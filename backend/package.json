@@ -1,0 +1,43 @@
+{
+  "name": "eduvertex-erp-backend",
+  "version": "1.0.0",
+  "description": "Eduvertex ERP System Backend - Node.js & MongoDB",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "seed": "node src/seeder.js"
+  },
+  "keywords": [
+    "erp",
+    "education",
+    "management",
+    "nodejs",
+    "mongodb"
+  ],
+  "author": "Eduvertex",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "colors": "^1.4.0",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-fileupload": "^1.4.3",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
+    "hpp": "^0.2.3",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.0.3",
+    "morgan": "^1.10.0",
+    "nodemailer": "^6.9.7",
+    "slugify": "^1.6.6",
+    "validator": "^13.11.0",
+    "xss-clean": "^0.1.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
