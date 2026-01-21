@@ -11,7 +11,6 @@ import {
   Bell,
   Send,
   Clock,
-  User,
   CheckCircle2,
   AlertCircle,
   Megaphone,

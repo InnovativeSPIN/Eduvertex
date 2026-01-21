@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from '@/components/ui/toaster';
 
 // Faculty Pages
 import Dashboard from './pages/faculty/Dashboard';
@@ -13,12 +14,19 @@ import Communication from './pages/faculty/Communication';
 import Reports from './pages/faculty/Reports';
 import NotFound from './pages/faculty/NotFound';
 
+// Student Routes
+import StudentRoutes from './pages/student/StudentRoutes';
+
 const App = () => {
   return (
     <BrowserRouter>
+      <Toaster />
       <Routes>
+        {/* Student Routes */}
+        <Route path="/student/*" element={<StudentRoutes />} />
+
         {/* Faculty Routes */}
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/faculty" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/timetable" element={<Timetable />} />
         <Route path="/attendance" element={<Attendance />} />

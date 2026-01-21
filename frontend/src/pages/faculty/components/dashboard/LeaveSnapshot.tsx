@@ -1,9 +1,10 @@
 import { motion } from "framer-motion";
-import { Calendar, Briefcase, Heart } from "lucide-react";
+import { Calendar } from "lucide-react";
+import { LucideIcon } from "lucide-react";
 
 interface LeaveBalance {
   type: string;
-  icon: typeof Calendar;
+  icon: LucideIcon;
   total: number;
   used: number;
   remaining: number;

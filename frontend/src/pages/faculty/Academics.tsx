@@ -247,7 +247,9 @@ export default function Academics() {
   const [selectedClassId, setSelectedClassId] = useState(classesHandled[0].id);
   const [topicsData, setTopicsData] = useState<Record<string, Topic[]>>(syllabusDataByClass);
   const [materialsData, setMaterialsData] = useState<Record<string, Material[]>>(materialsDataByClass);
-  const [marksData, setMarksData] = useState<Record<string, StudentMark[]>>(studentMarksDataByClass);
+  // TODO: Implement marks editing functionality
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [marksData, _setMarksData] = useState<Record<string, StudentMark[]>>(studentMarksDataByClass);
   const [lockedClasses, setLockedClasses] = useState<Record<string, boolean>>({});
 
   // Credits filter states

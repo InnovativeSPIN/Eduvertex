@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import {
-  User,
   Mail,
   Phone,
   MapPin,
@@ -25,7 +24,6 @@ import {
   BookOpen,
   Users,
   Target,
-  Star,
 } from "lucide-react";
 
 // Faculty data based on the Self-Appraisal Form

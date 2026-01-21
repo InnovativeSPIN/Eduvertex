@@ -12,7 +12,6 @@ import {
   Award,
   Briefcase,
   Heart,
-  CalendarDays,
 } from "lucide-react";
 
 // Mock data
