@@ -17,6 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   ClipboardCheck,
   Search,
+  Users,
   CheckCircle2,
   XCircle,
   Clock,
@@ -31,7 +32,7 @@ interface Student {
   rollNo: string;
   name: string;
   photo: string;
-  attendance?: "present" | "absent" | "late";
+  attendance?: "present" | "absent" | "leave";
 }
 
 const students: Student[] = [
@@ -50,10 +51,10 @@ const students: Student[] = [
 ];
 
 const attendanceHistory = [
-  { date: "2024-01-15", subject: "Data Structures", section: "CSE-A", present: 58, absent: 4, late: 2 },
-  { date: "2024-01-14", subject: "Data Structures", section: "CSE-A", present: 60, absent: 2, late: 2 },
-  { date: "2024-01-13", subject: "OOP", section: "CSE-B", present: 55, absent: 3, late: 0 },
-  { date: "2024-01-12", subject: "Algorithms", section: "CSE-C", present: 52, absent: 6, late: 2 },
+  { date: "2024-01-15", subject: "Data Structures", section: "CSE-A", present: 58, absent: 4, leave: 2 },
+  { date: "2024-01-14", subject: "Data Structures", section: "CSE-A", present: 60, absent: 2, leave: 2 },
+  { date: "2024-01-13", subject: "OOP", section: "CSE-B", present: 55, absent: 3, leave: 0 },
+  { date: "2024-01-12", subject: "Algorithms", section: "CSE-C", present: 52, absent: 6, leave: 2 },
 ];
 
 export default function Attendance() {
@@ -86,7 +87,7 @@ export default function Attendance() {
 
   const presentCount = Object.values(attendanceData).filter((v) => v === "present").length;
   const absentCount = Object.values(attendanceData).filter((v) => v === "absent").length;
-  const lateCount = Object.values(attendanceData).filter((v) => v === "late").length;
+  const leaveCount = Object.values(attendanceData).filter((v) => v === "leave").length;
 
   return (
     <MainLayout>
@@ -185,8 +186,8 @@ export default function Attendance() {
                 <p className="text-xs text-muted-foreground">Absent</p>
               </div>
               <div className="p-4 bg-warning/10 rounded-lg border border-warning/20 text-center">
-                <p className="text-2xl font-bold text-warning">{lateCount}</p>
-                <p className="text-xs text-muted-foreground">Late</p>
+                <p className="text-2xl font-bold text-warning">{leaveCount}</p>
+                <p className="text-xs text-muted-foreground">Leave</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -240,7 +241,7 @@ export default function Attendance() {
                   "widget-card p-4 transition-all",
                   attendanceData[student.id] === "present" && "border-success/50 bg-success/5",
                   attendanceData[student.id] === "absent" && "border-destructive/50 bg-destructive/5",
-                  attendanceData[student.id] === "late" && "border-warning/50 bg-warning/5"
+                  attendanceData[student.id] === "leave" && "border-warning/50 bg-warning/5"
                 )}
               >
                 <div className="flex items-center gap-3 mb-4">
@@ -297,15 +298,15 @@ export default function Attendance() {
                   </div>
                   <div className="flex-1">
                     <RadioGroupItem
-                      value="late"
-                      id={`${student.id}-late`}
+                      value="leave"
+                      id={`${student.id}-leave`}
                       className="sr-only"
                     />
                     <Label
-                      htmlFor={`${student.id}-late`}
+                      htmlFor={`${student.id}-leave`}
                       className={cn(
                         "flex items-center justify-center gap-1 p-2 rounded-lg border cursor-pointer transition-all text-xs",
-                        attendanceData[student.id] === "late"
+                        attendanceData[student.id] === "leave"
                           ? "bg-warning text-white border-warning"
                           : "hover:bg-warning/10 border-border"
                       )}
@@ -357,7 +358,7 @@ export default function Attendance() {
                     <th className="text-left p-3 text-sm font-semibold text-muted-foreground">Section</th>
                     <th className="text-center p-3 text-sm font-semibold text-success">Present</th>
                     <th className="text-center p-3 text-sm font-semibold text-destructive">Absent</th>
-                    <th className="text-center p-3 text-sm font-semibold text-warning">Late</th>
+                    <th className="text-center p-3 text-sm font-semibold text-warning">Leave</th>
                     <th className="text-right p-3 text-sm font-semibold text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
@@ -385,7 +386,7 @@ export default function Attendance() {
                       </td>
                       <td className="p-3 text-center">
                         <span className="px-2 py-1 bg-warning/10 text-warning rounded-full text-sm">
-                          {record.late}
+                          {record.leave}
                         </span>
                       </td>
                       <td className="p-3 text-right">
