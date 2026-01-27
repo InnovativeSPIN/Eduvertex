@@ -1,9 +1,9 @@
 import { MainLayout } from "@/components/layout/MainLayout";
-import { StatCard } from "./components/dashboard/StatCard";
-import { NextClassCard } from "./components/dashboard/NextClassCard";
-import { PendingTasksList } from "./components/dashboard/PendingTasksList";
-import { LeaveSnapshot } from "./components/dashboard/LeaveSnapshot";
-import { ProgressRing } from "./components/dashboard/ProgressRing";
+import { StatCard } from "@/components/dashboard/StatCard";
+import { NextClassCard } from "@/components/dashboard/NextClassCard";
+import { PendingTasksList } from "@/components/dashboard/PendingTasksList";
+import { LeaveSnapshot } from "@/components/dashboard/LeaveSnapshot";
+import { ProgressRing } from "@/components/dashboard/ProgressRing";
 import { motion } from "framer-motion";
 import {
   Users,
@@ -12,6 +12,7 @@ import {
   Award,
   Briefcase,
   Heart,
+  CalendarDays,
 } from "lucide-react";
 
 // Mock data
@@ -70,7 +71,7 @@ export default function Dashboard() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="page-header font-serif">Good Morning, Dr. Sharma</h1>
+        <h1 className="page-header font-serif">Good Morning, Mr.L.S.Vignesh</h1>
         <p className="text-muted-foreground -mt-4">
           Here's your academic overview for today
         </p>
