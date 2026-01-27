@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import {
+  User,
   Mail,
   Phone,
   MapPin,
@@ -24,12 +25,13 @@ import {
   BookOpen,
   Users,
   Target,
+  Star,
 } from "lucide-react";
 
 // Faculty data based on the Self-Appraisal Form
 const facultyData = {
   // Basic Information
-  name: "J. Vinoth Kumar",
+  name: "L.S.Vignesh",
   employeeId: "FAC2023045",
   designation: "Assistant Professor",
   department: "Artificial Intelligence and Data Science",
@@ -213,9 +215,7 @@ ${memberships.map(m => `${m.society} (ID: ${m.id})`).join('\n')}
       >
         <div>
           <h1 className="page-header font-serif">Faculty Profile</h1>
-          <p className="text-muted-foreground -mt-4">
-            Self-Appraisal Form - Academic Year 2023-24
-          </p>
+         
         </div>
         <Button onClick={handleDownloadProfile} className="bg-secondary hover:bg-secondary/90">
           <Download className="w-4 h-4 mr-2" />
@@ -233,7 +233,7 @@ ${memberships.map(m => `${m.society} (ID: ${m.id})`).join('\n')}
         >
           <div className="text-center">
             <div className="w-32 h-32 mx-auto rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mb-4">
-              <span className="text-4xl font-bold text-white">JV</span>
+              <span className="text-4xl font-bold text-white">LS</span>
             </div>
             <h2 className="font-serif text-xl font-bold text-foreground">
               {facultyData.name}
