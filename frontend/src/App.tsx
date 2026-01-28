@@ -1,6 +1,7 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 // Admin Pages
 import SuperAdminDashboard from './pages/admin/superadmin/Dashboard';
@@ -43,8 +44,12 @@ import StudentRoutes from './pages/student/StudentRoutes';
 const App = () => {
   return (
     <BrowserRouter>
-      <Toaster />
-      <Routes>
+      <AuthProvider>
+        <Toaster />
+        <Routes>
+        {/* Root redirect */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+
         {/* Universal Auth */}
         <Route path="/login" element={<Login />} />
 
@@ -89,6 +94,7 @@ const App = () => {
         {/* NotFound for all unmatched routes */}
         <Route path="*" element={<AdminNotFound />} />
       </Routes>
+      </AuthProvider>
     </BrowserRouter>
   );
 };
