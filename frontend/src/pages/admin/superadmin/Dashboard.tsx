@@ -23,7 +23,7 @@ export default function SuperAdminDashboard() {
             title="Total Students"
             value={dashboardStats.totalStudents}
             icon={<GraduationCap className="h-6 w-6" />}
-            change="+12 this month"
+            change="In College"
             changeType="positive"
           />
           <StatsCard

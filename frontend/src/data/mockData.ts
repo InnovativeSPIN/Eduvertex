@@ -3,22 +3,25 @@ export const dashboardStats = {
   totalFaculty: 50,
   totalDepartments: 6,
   totalCourses: 24,
+  activePrograms: 12,
+  graduationRate: 92,
+  attendanceRate: 87,
 };
 
 export const mockStudents = [
-  { name: "Alice Johnson", id: 1 },
-  { name: "Bob Smith", id: 2 },
-  { name: "Carol Lee", id: 3 },
-  { name: "David Kim", id: 4 },
-  { name: "Eva Brown", id: 5 },
-  { name: "Frank Green", id: 6 },
+  { name: "Alice Johnson", id: 1, department: "Computer Science", status: "active" },
+  { name: "Bob Smith", id: 2, department: "Mechanical Engineering", status: "active" },
+  { name: "Carol Lee", id: 3, department: "Electronics", status: "active" },
+  { name: "David Kim", id: 4, department: "Civil Engineering", status: "inactive" },
+  { name: "Eva Brown", id: 5, department: "Mathematics", status: "active" },
+  { name: "Frank Green", id: 6, department: "Physics", status: "active" },
 ];
 
 export const mockFaculty = [
-  { name: "Prof. Xavier", id: 1 },
-  { name: "Dr. Jane Foster", id: 2 },
-  { name: "Dr. Bruce Wayne", id: 3 },
-  { name: "Dr. Clark Kent", id: 4 },
+  { name: "Prof. Xavier", id: 1, designation: "Professor", department: "Computer Science" },
+  { name: "Dr. Jane Foster", id: 2, designation: "Associate Professor", department: "Physics" },
+  { name: "Dr. Bruce Wayne", id: 3, designation: "Assistant Professor", department: "Electronics" },
+  { name: "Dr. Clark Kent", id: 4, designation: "Professor", department: "Mathematics" },
 ];
 
 export const mockDepartments = [

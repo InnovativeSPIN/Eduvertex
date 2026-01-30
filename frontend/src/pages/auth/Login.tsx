@@ -66,7 +66,7 @@ export default function Login() {
             </div>
           </div>
           <h1 className="text-4xl font-bold text-primary-foreground mb-4">
-         NSCET ERP PORTAL
+         EDUVERTEX
           </h1>
           {/* <p className="text-lg text-primary-foreground/80">
             Comprehensive education management system for administrators, faculty, and students.
