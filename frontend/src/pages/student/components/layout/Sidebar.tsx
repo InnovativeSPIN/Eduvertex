@@ -27,7 +27,7 @@ const mainNavItems = [
 ];
 
 const profileNavItems = [
-  { path: '/student/profile/basic', label: 'Basic Info', icon: User },
+  { path: '/student/profile/', label: 'Basic Info', icon: User },
 ];
 
 const academicNavItems = [
