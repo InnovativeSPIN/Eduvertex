@@ -8,6 +8,9 @@ export interface User {
 	role: UserRole;
 	avatar?: string;
 	department?: string;
+	rollNo?: string;
+	year?: number;
+	semester?: number;
 }
 
 export interface Student {

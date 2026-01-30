@@ -23,79 +23,72 @@ import AcademicDepartments from './pages/admin/academic/Departments';
 import AcademicReports from './pages/admin/academic/Reports';
 
 import Login from './pages/auth/Login';
-import AdminNotFound from './pages/admin/NotFound';
+import NotFound from './pages/auth/NotFound';
 
-// Faculty Pages
-import Dashboard from './pages/faculty/Dashboard';
-import Profile from './pages/faculty/Profile';
-import Timetable from './pages/faculty/Timetable';
-import Attendance from './pages/faculty/Attendance';
-import Academics from './pages/faculty/Academics';
-import Leave from './pages/faculty/Leave';
-import Assessments from './pages/faculty/Assessments';
-import Counseling from './pages/faculty/Counseling';
-import Communication from './pages/faculty/Communication';
-import Reports from './pages/faculty/Reports';
+// Faculty Routes
+import FacultyRoutes from './pages/faculty/FacultyRoutes';
 
 // Student Routes
 import StudentRoutes from './pages/student/StudentRoutes';
 
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { Toaster as Sonner } from '@/components/ui/sonner';
+
+const queryClient = new QueryClient();
+
 const App = () => {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <Toaster />
-        <Routes>
-        {/* Root redirect */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              {/* Root redirect */}
+              <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* Universal Auth */}
-        <Route path="/login" element={<Login />} />
+              {/* Universal Auth */}
+              <Route path="/login" element={<Login />} />
 
-        {/* Super Admin Routes */}
-        <Route path="/admin/superadmin" element={<SuperAdminDashboard />} />
-        <Route path="/admin/superadmin/students" element={<SuperAdminStudents />} />
-        <Route path="/admin/superadmin/faculty" element={<SuperAdminFaculty />} />
-        <Route path="/admin/superadmin/departments" element={<SuperAdminDepartments />} />
-        <Route path="/admin/superadmin/reports" element={<SuperAdminReports />} />
-        <Route path="/admin/superadmin/backup" element={<SuperAdminBackup />} />
+              {/* Super Admin Routes */}
+              <Route path="/admin/superadmin" element={<SuperAdminDashboard />} />
+              <Route path="/admin/superadmin/students" element={<SuperAdminStudents />} />
+              <Route path="/admin/superadmin/faculty" element={<SuperAdminFaculty />} />
+              <Route path="/admin/superadmin/departments" element={<SuperAdminDepartments />} />
+              <Route path="/admin/superadmin/reports" element={<SuperAdminReports />} />
+              <Route path="/admin/superadmin/backup" element={<SuperAdminBackup />} />
 
-        {/* Executive Admin Routes */}
-        <Route path="/admin/executive" element={<ExecutiveAdminDashboard />} />
-        <Route path="/admin/executive/students" element={<ExecutiveStudents />} />
-        <Route path="/admin/executive/faculty" element={<ExecutiveFaculty />} />
-        <Route path="/admin/executive/reports" element={<ExecutiveReports />} />
+              {/* Executive Admin Routes */}
+              <Route path="/admin/executive" element={<ExecutiveAdminDashboard />} />
+              <Route path="/admin/executive/students" element={<ExecutiveStudents />} />
+              <Route path="/admin/executive/faculty" element={<ExecutiveFaculty />} />
+              <Route path="/admin/executive/reports" element={<ExecutiveReports />} />
 
-        {/* Academic Admin Routes */}
-        <Route path="/admin/academic" element={<AcademicAdminDashboard />} />
-        <Route path="/admin/academic/students" element={<AcademicStudents />} />
-        <Route path="/admin/academic/faculty" element={<AcademicFaculty />} />
-        <Route path="/admin/academic/departments" element={<AcademicDepartments />} />
-        <Route path="/admin/academic/reports" element={<AcademicReports />} />
+              {/* Academic Admin Routes */}
+              <Route path="/admin/academic" element={<AcademicAdminDashboard />} />
+              <Route path="/admin/academic/students" element={<AcademicStudents />} />
+              <Route path="/admin/academic/faculty" element={<AcademicFaculty />} />
+              <Route path="/admin/academic/departments" element={<AcademicDepartments />} />
+              <Route path="/admin/academic/reports" element={<AcademicReports />} />
 
-        {/* Student Routes */}
-        <Route path="/student/*" element={<StudentRoutes />} />
+              {/* Student Routes */}
+              <Route path="/student/*" element={<StudentRoutes />} />
 
-        {/* Faculty Routes */}
-        <Route path="/faculty" element={<Dashboard />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/timetable" element={<Timetable />} />
-        <Route path="/attendance" element={<Attendance />} />
-        <Route path="/academics" element={<Academics />} />
-        <Route path="/leave" element={<Leave />} />
-        <Route path="/assessments" element={<Assessments />} />
-        <Route path="/counseling" element={<Counseling />} />
-        <Route path="/communication" element={<Communication />} />
-        <Route path="/reports" element={<Reports />} />
+              {/* Faculty Routes */}
+              <Route path="/faculty/*" element={<FacultyRoutes />} />
 
-        {/* Redirects */}
-        <Route path="/dashboard" element={<Navigate to="/" replace />} />
-        {/* NotFound for all unmatched routes */}
-        <Route path="*" element={<AdminNotFound />} />
-      </Routes>
-      </AuthProvider>
-    </BrowserRouter>
+              {/* Redirects */}
+              <Route path="/dashboard" element={<Navigate to="/" replace />} />
+              {/* NotFound for all unmatched routes */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 };
 

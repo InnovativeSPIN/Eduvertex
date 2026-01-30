@@ -43,6 +43,9 @@ const mockUsers: Record<UserRole, User> = {
     name: 'Jane Doe',
     role: 'student',
     department: 'Computer Science',
+    rollNo: 'CS2024001',
+    year: 3,
+    semester: 5,
   },
 };
 
@@ -51,7 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = (email: string, password: string, role: UserRole): boolean => {
     // Mock authentication - in production, this would validate against a backend
-    if (password === 'password123') {
+    if (password === '123') {
       // Find the mock user for the given role and override email if needed
       const user = { ...mockUsers[role], email };
       setUser(user);

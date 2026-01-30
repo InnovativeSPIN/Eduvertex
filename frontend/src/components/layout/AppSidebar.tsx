@@ -19,7 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const menuItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Dashboard", url: "/faculty", icon: LayoutDashboard },
   { title: "Profile", url: "/profile", icon: User },
   { title: "Timetable", url: "/timetable", icon: Calendar },
   { title: "Attendance", url: "/attendance", icon: ClipboardCheck },
@@ -31,8 +31,13 @@ const menuItems = [
   { title: "Reports", url: "/reports", icon: BarChart3 },
 ];
 
-export function AppSidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+interface AppSidebarProps {
+  collapsed: boolean;
+  setCollapsed: (collapsed: boolean) => void;
+}
+
+export function AppSidebar({ collapsed, setCollapsed }: AppSidebarProps) {
+
   const location = useLocation();
 
   return (

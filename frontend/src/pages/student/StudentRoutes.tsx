@@ -1,60 +1,66 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { StudentAuthProvider } from '@/context/StudentAuthContext';
+﻿import { Routes, Route, Navigate } from 'react-router-dom';
+import './student.css';
 
-// Layout & Components
-import StudentMainLayout from './components/StudentMainLayout';
-import StudentProtectedRoute from './components/StudentProtectedRoute';
-
-// Auth
-import StudentLogin from './auth/StudentLogin';
+// Layout
+import MainLayout from './components/layout/MainLayout';
+import ProtectedRoute from './components/common/ProtectedRoute';
 
 // Dashboard
-import StudentDashboard from './dashboard/StudentDashboard';
+import StudentDashboard from './pages/dashboard/StudentDashboard';
 
 // Profile
-import BasicInfo from './profile/BasicInfo';
-import PersonalInfo from './profile/PersonalInfo';
-import ParentInfo from './profile/ParentInfo';
-import ReferenceInfo from './profile/ReferenceInfo';
-import Photos from './profile/Photos';
+import PersonalInfo from './pages/profile/PersonalInfo';
+import ParentInfo from './pages/profile/ParentInfo';
+import ReferenceInfo from './pages/profile/ReferenceInfo';
+import Photos from './pages/profile/Photos';
 
 // Academics
-import Attendance from './academics/Attendance';
-import Marks from './academics/Marks';
-import Timetable from './academics/Timetable';
+import Attendance from './pages/academics/Attendance';
+import Marks from './pages/academics/Marks';
+import Timetable from './pages/academics/Timetable';
+import Leave from './pages/academics/Leave';
 
 // Records
-import Projects from './records/Projects';
-import Certifications from './records/Certifications';
-import Disciplinary from './records/Disciplinary';
+import Certifications from './pages/records/Certifications';
 
 // Knowledge
-import Materials from './knowledge/Materials';
-import Discussions from './knowledge/Discussions';
+import Materials from './pages/knowledge/Materials';
+import Discussions from './pages/knowledge/Discussions';
 
 // Notifications
-import Notifications from './notifications/Notifications';
+import Notifications from './pages/notifications/Notifications';
 
-export default function StudentRoutes() {
+// Announcements
+import Announcements from './pages/announcements/Announcements';
+
+// Extra-curricular
+import Extracurricular from './pages/extracurricular/Extracurricular';
+
+// Errors
+import Unauthorized from './pages/errors/Unauthorized';
+import NotFound from './pages/NotFound';
+
+const StudentRoutes = () => {
   return (
-    <StudentAuthProvider>
+    <div className="student-portal">
       <Routes>
-        {/* Public Routes */}
-        <Route path="login" element={<StudentLogin />} />
+        {/* Public Routes - kept if needed, but Login is global */}
+        <Route path="unauthorized" element={<Unauthorized />} />
 
         {/* Protected Routes */}
         <Route
           element={
-            <StudentProtectedRoute>
-              <StudentMainLayout />
-            </StudentProtectedRoute>
+            <ProtectedRoute>
+              <MainLayout />
+            </ProtectedRoute>
           }
         >
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<StudentDashboard />} />
 
           {/* Profile */}
-          <Route path="profile/basic" element={<BasicInfo />} />
+          <Route path="profile" element={<Navigate to="personal" replace />} />
+          <Route path="profile/basic" element={<Navigate to="personal" replace />} />
           <Route path="profile/personal" element={<PersonalInfo />} />
           <Route path="profile/parent" element={<ParentInfo />} />
           <Route path="profile/reference" element={<ReferenceInfo />} />
@@ -64,11 +70,10 @@ export default function StudentRoutes() {
           <Route path="academics/attendance" element={<Attendance />} />
           <Route path="academics/marks" element={<Marks />} />
           <Route path="academics/timetable" element={<Timetable />} />
+          <Route path="academics/leave" element={<Leave />} />
 
           {/* Records */}
-          <Route path="records/projects" element={<Projects />} />
           <Route path="records/certifications" element={<Certifications />} />
-          <Route path="records/disciplinary" element={<Disciplinary />} />
 
           {/* Knowledge */}
           <Route path="knowledge/materials" element={<Materials />} />
@@ -76,11 +81,20 @@ export default function StudentRoutes() {
 
           {/* Notifications */}
           <Route path="notifications" element={<Notifications />} />
+
+          {/* Announcements */}
+          <Route path="announcements" element={<Announcements />} />
+
+          {/* Extra-curricular */}
+          <Route path="extracurricular/sports" element={<Extracurricular />} />
+          <Route path="extracurricular/events" element={<Extracurricular />} />
         </Route>
 
-        {/* Catch-all for student routes */}
-        <Route path="*" element={<Navigate to="dashboard" replace />} />
+        {/* Catch-all */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
-    </StudentAuthProvider>
+    </div>
   );
-}
+};
+
+export default StudentRoutes;

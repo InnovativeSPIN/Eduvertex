@@ -1,6 +1,6 @@
-import { motion } from "framer-motion";
+﻿import { motion } from "framer-motion";
 import { Clock, MapPin, BookOpen, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/pages/faculty/components/ui/button";
 
 interface ClassInfo {
   subject: string;
@@ -48,7 +48,7 @@ export function NextClassCard({ currentClass, nextClass }: NextClassCardProps) {
               </div>
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-primary" />
-                <span>{currentClass.section} • {currentClass.studentsCount} students</span>
+                <span>{currentClass.section} â€¢ {currentClass.studentsCount} students</span>
               </div>
             </div>
             <Button className="mt-4 w-full bg-primary hover:bg-primary/90">
@@ -86,7 +86,7 @@ export function NextClassCard({ currentClass, nextClass }: NextClassCardProps) {
               </div>
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-secondary" />
-                <span>{nextClass.section} • {nextClass.studentsCount} students</span>
+                <span>{nextClass.section} â€¢ {nextClass.studentsCount} students</span>
               </div>
             </div>
           </div>
@@ -95,3 +95,7 @@ export function NextClassCard({ currentClass, nextClass }: NextClassCardProps) {
     </motion.div>
   );
 }
+
+
+
+

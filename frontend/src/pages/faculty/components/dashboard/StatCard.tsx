@@ -1,6 +1,6 @@
-import { motion } from "framer-motion";
+﻿import { motion } from "framer-motion";
 import { LucideIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/pages/faculty/lib/utils";
 
 interface StatCardProps {
   title: string;
@@ -53,3 +53,6 @@ export function StatCard({
     </motion.div>
   );
 }
+
+
+
