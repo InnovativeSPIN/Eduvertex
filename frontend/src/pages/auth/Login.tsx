@@ -68,10 +68,10 @@ export default function Login() {
           <h1 className="text-4xl font-bold text-primary-foreground mb-4">
          NSCET ERP PORTAL
           </h1>
-          <p className="text-lg text-primary-foreground/80">
+          {/* <p className="text-lg text-primary-foreground/80">
             Comprehensive education management system for administrators, faculty, and students.
-          </p>
-          <div className="mt-12 grid grid-cols-3 gap-6">
+          </p> */}
+          {/* <div className="mt-12 grid grid-cols-3 gap-6">
             <div className="text-center">
               <div className="text-3xl font-bold text-primary-foreground">500+</div>
               <div className="text-sm text-primary-foreground/70">Students</div>
@@ -84,7 +84,7 @@ export default function Login() {
               <div className="text-3xl font-bold text-primary-foreground">6</div>
               <div className="text-sm text-primary-foreground/70">Departments</div>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
 
