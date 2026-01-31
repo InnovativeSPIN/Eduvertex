@@ -318,7 +318,7 @@ export default function Leave() {
                       <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <CalendarDays className="w-3 h-3" />
-                          {request.fromDate} â†’ {request.toDate} ({request.days} days)
+                          {request.fromDate} {request.toDate} ({request.days} days)
                         </span>
                         <span className="flex items-center gap-1">
                           <User className="w-3 h-3" />

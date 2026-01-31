@@ -9,9 +9,9 @@ export function MentorModeToggle() {
   const handleToggle = () => {
     toggleMentorMode();
     if (!isMentorMode) {
-      navigate("/mentor");
+      navigate("/faculty/mentor");
     } else {
-      navigate("/dashboard");
+      navigate("/faculty/dashboard");
     }
   };
 
@@ -24,9 +24,8 @@ export function MentorModeToggle() {
     >
       <motion.button
         onClick={handleToggle}
-        className={`relative w-14 h-8 rounded-full transition-colors ${
-          isMentorMode ? "bg-gradient-to-r from-[#790c0c] to-[#01898d]" : "bg-gray-300"
-        }`}
+        className={`relative w-14 h-8 rounded-full transition-colors ${isMentorMode ? "bg-gradient-to-r from-[#790c0c] to-[#01898d]" : "bg-gray-300"
+          }`}
         whileTap={{ scale: 0.95 }}
       >
         {/* Glow effect */}
@@ -58,12 +57,11 @@ export function MentorModeToggle() {
 
       {/* Label */}
       <motion.span
-        className={`text-sm font-semibold transition-colors ${
-          isMentorMode ? "text-purple-600" : "text-gray-600"
-        }`}
+        className={`text-sm font-semibold transition-colors ${isMentorMode ? "text-purple-600" : "text-gray-600"
+          }`}
         animate={{ color: isMentorMode ? "#790c0c" : "#4b5563" }}
       >
-        {isMentorMode ? "Mentor Mode" : "Faculty Mode"}
+        {isMentorMode ? "Faculty Mode" : "Mentor Mode"}
       </motion.span>
     </motion.div>
   );

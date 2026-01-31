@@ -204,7 +204,7 @@ export default function Attendance() {
     }
 
     setAttendanceData(newAttendance);
-    setBulkSuccess(`âœ“ Applied "${bulkStatus}" to ${matchedCount} student(s). Others marked as Present.`);
+    setBulkSuccess(`Applied "${bulkStatus}" to ${matchedCount} student(s). Others marked as Present.`);
     setBulkDigits("");
     setBulkStatus("");
     setTimeout(() => setBulkSuccess(""), 3000);
@@ -465,7 +465,7 @@ export default function Attendance() {
                 animate={{ opacity: 1, y: 0 }}
                 className="mt-3 p-3 bg-destructive/10 border border-destructive/30 rounded text-destructive text-xs"
               >
-                âš  {bulkError}
+                {bulkError}
               </motion.div>
             )}
             {bulkSuccess && (
@@ -661,7 +661,7 @@ export default function Attendance() {
                   onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
                   disabled={currentPage === 0}
                 >
-                  â† Previous
+                  Previous
                 </Button>
 
                 <div className="flex items-center gap-2">
@@ -694,7 +694,7 @@ export default function Attendance() {
                   }
                   disabled={currentPage >= Math.ceil(filteredStudents.length / itemsPerPage) - 1}
                 >
-                  Next â†’
+                  Next 
                 </Button>
               </div>
             )}

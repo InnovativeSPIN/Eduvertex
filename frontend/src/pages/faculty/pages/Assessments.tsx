@@ -219,7 +219,7 @@ export default function Assessments() {
                           {paper.subject}
                         </h4>
                         <p className="text-sm text-muted-foreground">
-                          {paper.code} â€¢ Semester {paper.semester}
+                          {paper.code} Semester {paper.semester}
                         </p>
                         {paper.uploadedOn && (
                           <p className="text-xs text-muted-foreground mt-1">

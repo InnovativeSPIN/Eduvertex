@@ -182,7 +182,7 @@ export default function Communication() {
                         {notice.title}
                       </h4>
                       <p className="text-xs text-muted-foreground">
-                        {notice.author} â€¢ {notice.date}
+                        {notice.author} {notice.date}
                       </p>
                     </div>
                   </div>
@@ -234,7 +234,7 @@ export default function Communication() {
                           {query.student}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {query.rollNo} â€¢ {query.subject}
+                          {query.rollNo} {query.subject}
                         </p>
                       </div>
                     </div>
@@ -279,7 +279,7 @@ export default function Communication() {
                         {selectedQuery.student}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {selectedQuery.rollNo} â€¢ {selectedQuery.subject}
+                        {selectedQuery.rollNo} {selectedQuery.subject}
                       </p>
                     </div>
                   </div>

@@ -414,7 +414,7 @@ export default function Academics() {
     const platformText = platform === "google" ? "Google Classroom" : 
                         platform === "canvas" ? "Canvas LMS" : "Google Classroom and Canvas";
     
-    setSuccessMessage(`ðŸ“¤ Study material shared successfully!\nSubject: ${materialFormData.subjectName}\nPlatform: ${platformText}`);
+    setSuccessMessage(`Study material shared successfully!\nSubject: ${materialFormData.subjectName}\nPlatform: ${platformText}`);
     
     if (platform === "google") setShowGoogleModal(false);
     if (platform === "canvas") setShowCanvasModal(false);
@@ -575,7 +575,7 @@ export default function Academics() {
                   {selectedClass.subject}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  {selectedClass.program} â€¢ Semester {selectedClass.semester} â€¢ Section {selectedClass.section}
+                  {selectedClass.program} Semester {selectedClass.semester} Section {selectedClass.section}
                 </p>
               </div>
               <div className="text-right">
@@ -760,7 +760,7 @@ export default function Academics() {
                     <Input
                       value={materialFormData.materialTitle}
                       onChange={(e) => setMaterialFormData({...materialFormData, materialTitle: e.target.value})}
-                      placeholder="e.g., Unit 3 â€“ Trees Notes"
+                      placeholder="e.g., Unit 3 Trees Notes"
                     />
                   </div>
 
@@ -878,7 +878,7 @@ export default function Academics() {
                     <Input
                       value={materialFormData.materialTitle}
                       onChange={(e) => setMaterialFormData({...materialFormData, materialTitle: e.target.value})}
-                      placeholder="e.g., Unit 3 â€“ Trees Notes"
+                      placeholder="e.g., Unit 3 Trees Notes"
                     />
                   </div>
 
@@ -996,7 +996,7 @@ export default function Academics() {
                     <Input
                       value={materialFormData.materialTitle}
                       onChange={(e) => setMaterialFormData({...materialFormData, materialTitle: e.target.value})}
-                      placeholder="e.g., Unit 3 â€“ Trees Notes"
+                      placeholder="e.g., Unit 3 Trees Notes"
                     />
                   </div>
 
@@ -1090,7 +1090,7 @@ export default function Academics() {
                         <div>
                           <p className="font-medium text-foreground">{material.name}</p>
                           <p className="text-xs text-muted-foreground">
-                            {material.size} â€¢ {material.uploadDate}
+                            {material.size} {material.uploadDate}
                           </p>
                         </div>
                       </div>

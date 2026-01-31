@@ -10,14 +10,14 @@ export function MentorDashboard() {
   const navigate = useNavigate();
 
   const years = [
-    { id: "2nd", label: "2nd Year", color: "from-[#790c0c] to-[#01898d]", icon: "ðŸŽ“" },
-    { id: "3rd", label: "3rd Year", color: "from-[#01898d] to-[#790c0c]", icon: "ðŸŽ“" },
-    { id: "Final", label: "Final Year", color: "from-[#790c0c] via-[#01898d] to-[#790c0c]", icon: "ðŸŽ“" },
+    { id: "2nd", label: "2nd Year", color: "from-[#790c0c] to-[#01898d]" },
+    { id: "3rd", label: "3rd Year", color: "from-[#01898d] to-[#790c0c]" },
+    { id: "Final", label: "Final Year", color: "from-[#790c0c] via-[#01898d] to-[#790c0c]" },
   ];
 
   const handleYearClick = (year: "2nd" | "3rd" | "Final") => {
     setSelectedYear(year);
-    navigate(`/mentor/${year.toLowerCase()}`);
+    navigate(`/faculty/mentor/${year.toLowerCase()}`);
   };
 
   return (
@@ -31,13 +31,13 @@ export function MentorDashboard() {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => navigate("/dashboard")}
+          onClick={() => navigate("/faculty/dashboard")}
           className="flex items-center gap-2 text-white hover:text-gray-200 transition-colors"
         >
           <ArrowLeft size={20} />
           <span>Back to Dashboard</span>
         </motion.button>
-        
+
         <div className="flex items-center gap-4">
           <MentorModeToggle />
           <NotificationBell />
@@ -52,7 +52,7 @@ export function MentorDashboard() {
         className="text-center mb-16"
       >
         <h1 className="text-5xl font-bold text-white mb-3">
-          ðŸŽ“ Welcome to Mentor Dashboard
+          Welcome to Mentor Dashboard
         </h1>
         <p className="text-gray-300 text-lg">
           Manage and guide your mentees through their academic journey
@@ -81,7 +81,6 @@ export function MentorDashboard() {
 
               {/* Content */}
               <div className="relative z-10">
-                <div className="text-6xl mb-4">{year.icon}</div>
                 <h2 className="text-3xl font-bold text-white mb-2">{year.label}</h2>
                 <p className="text-white/90 text-sm">10 Mentees</p>
               </div>

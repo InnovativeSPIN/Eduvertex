@@ -203,12 +203,12 @@ export default function Timetable() {
                             {slot.subject}
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {slot.section} â€¢ {slot.room}
+                            {slot.section} {slot.room}
                           </p>
                         </motion.div>
                       ) : (
                         <div className="p-3 rounded-lg bg-muted/30 text-center">
-                          <span className="text-xs text-muted-foreground">â€”</span>
+                          <span className="text-xs text-muted-foreground"></span>
                         </div>
                       )}
                     </td>

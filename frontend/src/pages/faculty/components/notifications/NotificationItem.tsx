@@ -13,19 +13,19 @@ export function NotificationItem({ notification, onClick, sourceColor }: Notific
   const getTypeEmoji = (type: string) => {
     switch (type) {
       case "leave":
-        return "ðŸ“„";
+        return "";
       case "attendance":
-        return "âœ“";
+        return "";
       case "counseling":
-        return "ðŸ’¬";
+        return "";
       case "academic":
-        return "ðŸ“š";
+        return "";
       case "message":
-        return "ðŸ’Œ";
+        return "";
       case "announcement":
-        return "ðŸ“¢";
+        return "";
       default:
-        return "ðŸ””";
+        return "";
     }
   };
 

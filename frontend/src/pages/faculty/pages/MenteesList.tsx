@@ -15,7 +15,7 @@ export function MenteesList() {
     const student = students.find((s) => s.id === studentId);
     if (student) {
       setSelectedStudent(student);
-      navigate(`/mentor/student/${studentId}`);
+      navigate(`/faculty/mentor/student/${studentId}`);
     }
   };
 
@@ -30,13 +30,13 @@ export function MenteesList() {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => navigate("/mentor")}
+          onClick={() => navigate("/faculty/mentor")}
           className="p-2 hover:bg-white rounded-lg transition-colors"
         >
           <ArrowLeft className="text-gray-700" size={24} />
         </motion.button>
         <h1 className="text-4xl font-bold text-gray-800">
-          ðŸŽ“ {yearValue} Year Students
+          {yearValue} Year Students
         </h1>
       </motion.div>
 

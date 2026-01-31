@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Trash2, Edit2, Save, X } from "lucide-react";
 
@@ -71,7 +71,7 @@ export function SiblingsEditor({
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">👶 Siblings Information</h2>
+        <h2 className="text-2xl font-bold text-gray-800">Siblings Information</h2>
         {isMentorMode && !isEditing && (
           <motion.button
             whileHover={{ scale: 1.05 }}

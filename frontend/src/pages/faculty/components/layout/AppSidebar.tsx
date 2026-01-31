@@ -16,20 +16,9 @@ import {
   ChevronRight,
   GraduationCap,
   Users,
-  Hash,
-  Briefcase,
-  Building2,
   LogOut,
 } from "lucide-react";
 import { cn } from "@/pages/faculty/lib/utils";
-
-const facultyInfo = {
-  name: "Dr. Rajesh Kumar Sharma",
-  facultyId: "FAC001",
-  employeeId: "EMP12345",
-  designation: "Associate Professor",
-  department: "CSE",
-};
 
 const menuItems = [
   { title: "Dashboard", url: "/faculty/dashboard", icon: LayoutDashboard },
@@ -62,34 +51,45 @@ export function AppSidebar() {
       transition={{ duration: 0.3, ease: "easeInOut" }}
       className="fixed left-0 top-0 h-screen bg-sidebar z-50 flex flex-col shadow-xl"
     >
-
-      {/* Faculty Info Section */}
-      <div className="px-3 py-4 border-b border-sidebar-border">
-        <AnimatePresence>
-          {!collapsed && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="flex items-center gap-3"
-            >
-              {/* Avatar */}
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sidebar-accent to-secondary flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">
-                {facultyInfo.name.split(" ").map((n) => n[0]).join("")}
-              </div>
-
-              {/* Faculty Details */}
-              <div className="min-w-0 flex-1">
-                <p className="text-white font-semibold truncate text-sm">
-                  {facultyInfo.name}
-                </p>
-                <p className="text-white/70 truncate text-xs">
-                  {facultyInfo.designation}
-                </p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+      {/* Logo Section */}
+      <div className="p-4 border-b border-sidebar-border">
+        <div className="flex items-center gap-3">
+          {/* Removed GraduationCap icon */}
+          <AnimatePresence>
+            {!collapsed && (
+              <motion.div
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: "auto" }}
+                exit={{ opacity: 0, width: 0 }}
+                className="overflow-hidden flex items-center"
+              >
+                {/* Faculty Photo */}
+                <img
+                  src="/src/assets/prathap.png"
+                  alt="C.Prathap"
+                  className="w-12 h-12 rounded-full object-cover border-2 border-white"
+                  onError={(e) => {
+                    // Fallback to initials if image fails to load
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+                <div className="hidden w-12 h-12 rounded-full bg-gradient-to-br from-sidebar-accent to-secondary flex items-center justify-center flex-shrink-0 text-white font-bold text-sm border-2 border-white">
+                  CP
+                </div>
+                {/* Name and Role */}
+                <div className="flex flex-col ml-3">
+                  <span className="font-serif font-bold text-white text-lg whitespace-nowrap">
+                    C.Prathap
+                  </span>
+                  <span className="text-xs text-white/70 whitespace-nowrap mt-1">
+                    Assistant Professor
+                  </span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
       {/* Navigation */}
@@ -143,7 +143,7 @@ export function AppSidebar() {
         {/* Logout Button */}
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-sidebar-accent text-white hover:bg-sidebar-accent/80 transition-colors"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-destructive/90 text-white hover:bg-destructive transition-colors"
         >
           <LogOut className="w-5 h-5" />
           <AnimatePresence>
@@ -178,6 +178,3 @@ export function AppSidebar() {
     </motion.aside>
   );
 }
-
-
-

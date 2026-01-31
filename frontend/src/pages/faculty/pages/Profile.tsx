@@ -2,12 +2,9 @@
 import { MainLayout } from "@/pages/faculty/components/layout/MainLayout";
 import { motion } from "framer-motion";
 import { Button } from "@/pages/faculty/components/ui/button";
-import { Input } from "@/pages/faculty/components/ui/input";
-import { Label } from "@/pages/faculty/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/pages/faculty/components/ui/tabs";
 import { Badge } from "@/pages/faculty/components/ui/badge";
 import { NotificationBell } from "@/pages/faculty/components/notifications/NotificationBell";
-import { MentorModeToggle } from "@/pages/faculty/components/mentor/MentorModeToggle";
 import {
   User,
   Mail,
@@ -16,9 +13,6 @@ import {
   Briefcase,
   GraduationCap,
   Calendar,
-  Edit2,
-  Save,
-  X,
   FileText,
   Award,
   Download,
@@ -43,7 +37,7 @@ const facultyData = {
   dateOfJoining: "01.09.2023",
   email: "Velvinojagan@gmail.com",
   phone: "+91 8072435849",
-  address: "Vadapudupatti, Theni â€“ 625531",
+  address: "Vadapudupatti, Theni 625531",
 };
 
 // Educational Qualifications
@@ -138,7 +132,7 @@ const documents = [
 
 // Journals
 const journals = [
-  { name: "AI in Education â€“ 2024", type: "PDF", publication: "International Journal of Computer Science", date: "2024", size: "2.1 MB" },
+  { name: "AI in Education 2024", type: "PDF", publication: "International Journal of Computer Science", date: "2024", size: "2.1 MB" },
   { name: "Machine Learning Applications in Data Science", type: "PDF", publication: "IEEE Transactions on AI", date: "2023", size: "1.9 MB" },
 ];
 
@@ -160,14 +154,8 @@ const conferencesNational = [
 ];
 
 export default function Profile() {
-  const [isEditing, setIsEditing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("certificates");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [formData, setFormData] = useState({
-    email: facultyData.email,
-    phone: facultyData.phone,
-    address: facultyData.address,
-  });
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -252,11 +240,10 @@ ${memberships.map(m => `${m.society} (ID: ${m.id})`).join('\n')}
         <div>
           <h1 className="page-header font-serif">Faculty Profile</h1>
           <p className="text-muted-foreground -mt-4">
-           
+
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <MentorModeToggle />
           <NotificationBell />
           <Button onClick={handleDownloadProfile} className="bg-secondary hover:bg-secondary/90">
             <Download className="w-4 h-4 mr-2" />
@@ -315,6 +302,10 @@ ${memberships.map(m => `${m.society} (ID: ${m.id})`).join('\n')}
               <Phone className="w-4 h-4 text-primary flex-shrink-0" />
               <span className="font-medium">{facultyData.phone}</span>
             </div>
+            <div className="flex items-center gap-3 text-sm">
+              <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
+              <span className="font-medium text-sm">{facultyData.address}</span>
+            </div>
           </div>
 
           {/* Leave Summary */}
@@ -352,11 +343,10 @@ ${memberships.map(m => `${m.society} (ID: ${m.id})`).join('\n')}
           className="widget-card lg:col-span-2"
         >
           <Tabs defaultValue="education" className="w-full">
-            <TabsList className="grid w-full grid-cols-5 mb-6">
+            <TabsList className="grid w-full grid-cols-4 mb-6">
               <TabsTrigger value="education" className="text-xs">Education</TabsTrigger>
               <TabsTrigger value="experience" className="text-xs">Experience</TabsTrigger>
               <TabsTrigger value="subjects" className="text-xs">Subjects</TabsTrigger>
-              <TabsTrigger value="contact" className="text-xs">Contact</TabsTrigger>
               <TabsTrigger value="documents" className="text-xs">Documents</TabsTrigger>
             </TabsList>
 
@@ -507,10 +497,9 @@ ${memberships.map(m => `${m.society} (ID: ${m.id})`).join('\n')}
                       </div>
                       <div className="text-right">
                         <p className="text-xs text-muted-foreground">Result</p>
-                        <p className={`text-lg font-bold ${
-                          parseInt(subject.result) >= 90 ? "text-success" :
+                        <p className={`text-lg font-bold ${parseInt(subject.result) >= 90 ? "text-success" :
                           parseInt(subject.result) >= 80 ? "text-secondary" : "text-warning"
-                        }`}>
+                          }`}>
                           {subject.result}
                         </p>
                       </div>
@@ -530,85 +519,7 @@ ${memberships.map(m => `${m.society} (ID: ${m.id})`).join('\n')}
               </div>
             </TabsContent>
 
-            {/* Contact Details */}
-            <TabsContent value="contact">
-              <div className="flex justify-end mb-4">
-                {isEditing ? (
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsEditing(false)}
-                    >
-                      <X className="w-4 h-4 mr-1" />
-                      Cancel
-                    </Button>
-                    <Button size="sm" onClick={() => setIsEditing(false)}>
-                      <Save className="w-4 h-4 mr-1" />
-                      Save Changes
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsEditing(true)}
-                  >
-                    <Edit2 className="w-4 h-4 mr-1" />
-                    Edit
-                  </Button>
-                )}
-              </div>
 
-              <div className="grid gap-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Mail className="w-4 h-4 text-muted-foreground" />
-                      Email Address
-                    </Label>
-                    <Input
-                      value={formData.email}
-                      onChange={(e) =>
-                        setFormData({ ...formData, email: e.target.value })
-                      }
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Phone className="w-4 h-4 text-muted-foreground" />
-                      Phone Number
-                    </Label>
-                    <Input
-                      value={formData.phone}
-                      onChange={(e) =>
-                        setFormData({ ...formData, phone: e.target.value })
-                      }
-                      disabled={!isEditing}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-muted-foreground" />
-                    Permanent Address
-                  </Label>
-                  <Input
-                    value={formData.address}
-                    onChange={(e) =>
-                      setFormData({ ...formData, address: e.target.value })
-                    }
-                    disabled={!isEditing}
-                  />
-                </div>
-              </div>
-              {isEditing && (
-                <p className="text-xs text-muted-foreground mt-4">
-                  * Changes will require admin approval to reflect
-                </p>
-              )}
-            </TabsContent>
 
             {/* Documents */}
             <TabsContent value="documents">
@@ -616,7 +527,7 @@ ${memberships.map(m => `${m.society} (ID: ${m.id})`).join('\n')}
                 <FileText className="w-5 h-5 text-secondary" />
                 Document Vault
               </h3>
-              
+
               {/* Category Buttons */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                 {[
@@ -653,7 +564,7 @@ ${memberships.map(m => `${m.society} (ID: ${m.id})`).join('\n')}
                       <div>
                         <p className="font-medium text-foreground">{doc.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {doc.type} â€¢ {doc.size} â€¢ {doc.date}
+                          {doc.type}  {doc.size}  {doc.date}
                         </p>
                       </div>
                     </div>
@@ -678,7 +589,7 @@ ${memberships.map(m => `${m.society} (ID: ${m.id})`).join('\n')}
                       <div>
                         <p className="font-medium text-foreground">{journal.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {journal.publication} â€¢ {journal.size} â€¢ {journal.date}
+                          {journal.publication} {journal.size} {journal.date}
                         </p>
                       </div>
                     </div>
@@ -703,7 +614,7 @@ ${memberships.map(m => `${m.society} (ID: ${m.id})`).join('\n')}
                       <div>
                         <p className="font-medium text-foreground">{workshop.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {workshop.organization} â€¢ {workshop.size} â€¢ {workshop.date}
+                          {workshop.organization} {workshop.size} {workshop.date}
                         </p>
                       </div>
                     </div>
@@ -717,7 +628,6 @@ ${memberships.map(m => `${m.society} (ID: ${m.id})`).join('\n')}
                   <div className="space-y-4">
                     <div>
                       <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                        <span className="text-warning">â—</span>
                         International Conferences
                       </h4>
                       <div className="space-y-3">
@@ -736,7 +646,7 @@ ${memberships.map(m => `${m.society} (ID: ${m.id})`).join('\n')}
                               <div>
                                 <p className="font-medium text-foreground">{conf.name}</p>
                                 <p className="text-xs text-muted-foreground">
-                                  {conf.location} â€¢ {conf.size} â€¢ {conf.date}
+                                  {conf.location} {conf.size} {conf.date}
                                 </p>
                               </div>
                             </div>
@@ -750,7 +660,6 @@ ${memberships.map(m => `${m.society} (ID: ${m.id})`).join('\n')}
 
                     <div>
                       <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                        <span className="text-info">â—</span>
                         National Conferences
                       </h4>
                       <div className="space-y-3">
@@ -769,7 +678,7 @@ ${memberships.map(m => `${m.society} (ID: ${m.id})`).join('\n')}
                               <div>
                                 <p className="font-medium text-foreground">{conf.name}</p>
                                 <p className="text-xs text-muted-foreground">
-                                  {conf.location} â€¢ {conf.size} â€¢ {conf.date}
+                                  {conf.location}  {conf.size} {conf.date}
                                 </p>
                               </div>
                             </div>

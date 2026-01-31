@@ -31,6 +31,8 @@ import {
   PlusCircle,
 } from "lucide-react";
 import { cn } from "@/pages/faculty/lib/utils";
+import { MentorModeToggle } from "@/pages/faculty/components/mentor/MentorModeToggle";
+import { NotificationBell } from "@/pages/faculty/components/notifications/NotificationBell";
 
 interface Student {
   id: string;
@@ -256,12 +258,18 @@ export default function Counseling() {
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
+        className="mb-8 flex items-center justify-between"
       >
-        <h1 className="page-header font-serif">Student Counseling</h1>
-        <p className="text-muted-foreground -mt-4">
-          Guide and support your assigned students
-        </p>
+        <div>
+          <h1 className="page-header font-serif">Student Counseling</h1>
+          <p className="text-muted-foreground -mt-4">
+            Guide and support your assigned students
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <MentorModeToggle />
+          <NotificationBell />
+        </div>
       </motion.div>
 
       {/* Stats Overview */}
@@ -325,7 +333,7 @@ export default function Counseling() {
               </div>
               <div>
                 <h3 className="text-2xl font-bold text-foreground">{sessionStudent.name}</h3>
-                <p className="text-muted-foreground">{sessionStudent.rollNo} â€¢ Semester {sessionStudent.semester}</p>
+                <p className="text-muted-foreground">{sessionStudent.rollNo} Semester {sessionStudent.semester}</p>
               </div>
             </div>
             <Button variant="outline" size="sm" onClick={() => setSessionStudent(null)}>
@@ -429,7 +437,7 @@ export default function Counseling() {
                           </span>
                         </div>
                         <p className="text-sm text-muted-foreground mb-2">
-                          {student.rollNo} â€¢ Sem {student.semester} â€¢ Section {student.section}
+                          {student.rollNo} Sem {student.semester} Section {student.section}
                         </p>
                         <div className="flex gap-4 text-xs">
                           <span className="flex items-center gap-1">
@@ -560,7 +568,7 @@ export default function Counseling() {
                         </span>
                       </div>
                       <p className="text-sm text-muted-foreground mb-3">{record.summary}</p>
-                      
+
                       <div className="mb-3">
                         <p className="text-xs font-medium text-foreground mb-1">Action Items:</p>
                         <ul className="text-xs text-muted-foreground space-y-1">

@@ -48,7 +48,7 @@ export function NextClassCard({ currentClass, nextClass }: NextClassCardProps) {
               </div>
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-primary" />
-                <span>{currentClass.section} â€¢ {currentClass.studentsCount} students</span>
+                <span>{currentClass.section} {currentClass.studentsCount} students</span>
               </div>
             </div>
             <Button className="mt-4 w-full bg-primary hover:bg-primary/90">
@@ -86,7 +86,7 @@ export function NextClassCard({ currentClass, nextClass }: NextClassCardProps) {
               </div>
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-secondary" />
-                <span>{nextClass.section} â€¢ {nextClass.studentsCount} students</span>
+                <span>{nextClass.section} {nextClass.studentsCount} students</span>
               </div>
             </div>
           </div>

@@ -278,11 +278,11 @@ export default function Reports() {
               <div className="p-4 bg-muted/30 rounded-lg">
                 <h4 className="font-semibold text-foreground mb-2">Key Highlights</h4>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>â€¢ Total classes conducted: 42</li>
-                  <li>â€¢ Syllabus coverage: 68% completed</li>
-                  <li>â€¢ Internal assessments: 2 tests, 4 quizzes, 3 assignments</li>
-                  <li>â€¢ Students with shortage: 4 (needs attention)</li>
-                  <li>â€¢ Average class strength: 58 students</li>
+                  <li>Total classes conducted: 42</li>
+                  <li>Syllabus coverage: 68% completed</li>
+                  <li>Internal assessments: 2 tests, 4 quizzes, 3 assignments</li>
+                  <li>Students with shortage: 4 (needs attention)</li>
+                  <li>Average class strength: 58 students</li>
                 </ul>
               </div>
             </div>

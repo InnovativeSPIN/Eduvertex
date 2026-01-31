@@ -15,11 +15,11 @@ import { ExtraCurricularView } from "@/pages/faculty/components/mentor/ExtraCurr
 type TabType = "basic" | "personal" | "parent" | "reference" | "photos";
 
 const tabs: Array<{ id: TabType; label: string; icon: string }> = [
-  { id: "basic", label: "BASIC INFO", icon: "ðŸ“‹" },
-  { id: "personal", label: "PERSONAL INFO", icon: "ðŸ‘¤" },
-  { id: "parent", label: "PARENT INFO", icon: "ðŸ‘¨â€ðŸ‘©â€ðŸ‘§" },
-  { id: "reference", label: "REFERENCE", icon: "ðŸ“ž" },
-  { id: "photos", label: "PHOTOS", icon: "ðŸ“¸" },
+  { id: "basic", label: "BASIC INFO", icon: "" },
+  { id: "personal", label: "PERSONAL INFO", icon: "" },
+  { id: "parent", label: "PARENT INFO", icon: "" },
+  { id: "reference", label: "REFERENCE", icon: "" },
+  { id: "photos", label: "PHOTOS", icon: "" },
 ];
 
 export function StudentProfileView() {
@@ -87,7 +87,7 @@ export function StudentProfileView() {
                       {student.basicInfo.department} | {student.basicInfo.year} Year | Section {student.basicInfo.section}
                     </p>
                     <p className="text-sm text-gray-500 mt-1">
-                      {student.id} â€¢ Roll: {student.basicInfo.rollNumber}
+                      {student.id} Roll: {student.basicInfo.rollNumber}
                     </p>
                   </div>
                 </div>
@@ -208,7 +208,7 @@ export function StudentProfileView() {
                                     <div>
                                       <p className="font-semibold text-gray-800">{change.field}</p>
                                       <p className="text-sm text-gray-600">
-                                        <span className="line-through">{change.oldValue}</span> â†’ <span className="text-blue-600 font-semibold">{change.newValue}</span>
+                                        <span className="line-through">{change.oldValue}</span> <span className="text-blue-600 font-semibold">{change.newValue}</span>
                                       </p>
                                     </div>
                                     <div className="flex gap-2">
@@ -240,7 +240,7 @@ export function StudentProfileView() {
                       {activeTab === "parent" && (
                         <div className="space-y-6">
                           <EditableSection
-                            title="ðŸ‘¨ Father's Information"
+                            title="Father's Information"
                             fields={[
                               { key: "fatherName", label: "Name", value: student.parentInfo.fatherName },
                               { key: "fatherOccupation", label: "Occupation", value: student.parentInfo.fatherOccupation },
@@ -251,7 +251,7 @@ export function StudentProfileView() {
                           />
 
                           <EditableSection
-                            title="ðŸ‘© Mother's Information"
+                            title="Mother's Information"
                             fields={[
                               { key: "motherName", label: "Name", value: student.parentInfo.motherName },
                               { key: "motherOccupation", label: "Occupation", value: student.parentInfo.motherOccupation },
@@ -290,7 +290,7 @@ export function StudentProfileView() {
                             animate={{ opacity: 1, scale: 1 }}
                             className="bg-white rounded-xl shadow-lg p-6"
                           >
-                            <h3 className="text-lg font-bold text-gray-800 mb-4">ðŸ“¸ Student Photo</h3>
+                            <h3 className="text-lg font-bold text-gray-800 mb-4">Student Photo</h3>
                             <motion.img
                               src={student.photos.studentPhoto}
                               alt="Student"
@@ -310,7 +310,7 @@ export function StudentProfileView() {
                             transition={{ delay: 0.1 }}
                             className="bg-white rounded-xl shadow-lg p-6"
                           >
-                            <h3 className="text-lg font-bold text-gray-800 mb-4">ðŸ‘¨â€ðŸ‘©â€ðŸ‘§ Family Photo</h3>
+                            <h3 className="text-lg font-bold text-gray-800 mb-4">Family Photo</h3>
                             <motion.img
                               src={student.photos.familyPhoto}
                               alt="Family"
@@ -346,7 +346,7 @@ export function StudentProfileView() {
                   animate={{ opacity: 1, y: 0 }}
                   className="bg-white rounded-xl shadow-lg p-6"
                 >
-                  <h2 className="text-2xl font-bold text-gray-800 mb-6">ðŸ“„ Student Records</h2>
+                  <h2 className="text-2xl font-bold text-gray-800 mb-6">Student Records</h2>
                   <RecordsView />
                 </motion.div>
               )}
@@ -357,7 +357,7 @@ export function StudentProfileView() {
                   animate={{ opacity: 1, y: 0 }}
                   className="bg-white rounded-xl shadow-lg p-6"
                 >
-                  <h2 className="text-2xl font-bold text-gray-800 mb-6">ðŸ† Extra Curricular Activities</h2>
+                  <h2 className="text-2xl font-bold text-gray-800 mb-6">Extra Curricular Activities</h2>
                   <ExtraCurricularView />
                 </motion.div>
               )}
