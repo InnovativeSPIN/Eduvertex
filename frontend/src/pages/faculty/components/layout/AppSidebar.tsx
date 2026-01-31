@@ -29,7 +29,7 @@ const menuItems = [
   { title: "Leave", url: "/faculty/leave", icon: CalendarDays },
   { title: "Assessments", url: "/faculty/assessments", icon: FileText },
   { title: "Counseling", url: "/faculty/counseling", icon: Users },
-  { title: "Communication", url: "/faculty/communication", icon: MessageSquare },
+  { title: "Announcement", url: "/faculty/communication", icon: MessageSquare },
   { title: "Reports", url: "/faculty/reports", icon: BarChart3 },
 ];
 
@@ -85,6 +85,10 @@ export function AppSidebar() {
                   <span className="text-xs text-white/70 whitespace-nowrap mt-1">
                     Assistant Professor
                   </span>
+                  <span className="text-xs text-white/70 whitespace-nowrap mt-1">
+                    Department of AI & DS
+                  </span>
+                 
                 </div>
               </motion.div>
             )}
