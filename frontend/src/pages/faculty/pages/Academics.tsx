@@ -548,10 +548,7 @@ export default function Academics() {
             <FileUp className="w-4 h-4" />
             Study Materials
           </TabsTrigger>
-          <TabsTrigger value="marks" className="flex items-center gap-2">
-            <ClipboardList className="w-4 h-4" />
-            Internal Marks
-          </TabsTrigger>
+         
           <TabsTrigger value="coursefile" className="flex items-center gap-2">
             <ClipboardList className="w-4 h-4" />
             Course File 
