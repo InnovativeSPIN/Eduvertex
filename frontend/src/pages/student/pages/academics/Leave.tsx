@@ -175,8 +175,8 @@ export default function Leave() {
     }
   };
 
-  const filteredRequests = activeTab === 'all' 
-    ? leaveRequests 
+  const filteredRequests = activeTab === 'all'
+    ? leaveRequests
     : leaveRequests.filter(r => r.status === activeTab);
 
   const stats = {
@@ -191,7 +191,7 @@ export default function Leave() {
         title="Leave Management"
         subtitle="Request and manage your leave"
         breadcrumbs={[
-          { label: 'Academics', path: '/academics/leave' },
+          { label: 'Academics', path: '/student/academics/leave' },
           { label: 'Leave' },
         ]}
         actions={
@@ -249,11 +249,10 @@ export default function Leave() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab as any)}
-            className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
-              activeTab === tab
+            className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${activeTab === tab
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
+              }`}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>

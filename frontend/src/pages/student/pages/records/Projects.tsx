@@ -1,6 +1,5 @@
 ﻿import { useState } from 'react';
 import PageHeader from '@/pages/student/components/layout/PageHeader';
-import SectionCard from '@/pages/student/components/common/SectionCard';
 import Modal from '@/pages/student/components/common/Modal';
 import Badge from '@/pages/student/components/common/Badge';
 import { Plus, ExternalLink, Github, Edit2, Trash2, Image } from 'lucide-react';
@@ -64,7 +63,7 @@ export default function Projects() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.title.trim() || !formData.description.trim()) {
       toast({
         title: 'Validation Error',
@@ -141,7 +140,7 @@ export default function Projects() {
         title="Projects"
         subtitle="Manage your academic and personal projects"
         breadcrumbs={[
-          { label: 'Records', path: '/records/projects' },
+          { label: 'Records', path: '/student/records/projects' },
           { label: 'Projects' },
         ]}
         actions={
@@ -159,7 +158,7 @@ export default function Projects() {
             <div className="h-32 bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
               <Image className="w-12 h-12 text-muted-foreground/50" />
             </div>
-            
+
             <div className="p-5">
               <div className="flex items-start justify-between mb-3">
                 <div>
@@ -243,7 +242,7 @@ export default function Projects() {
               placeholder="Project title"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium mb-2">Description *</label>
             <textarea

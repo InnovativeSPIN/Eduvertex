@@ -7,8 +7,8 @@ interface KnowledgeNavItem {
 }
 
 const knowledgeNavItems: KnowledgeNavItem[] = [
-  { path: '/knowledge/materials', label: 'Materials' },
-  { path: '/knowledge/discussions', label: 'Discussions' },
+  { path: '/student/knowledge/materials', label: 'Materials' },
+  { path: '/student/knowledge/discussions', label: 'Discussions' },
 ];
 
 export default function KnowledgeNavBar() {

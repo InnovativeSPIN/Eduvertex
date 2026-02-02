@@ -7,10 +7,10 @@ interface AcademicsNavItem {
 }
 
 const academicsNavItems: AcademicsNavItem[] = [
-  { path: '/academics/attendance', label: 'Attendance' },
-  { path: '/academics/marks', label: 'Marks' },
-  { path: '/academics/timetable', label: 'Timetable' },
-  { path: '/academics/leave', label: 'Leave' },
+  { path: '/student/academics/attendance', label: 'Attendance' },
+  { path: '/student/academics/marks', label: 'Marks' },
+  { path: '/student/academics/timetable', label: 'Timetable' },
+  { path: '/student/academics/leave', label: 'Leave' },
 ];
 
 export default function AcademicsNavBar() {

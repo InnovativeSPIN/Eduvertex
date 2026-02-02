@@ -43,13 +43,13 @@ export default function Photos() {
     reader.onload = async (event) => {
       // Simulate upload delay
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
+
       if (type === 'student') {
         setStudentPhoto(event.target?.result as string);
       } else {
         setFamilyPhoto(event.target?.result as string);
       }
-      
+
       setUploading(null);
       setPendingRequest(true);
       toast({
@@ -81,8 +81,8 @@ export default function Photos() {
   }
 
   const PhotoUploadCard = ({ title, description, icon: Icon, photo, type }: PhotoUploadCardProps) => (
-    <SectionCard 
-      title={title} 
+    <SectionCard
+      title={title}
       subtitle={description}
       actions={
         <button
@@ -158,7 +158,7 @@ export default function Photos() {
         title="Photos"
         subtitle="Upload and manage your photos"
         breadcrumbs={[
-          { label: 'Profile', path: '/profile/basic' },
+          { label: 'Profile', path: '/student/profile/personal' },
           { label: 'Photos' },
         ]}
       />

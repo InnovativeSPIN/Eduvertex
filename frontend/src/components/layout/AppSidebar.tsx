@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -19,16 +18,16 @@ import {
 import { cn } from "@/lib/utils";
 
 const menuItems = [
-  { title: "Dashboard", url: "/faculty", icon: LayoutDashboard },
-  { title: "Profile", url: "/profile", icon: User },
-  { title: "Timetable", url: "/timetable", icon: Calendar },
-  { title: "Attendance", url: "/attendance", icon: ClipboardCheck },
-  { title: "Academics", url: "/academics", icon: BookOpen },
-  { title: "Leave", url: "/leave", icon: CalendarDays },
-  { title: "Assessments", url: "/assessments", icon: FileText },
-  { title: "Counseling", url: "/counseling", icon: Users },
-  { title: "Communication", url: "/communication", icon: MessageSquare },
-  { title: "Reports", url: "/reports", icon: BarChart3 },
+  { title: "Dashboard", url: "/faculty/dashboard", icon: LayoutDashboard },
+  { title: "Profile", url: "/faculty/profile", icon: User },
+  { title: "Timetable", url: "/faculty/timetable", icon: Calendar },
+  { title: "Attendance", url: "/faculty/attendance", icon: ClipboardCheck },
+  { title: "Academics", url: "/faculty/academics", icon: BookOpen },
+  { title: "Leave", url: "/faculty/leave", icon: CalendarDays },
+  { title: "Assessments", url: "/faculty/assessments", icon: FileText },
+  { title: "Counseling", url: "/faculty/counseling", icon: Users },
+  { title: "Communication", url: "/faculty/communication", icon: MessageSquare },
+  { title: "Reports", url: "/faculty/reports", icon: BarChart3 },
 ];
 
 interface AppSidebarProps {
@@ -77,7 +76,7 @@ export function AppSidebar({ collapsed, setCollapsed }: AppSidebarProps) {
       <nav className="flex-1 py-4 overflow-y-auto">
         <ul className="space-y-1 px-3">
           {menuItems.map((item, index) => {
-            const isActive = location.pathname === item.url;
+            const isActive = location.pathname.startsWith(item.url);
             return (
               <motion.li
                 key={item.title}

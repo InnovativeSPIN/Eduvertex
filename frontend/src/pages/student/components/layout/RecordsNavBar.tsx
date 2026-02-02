@@ -7,7 +7,7 @@ interface RecordsNavItem {
 }
 
 const recordsNavItems: RecordsNavItem[] = [
-  { path: '/records/certifications', label: 'Certifications' },
+  { path: '/student/records/certifications', label: 'Certifications' },
 ];
 
 export default function RecordsNavBar() {

@@ -67,19 +67,18 @@ export default function Disciplinary() {
         title="Disciplinary Records"
         subtitle="View your disciplinary history"
         breadcrumbs={[
-          { label: 'Records', path: '/records/disciplinary' },
+          { label: 'Records', path: '/student/records/disciplinary' },
           { label: 'Disciplinary' },
         ]}
       />
 
       {/* Status Banner */}
-      <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
-        !hasRecords 
-          ? 'bg-success/10 border border-success/20' 
-          : allResolved 
+      <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${!hasRecords
+          ? 'bg-success/10 border border-success/20'
+          : allResolved
             ? 'bg-warning/10 border border-warning/20'
             : 'bg-destructive/10 border border-destructive/20'
-      }`}>
+        }`}>
         {!hasRecords ? (
           <>
             <CheckCircle className="w-5 h-5 text-success" />
@@ -111,8 +110,8 @@ export default function Disciplinary() {
       {hasRecords ? (
         <div className="space-y-4">
           {disciplinaryRecords.map((record, index) => (
-            <SectionCard 
-              key={record.id} 
+            <SectionCard
+              key={record.id}
               title={`Record #${disciplinaryRecords.length - index}`}
               actions={
                 <Badge variant={record.resolved ? 'success' : 'danger'}>
@@ -175,7 +174,7 @@ export default function Disciplinary() {
       {/* Disclaimer */}
       <div className="mt-6 p-4 rounded-lg bg-muted/30 text-sm text-muted-foreground">
         <p>
-          <strong>Note:</strong> This page displays read-only information. If you believe any record is incorrect, 
+          <strong>Note:</strong> This page displays read-only information. If you believe any record is incorrect,
           please contact the Student Affairs Office for clarification.
         </p>
       </div>

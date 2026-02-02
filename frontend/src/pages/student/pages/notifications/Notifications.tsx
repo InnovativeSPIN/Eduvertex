@@ -69,7 +69,7 @@ export default function Notifications() {
         title="Notifications"
         subtitle="Manage and review your notifications"
         breadcrumbs={[
-          { label: "Dashboard", path: "/dashboard" },
+          { label: "Dashboard", path: "/student/dashboard" },
           { label: "Notifications" },
         ]}
         actions={

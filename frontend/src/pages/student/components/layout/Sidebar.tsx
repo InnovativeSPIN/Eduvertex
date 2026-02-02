@@ -5,9 +5,7 @@ import {
   LayoutDashboard,
   User,
   GraduationCap,
-  FolderOpen,
   BookOpen,
-  Bell,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -15,8 +13,6 @@ import {
   Award,
   FileText,
   MessageSquare,
-  Users,
-  AlertTriangle,
   Megaphone,
   Zap,
 } from 'lucide-react';
@@ -64,9 +60,22 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const { logout, user } = useAuth();
   const [expandedSection, setExpandedSection] = useState<string | null>('profile');
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => {
+    if (path === '/student/dashboard') {
+      return location.pathname === path;
+    }
+    // For other paths, check if the current pathname starts with the base path
+    // e.g., if path is /student/profile/personal, match if starts with /student/profile
+    const segments = path.split('/');
+    if (segments.length >= 3) {
+      const base = `/${segments[1]}/${segments[2]}`;
+      return location.pathname.startsWith(base);
+    }
+    return location.pathname.startsWith(path);
+  };
+
   const isSectionActive = (items: typeof profileNavItems) =>
-    items.some(item => location.pathname === item.path);
+    items.some(item => isActive(item.path));
 
   const toggleSection = (section: string) => {
     setExpandedSection(expandedSection === section ? null : section);

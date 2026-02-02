@@ -7,10 +7,10 @@ interface ProfileNavItem {
 }
 
 const profileNavItems: ProfileNavItem[] = [
-  { path: '/profile/personal', label: 'Personal Info' },
-  { path: '/profile/parent', label: 'Parent Info' },
-  { path: '/profile/reference', label: 'Reference' },
-  { path: '/profile/photos', label: 'Photos' },
+  { path: '/student/profile/personal', label: 'Personal Info' },
+  { path: '/student/profile/parent', label: 'Parent Info' },
+  { path: '/student/profile/reference', label: 'Reference' },
+  { path: '/student/profile/photos', label: 'Photos' },
 ];
 
 export default function ProfileNavBar() {

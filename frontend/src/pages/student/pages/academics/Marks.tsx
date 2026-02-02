@@ -80,7 +80,7 @@ function getGradeVariant(grade: string): 'success' | 'warning' | 'danger' | 'inf
 export default function Marks() {
   const [selectedSemester, setSelectedSemester] = useState<number>(5);
   const data = marksData[selectedSemester as keyof typeof marksData] || marksData[5];
-  
+
   const totalMarks = data.subjects.reduce((sum, s) => sum + s.total, 0);
   const maxMarks = data.subjects.length * 100;
   const overallPercentage = ((totalMarks / maxMarks) * 100).toFixed(1);
@@ -91,7 +91,7 @@ export default function Marks() {
         title="Marks"
         subtitle="View your examination results"
         breadcrumbs={[
-          { label: 'Academics', path: '/academics/marks' },
+          { label: 'Academics', path: '/student/academics/marks' },
           { label: 'Marks' },
         ]}
         actions={

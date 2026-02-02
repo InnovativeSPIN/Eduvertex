@@ -170,9 +170,9 @@ export default function PersonalInfo() {
         title="Personal Information"
         subtitle="Manage your contact details"
         breadcrumbs={[
-              { label: 'Profile', path: '/profile/personal' },
-              { label: 'Personal Info' },
-            ]}
+          { label: 'Profile', path: '/student/profile/personal' },
+          { label: 'Personal Info' },
+        ]}
 
       />
 
@@ -223,82 +223,82 @@ export default function PersonalInfo() {
       )}
 
       {/* Personal Details */}
-      <SectionCard 
-          title="Personal Details"
-          subtitle="Manage your personal, contact, and address information"
-          actions={
-            <button
-              onClick={() => setIsEditing(!isEditing)}
-              disabled={pendingRequest}
-              className="p-2 rounded-lg hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title={isEditing ? 'Cancel' : 'Edit'}
-            >
-              {isEditing ? <X className="w-5 h-5" /> : <Edit className="w-5 h-5" />}
-            </button>
-          }
-        >
-          {/* Admission details */}
+      <SectionCard
+        title="Personal Details"
+        subtitle="Manage your personal, contact, and address information"
+        actions={
+          <button
+            onClick={() => setIsEditing(!isEditing)}
+            disabled={pendingRequest}
+            className="p-2 rounded-lg hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title={isEditing ? 'Cancel' : 'Edit'}
+          >
+            {isEditing ? <X className="w-5 h-5" /> : <Edit className="w-5 h-5" />}
+          </button>
+        }
+      >
+        {/* Admission details */}
+        <div className="grid gap-4 sm:grid-cols-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">
+              Admission Number
+            </label>
+            <p className="text-base font-semibold text-slate-900">
+              {personalData.admissionNo}
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">
+              Batch
+            </label>
+            <p className="text-base font-semibold text-slate-900">
+              {personalData.batch}
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">
+              Admission Date
+            </label>
+            <p className="text-base font-semibold text-slate-900">
+              {personalData.admissionDate}
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">
+              Nature of Residence
+            </label>
+            <p className="text-base font-semibold text-slate-900">
+              {personalData.residenceType}
+            </p>
+          </div>
+        </div> <br />
+
+        <div className="space-y-6">
+          {/* Core personal details (read-only) */}
           <div className="grid gap-4 sm:grid-cols-4">
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">
-                Admission Number
-              </label>
-              <p className="text-base font-semibold text-slate-900">
-                {personalData.admissionNo}
-              </p>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Date of Birth</label>
+              <p className="text-base font-semibold text-slate-900">{personalData.dob}</p>
             </div>
-
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">
-                Batch
-              </label>
-              <p className="text-base font-semibold text-slate-900">
-                {personalData.batch}
-              </p>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Gender</label>
+              <p className="text-base font-semibold text-slate-900">{personalData.gender}</p>
             </div>
-
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">
-                Admission Date
-              </label>
-              <p className="text-base font-semibold text-slate-900">
-                {personalData.admissionDate}
-              </p>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Blood Group</label>
+              <p className="text-base font-semibold text-slate-900">{personalData.bloodGroup}</p>
             </div>
-
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">
-                Nature of Residence
-              </label>
-              <p className="text-base font-semibold text-slate-900">
-                {personalData.residenceType}
-              </p>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Mother Tongue</label>
+              <p className="text-base font-semibold text-slate-900">{personalData.motherTongue}</p>
             </div>
-          </div> <br /> 
+          </div>
 
-          <div className="space-y-6">
-            {/* Core personal details (read-only) */}
-            <div className="grid gap-4 sm:grid-cols-4">
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Date of Birth</label>
-                <p className="text-base font-semibold text-slate-900">{personalData.dob}</p>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Gender</label>
-                <p className="text-base font-semibold text-slate-900">{personalData.gender}</p>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Blood Group</label>
-                <p className="text-base font-semibold text-slate-900">{personalData.bloodGroup}</p>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Mother Tongue</label>
-                <p className="text-base font-semibold text-slate-900">{personalData.motherTongue}</p>
-              </div>
-            </div>
-
-            {/* Contact information (editable) */}
-            <div className="space-y-4">
+          {/* Contact information (editable) */}
+          <div className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-2">Email Address</label>
               {isEditing ? (
@@ -325,93 +325,93 @@ export default function PersonalInfo() {
                 <p className="py-2.5 text-base font-semibold text-slate-900">{formData.linkedinUrl}</p>
               )}
             </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-2">Mobile Number</label>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-2">Mobile Number</label>
+                {isEditing ? (
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="input-field"
+                  />
+                ) : (
+                  <p className="py-2.5 text-base font-semibold text-slate-900">{formData.phone}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-2">Alternate Mobile Number</label>
+                {isEditing ? (
+                  <input
+                    type="tel"
+                    value={formData.alternatePhone}
+                    onChange={(e) => setFormData({ ...formData, alternatePhone: e.target.value })}
+                    className="input-field"
+                  />
+                ) : (
+                  <p className="py-2.5 text-base font-semibold text-slate-900">{formData.alternatePhone}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Address details (editable) */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-medium text-gray-500 mb-2">Street Address</label>
               {isEditing ? (
                 <input
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  type="text"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   className="input-field"
                 />
               ) : (
-                <p className="py-2.5 text-base font-semibold text-slate-900">{formData.phone}</p>
+                <p className="py-2.5 text-base font-semibold text-slate-900">{formData.address}</p>
               )}
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-2">Alternate Mobile Number</label>
-                  {isEditing ? (
-                    <input
-                      type="tel"
-                      value={formData.alternatePhone}
-                      onChange={(e) => setFormData({ ...formData, alternatePhone: e.target.value })}
-                      className="input-field"
-                    />
-                  ) : (
-                    <p className="py-2.5 text-base font-semibold text-slate-900">{formData.alternatePhone}</p>
-                  )}
-                </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-2">City</label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  className="input-field"
+                />
+              ) : (
+                <p className="py-2.5 text-base font-semibold text-slate-900">{formData.city}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-2">State</label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={formData.state}
+                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                  className="input-field"
+                />
+              ) : (
+                <p className="py-2.5 text-base font-semibold text-slate-900">{formData.state}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-2">Pin Code</label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={formData.pincode}
+                  onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
+                  className="input-field"
+                />
+              ) : (
+                <p className="py-2.5 text-base font-semibold text-slate-900">{formData.pincode}</p>
+              )}
             </div>
           </div>
 
-            {/* Address details (editable) */}
-          <div className="grid gap-4 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-medium text-gray-500 mb-2">Street Address</label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="input-field"
-                  />
-                ) : (
-                  <p className="py-2.5 text-base font-semibold text-slate-900">{formData.address}</p>
-                )}
-            </div>
-            <div>
-                <label className="block text-xs font-medium text-gray-500 mb-2">City</label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    className="input-field"
-                  />
-                ) : (
-                  <p className="py-2.5 text-base font-semibold text-slate-900">{formData.city}</p>
-                )}
-            </div>
-            <div>
-                <label className="block text-xs font-medium text-gray-500 mb-2">State</label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={formData.state}
-                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                    className="input-field"
-                  />
-                ) : (
-                  <p className="py-2.5 text-base font-semibold text-slate-900">{formData.state}</p>
-                )}
-            </div>
-            <div>
-                <label className="block text-xs font-medium text-gray-500 mb-2">Pin Code</label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={formData.pincode}
-                    onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
-                    className="input-field"
-                  />
-                ) : (
-                  <p className="py-2.5 text-base font-semibold text-slate-900">{formData.pincode}</p>
-                )}
-            </div>
-          </div>
-
-            {/* Other details (read-only) */}
+          {/* Other details (read-only) */}
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1">Nationality</label>
@@ -428,33 +428,33 @@ export default function PersonalInfo() {
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1">Aadhar Number</label>
               <p className="text-base font-semibold text-slate-900">{personalData.aadharNo}</p>
-              </div>
             </div>
-
-            {/* Action buttons */}
-            {isEditing && (
-              <div className="flex gap-3 pt-6 border-t border-border mt-6">
-                <button
-                  onClick={handleCancel}
-                  disabled={isSaving}
-                  className="flex-1 px-4 py-2 rounded-lg border border-border hover:bg-muted transition-colors disabled:opacity-50"
-                >
-                  <X className="w-4 h-4 inline mr-2" />
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={isSaving || pendingRequest}
-                  className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  <Save className="w-4 h-4" />
-                  {isSaving ? 'Saving...' : 'Save Changes'}
-                </button>
-              </div>
-            )}
           </div>
-        </SectionCard>
-      </div>
+
+          {/* Action buttons */}
+          {isEditing && (
+            <div className="flex gap-3 pt-6 border-t border-border mt-6">
+              <button
+                onClick={handleCancel}
+                disabled={isSaving}
+                className="flex-1 px-4 py-2 rounded-lg border border-border hover:bg-muted transition-colors disabled:opacity-50"
+              >
+                <X className="w-4 h-4 inline mr-2" />
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={isSaving || pendingRequest}
+                className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                <Save className="w-4 h-4" />
+                {isSaving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          )}
+        </div>
+      </SectionCard>
+    </div>
   ); // missing closing parenthesis for the div tag
 }
 

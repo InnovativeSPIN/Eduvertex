@@ -115,7 +115,7 @@ export default function Announcements() {
         title="Announcements"
         subtitle="Stay updated with the latest announcements"
         breadcrumbs={[
-          { label: 'Dashboard', path: '/dashboard' },
+          { label: 'Dashboard', path: '/student/dashboard' },
           { label: 'Announcements' },
         ]}
         actions={
@@ -161,22 +161,19 @@ export default function Announcements() {
               return (
                 <div
                   key={announcement.id}
-                  className={`p-4 rounded-lg border transition-all ${
-                    announcement.isRead
+                  className={`p-4 rounded-lg border transition-all ${announcement.isRead
                       ? 'border-border/50 bg-muted/30'
                       : 'border-primary/30 bg-primary/5'
-                  } hover:border-border`}
+                    } hover:border-border`}
                 >
                   <div className="flex items-start gap-4">
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        announcement.isRead ? 'bg-muted' : 'bg-primary/10'
-                      }`}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${announcement.isRead ? 'bg-muted' : 'bg-primary/10'
+                        }`}
                     >
                       <IconComponent
-                        className={`w-5 h-5 ${
-                          announcement.isRead ? 'text-muted-foreground' : 'text-primary'
-                        }`}
+                        className={`w-5 h-5 ${announcement.isRead ? 'text-muted-foreground' : 'text-primary'
+                          }`}
                       />
                     </div>
 

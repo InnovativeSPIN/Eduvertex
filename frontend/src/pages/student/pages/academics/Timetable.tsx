@@ -9,7 +9,7 @@ export default function Timetable() {
         title="Timetable"
         subtitle=""
         breadcrumbs={[
-          { label: 'Academics', path: '/academics/timetable' },
+          { label: 'Academics', path: '/student/academics/timetable' },
           { label: 'Timetable' },
         ]}
       />

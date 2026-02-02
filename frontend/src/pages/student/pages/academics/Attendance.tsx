@@ -34,7 +34,7 @@ const attendanceData = {
 export default function Attendance() {
   const [selectedSemester, setSelectedSemester] = useState<number>(5);
   const data = attendanceData[selectedSemester as keyof typeof attendanceData] || attendanceData[5];
-  
+
   const overallPercentage = calculateAttendancePercentage(data.overall.attended, data.overall.total);
   const overallStatus = getAttendanceStatus(overallPercentage);
 
@@ -48,7 +48,7 @@ export default function Attendance() {
         title="Attendance"
         subtitle="View your attendance records by semester"
         breadcrumbs={[
-          { label: 'Academics', path: '/academics/attendance' },
+          { label: 'Academics', path: '/student/academics/attendance' },
           { label: 'Attendance' },
         ]}
         actions={
@@ -169,7 +169,7 @@ export default function Attendance() {
           {data.subjects.map((subject) => {
             const percentage = calculateAttendancePercentage(subject.attended, subject.total);
             const status = getAttendanceStatus(percentage);
-            
+
             return (
               <div key={subject.code} className="p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
                 <div className="flex items-center justify-between mb-2">

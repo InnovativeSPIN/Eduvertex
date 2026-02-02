@@ -1,6 +1,5 @@
 ﻿import { useState } from 'react';
 import PageHeader from '@/pages/student/components/layout/PageHeader';
-import SectionCard from '@/pages/student/components/common/SectionCard';
 import Modal from '@/pages/student/components/common/Modal';
 import Badge from '@/pages/student/components/common/Badge';
 import KnowledgeNavBar from '@/pages/student/components/layout/KnowledgeNavBar';
@@ -97,7 +96,7 @@ export default function Discussions() {
 
   const handleNewPost = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!newPost.title.trim() || !newPost.content.trim()) {
       toast({
         title: 'Validation Error',
@@ -136,8 +135,8 @@ export default function Discussions() {
       likes: 0,
     };
 
-    setDiscussions(discussions.map(d => 
-      d.id === discussionId 
+    setDiscussions(discussions.map(d =>
+      d.id === discussionId
         ? { ...d, replies: [...d.replies, newReply] }
         : d
     ));
@@ -161,7 +160,7 @@ export default function Discussions() {
         title="Discussions"
         subtitle="Ask questions and share knowledge"
         breadcrumbs={[
-          { label: 'Knowledge', path: '/knowledge/discussions' },
+          { label: 'Knowledge', path: '/student/knowledge/discussions' },
           { label: 'Discussions' },
         ]}
         actions={
@@ -180,7 +179,7 @@ export default function Discussions() {
           <div key={discussion.id} className="section-card p-6 hover:shadow-lg transition-shadow">
             <div className="flex items-start justify-between mb-3">
               <div>
-                <h3 
+                <h3
                   className="font-semibold text-lg hover:text-primary cursor-pointer"
                   onClick={() => setSelectedDiscussion(discussion)}
                 >
@@ -207,7 +206,7 @@ export default function Discussions() {
                 <ThumbsUp className="w-4 h-4" />
                 {discussion.likes}
               </button>
-              <button 
+              <button
                 onClick={() => setSelectedDiscussion(discussion)}
                 className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
@@ -290,7 +289,7 @@ export default function Discussions() {
 
             <div className="border-t border-border pt-4">
               <h4 className="font-medium mb-4">Replies ({selectedDiscussion.replies.length})</h4>
-              
+
               {selectedDiscussion.replies.length > 0 ? (
                 <div className="space-y-4 mb-4">
                   {selectedDiscussion.replies.map((reply) => (

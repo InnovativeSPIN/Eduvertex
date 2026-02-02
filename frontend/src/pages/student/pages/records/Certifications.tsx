@@ -1,10 +1,9 @@
 ﻿import { useState } from 'react';
 import PageHeader from '@/pages/student/components/layout/PageHeader';
-import SectionCard from '@/pages/student/components/common/SectionCard';
 import Modal from '@/pages/student/components/common/Modal';
 import Badge from '@/pages/student/components/common/Badge';
 import RecordsNavBar from '@/pages/student/components/layout/RecordsNavBar';
-import { Plus, ExternalLink, Award, Trash2, Calendar } from 'lucide-react';
+import { Plus, ExternalLink, Award, Trash2, Calendar, Edit2 } from 'lucide-react';
 import { useToast } from '@/pages/student/hooks/use-toast';
 import { formatDate } from '@/pages/student/utils/formatDate';
 
@@ -65,7 +64,7 @@ export default function Certifications() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name.trim() || !formData.issuer.trim() || !formData.issueDate) {
       toast({
         title: 'Validation Error',
@@ -141,7 +140,7 @@ export default function Certifications() {
         title="Certifications"
         subtitle="Manage your professional certifications"
         breadcrumbs={[
-          { label: 'Records', path: '/records/certifications' },
+          { label: 'Records', path: '/student/records/certifications' },
           { label: 'Certifications' },
         ]}
         actions={
@@ -161,7 +160,7 @@ export default function Certifications() {
               <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center flex-shrink-0">
                 <Award className="w-7 h-7 text-primary" />
               </div>
-              
+
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between">
                   <div>
@@ -169,6 +168,12 @@ export default function Certifications() {
                     <p className="text-muted-foreground">{cert.issuer}</p>
                   </div>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => handleEdit(cert)}
+                      className="p-2 rounded-lg hover:bg-muted transition-colors"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={() => handleDelete(cert.id)}
                       className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
@@ -242,7 +247,7 @@ export default function Certifications() {
               placeholder="e.g., AWS Certified Cloud Practitioner"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium mb-2">Issuing Organization *</label>
             <input

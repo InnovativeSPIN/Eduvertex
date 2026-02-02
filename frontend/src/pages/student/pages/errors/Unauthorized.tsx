@@ -13,9 +13,9 @@ export default function Unauthorized() {
           You don't have permission to access this page. Please log in with appropriate credentials.
         </p>
         <div className="flex items-center justify-center gap-4">
-          <Link to="/" className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border hover:bg-muted transition-colors">
+          <Link to="/student/dashboard" className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border hover:bg-muted transition-colors">
             <ArrowLeft className="w-4 h-4" />
-            Go Home
+            Back to Dashboard
           </Link>
           <Link to="/login" className="btn-primary flex items-center gap-2">
             <LogIn className="w-4 h-4" />

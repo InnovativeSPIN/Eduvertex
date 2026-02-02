@@ -4,7 +4,6 @@ import SectionCard from '@/pages/student/components/common/SectionCard';
 import Badge from '@/pages/student/components/common/Badge';
 import KnowledgeNavBar from '@/pages/student/components/layout/KnowledgeNavBar';
 import { Search, FileText, Filter, BookOpen, File, Presentation, ExternalLink } from 'lucide-react';
-import { formatDate } from '@/pages/student/utils/formatDate';
 
 interface Material {
   id: string;
@@ -107,7 +106,7 @@ export default function Materials() {
 
   const filteredMaterials = materials.filter(material => {
     const matchesSearch = material.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         material.description.toLowerCase().includes(searchQuery.toLowerCase());
+      material.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesSubject = selectedSubject === 'All' || material.subject === selectedSubject;
     return matchesSearch && matchesSubject;
   });
@@ -118,7 +117,7 @@ export default function Materials() {
         title="Study Materials"
         subtitle="Access study materials and resources"
         breadcrumbs={[
-          { label: 'Knowledge', path: '/knowledge/materials' },
+          { label: 'Knowledge', path: '/student/knowledge/materials' },
           { label: 'Materials' },
         ]}
       />
@@ -156,7 +155,7 @@ export default function Materials() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredMaterials.map((material) => {
             const TypeIcon = getTypeIcon(material.type);
-            
+
             return (
               <div key={material.id} className="section-card p-5 hover:shadow-lg transition-shadow group">
                 <div className="flex items-start gap-4">

@@ -1,4 +1,4 @@
-﻿import { useLocation, Navigate } from 'react-router-dom';
+﻿import { useLocation } from 'react-router-dom';
 import PageHeader from '@/pages/student/components/layout/PageHeader';
 import ExtraactivityNavBar from '@/pages/student/components/layout/ExtraactivityNavBar';
 import Sports from './Sports';
@@ -9,10 +9,10 @@ export default function Extracurricular() {
 
   // Determine which sub-page to show based on current path
   const getContent = () => {
-    if (location.pathname === '/extracurricular/events') {
+    if (location.pathname === '/student/extracurricular/events') {
       return <Events />;
     }
-    if (location.pathname === '/extracurricular/sports') {
+    if (location.pathname === '/student/extracurricular/sports') {
       return <Sports />;
     }
     // Default to Sports if at /extracurricular
@@ -25,7 +25,7 @@ export default function Extracurricular() {
         title="Extra-curricular Activity"
         subtitle="Participate in sports and events"
         breadcrumbs={[
-          { label: 'Extra-curricular', path: '/extracurricular/sports' },
+          { label: 'Extra-curricular', path: '/student/extracurricular/sports' },
         ]}
       />
 

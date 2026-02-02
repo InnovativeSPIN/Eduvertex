@@ -14,7 +14,6 @@ import {
   BarChart3,
   ChevronLeft,
   ChevronRight,
-  GraduationCap,
   Users,
   LogOut,
 } from "lucide-react";
@@ -88,7 +87,7 @@ export function AppSidebar() {
                   <span className="text-xs text-white/70 whitespace-nowrap mt-1">
                     Department of AI & DS
                   </span>
-                 
+
                 </div>
               </motion.div>
             )}
@@ -100,7 +99,7 @@ export function AppSidebar() {
       <nav className="flex-1 py-4 overflow-y-auto">
         <ul className="space-y-1 px-3">
           {menuItems.map((item, index) => {
-            const isActive = location.pathname === item.url;
+            const isActive = location.pathname.startsWith(item.url);
             return (
               <motion.li
                 key={item.title}

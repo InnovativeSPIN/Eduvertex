@@ -7,8 +7,8 @@ interface ExtraactivityNavItem {
 }
 
 const extraactivityNavItems: ExtraactivityNavItem[] = [
-  { path: '/extracurricular/sports', label: 'Sports' },
-  { path: '/extracurricular/events', label: 'Events' },
+  { path: '/student/extracurricular/sports', label: 'Sports' },
+  { path: '/student/extracurricular/events', label: 'Events' },
 ];
 
 export default function ExtraactivityNavBar() {

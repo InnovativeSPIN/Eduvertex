@@ -2,7 +2,7 @@
 import PageHeader from '@/pages/student/components/layout/PageHeader';
 import SectionCard from '@/pages/student/components/common/SectionCard';
 import ProfileNavBar from '@/pages/student/components/layout/ProfileNavBar';
-import { User, Phone, Briefcase, Users, Edit, Save, X, Clock } from 'lucide-react';
+import { User, Phone, Briefcase, Users, Edit, Clock } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/pages/student/components/ui/dialog';
 import { useToast } from '@/pages/student/hooks/use-toast';
 
@@ -126,7 +126,7 @@ export default function ParentInfo() {
   const handleSaveDialog = async () => {
     setIsSaving(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     if (editingSiblingIndex !== null) {
       const updatedSiblings = [...siblings];
       updatedSiblings[editingSiblingIndex] = {
@@ -239,7 +239,7 @@ export default function ParentInfo() {
         title="Parent Information"
         subtitle="Family and guardian details"
         breadcrumbs={[
-          { label: 'Profile', path: '/profile/basic' },
+          { label: 'Profile', path: '/student/profile/personal' },
           { label: 'Parent Info' },
         ]}
       />
@@ -260,7 +260,7 @@ export default function ParentInfo() {
           </div>
         )}
 
-        <SectionCard 
+        <SectionCard
           title="Parent & Guardian Details"
         >
           <div className="space-y-8">
@@ -463,10 +463,10 @@ export default function ParentInfo() {
                 {editingSiblingIndex !== null
                   ? `Edit ${siblings[editingSiblingIndex]?.name || 'Sibling'}`
                   : editingParent === 'father'
-                  ? "Edit Father's Information"
-                  : editingParent === 'mother'
-                  ? "Edit Mother's Information"
-                  : "Edit Guardian's Information"}
+                    ? "Edit Father's Information"
+                    : editingParent === 'mother'
+                      ? "Edit Mother's Information"
+                      : "Edit Guardian's Information"}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">

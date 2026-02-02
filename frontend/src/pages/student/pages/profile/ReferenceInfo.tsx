@@ -117,13 +117,13 @@ export default function ReferenceInfo() {
       setReferenceList(referenceList.map(ref =>
         ref.id === editingId
           ? {
-              ...ref,
-              name: formData.name,
-              relation: formData.relationship,
-              phone: `${formData.countryCode} ${formData.phone}`,
-              address: formData.address,
-              occupation: formData.occupation,
-            }
+            ...ref,
+            name: formData.name,
+            relation: formData.relationship,
+            phone: `${formData.countryCode} ${formData.phone}`,
+            address: formData.address,
+            occupation: formData.occupation,
+          }
           : ref
       ));
       setIsSaving(false);
@@ -173,7 +173,7 @@ export default function ReferenceInfo() {
   const handleEditClick = (reference: typeof referenceList[0]) => {
     const [countryCode, ...phoneParts] = reference.phone.split(' ');
     const phone = phoneParts.join(' ');
-    
+
     setEditingId(reference.id);
     setFormData({
       name: reference.name,
@@ -215,7 +215,7 @@ export default function ReferenceInfo() {
         title="Reference and Relatives in this Institution"
         subtitle="Emergency contacts and references"
         breadcrumbs={[
-          { label: 'Profile', path: '/profile/basic' },
+          { label: 'Profile', path: '/student/profile/personal' },
           { label: 'References' },
         ]}
       />
@@ -274,7 +274,7 @@ export default function ReferenceInfo() {
         ) : (
           filtered.map((ref, index) => (
             <div key={ref.id} className="relative">
-              <SectionCard 
+              <SectionCard
                 title={`${ref.type === 'references' ? 'Reference' : 'Relative'} ${index + 1}`}
                 actions={
                   <div className="flex gap-2">
@@ -297,26 +297,26 @@ export default function ReferenceInfo() {
                   </div>
                 }
               >
-              <div className="flex items-start gap-4 mb-4">
-                <div className="w-12 h-12 rounded-full bg-secondary/20 flex items-center justify-center">
-                  <User className="w-6 h-6 text-secondary" />
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-secondary/20 flex items-center justify-center">
+                    <User className="w-6 h-6 text-secondary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">{ref.name}</h3>
+                    <p className="text-sm text-muted-foreground">{ref.relation} â€¢ {ref.occupation}</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold">{ref.name}</h3>
-                  <p className="text-sm text-muted-foreground">{ref.relation} â€¢ {ref.occupation}</p>
-                </div>
-              </div>
 
-              <div className="grid gap-3">
-                <div className="flex items-center gap-3 text-sm">
-                  <Phone className="w-4 h-4 text-muted-foreground" />
-                  <span>{ref.phone}</span>
+                <div className="grid gap-3">
+                  <div className="flex items-center gap-3 text-sm">
+                    <Phone className="w-4 h-4 text-muted-foreground" />
+                    <span>{ref.phone}</span>
+                  </div>
+                  <div className="flex items-start gap-3 text-sm">
+                    <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
+                    <span>{ref.address}</span>
+                  </div>
                 </div>
-                <div className="flex items-start gap-3 text-sm">
-                  <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
-                  <span>{ref.address}</span>
-                </div>
-              </div>
               </SectionCard>
             </div>
           ))
