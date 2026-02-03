@@ -1,4 +1,5 @@
 ﻿import { useState, useRef } from "react";
+import { toast } from "@/pages/faculty/hooks/use-toast";
 import { MainLayout } from "@/pages/faculty/components/layout/MainLayout";
 import { motion } from "framer-motion";
 import { Button } from "@/pages/faculty/components/ui/button";
@@ -25,7 +26,7 @@ import {
 } from "lucide-react";
 
 // Faculty data based on the Self-Appraisal Form
-const facultyData = {
+const initialFacultyData = {
   // Basic Information
   name: "C.Prathap",
   employeeId: "FAC2023045",
@@ -68,35 +69,46 @@ const educationalQualifications = [
   },
 ];
 
-// Experience Details
-const experienceDetails = [
+// Experience Details (split into teaching and industry)
+const teachingExperience = [
   {
-    position: "Assistant Professor",
+    designation: "Assistant Professor",
     institution: "Nadar Saraswathi College of Engineering and Technology, Theni",
+    department: "Artificial Intelligence and Data Science",
     from: "01.09.2023",
     to: "Present",
     period: "1 Yr 1 M",
+    current: true,
   },
   {
-    position: "Assistant Professor",
+    designation: "Assistant Professor",
     institution: "AAA College of Engineering and Technology, Sivakasi",
+    department: "Artificial Intelligence and Data Science",
     from: "15.08.2021",
     to: "31.05.2023",
     period: "1 Yr 10 M",
+    current: false,
   },
   {
-    position: "Assistant Professor",
+    designation: "Assistant Professor",
     institution: "Ultra College of Engineering and Technology, Madurai",
+    department: "Artificial Intelligence and Data Science",
     from: "21.09.2020",
     to: "20.07.2021",
     period: "10 M",
+    current: false,
   },
+];
+
+const industryExperience = [
   {
-    position: "Front End Developer and Instructor",
-    institution: "Azhimat, Chennai",
+    jobTitle: "Front End Developer and Instructor",
+    company: "Azhimat, Chennai",
+    location: "Chennai",
     from: "01.06.2019",
     to: "30.08.2020",
     period: "1 Yr 2 M",
+    current: false,
   },
 ];
 
@@ -157,6 +169,69 @@ const conferencesNational = [
 export default function Profile() {
   const [selectedCategory, setSelectedCategory] = useState("certificates");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [facultyData, setFacultyData] = useState(initialFacultyData);
+  const [editMode, setEditMode] = useState(false);
+  const [editFields, setEditFields] = useState({ ...initialFacultyData });
+  const [errors, setErrors] = useState({ email: '', phone: '' });
+  const [loading, setLoading] = useState(false);
+
+  function validateEmail(email: string) {
+    return /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email);
+  }
+  function validatePhone(phone: string) {
+    return /^(\+91[\s-]?)?[6-9]\d{9}$/.test(phone.replace(/\D/g, ''));
+  }
+
+  const handleEdit = () => {
+    setEditFields({ ...facultyData });
+    setErrors({ email: '', phone: '' });
+    setEditMode(true);
+  };
+
+  const handleFieldChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditFields((prev) => ({ ...prev, [name]: value }));
+    if (name === 'email') {
+      setErrors((prev) => ({ ...prev, email: validateEmail(value) ? '' : 'Invalid email format' }));
+    }
+    if (name === 'phone') {
+      setErrors((prev) => ({ ...prev, phone: validatePhone(value) ? '' : 'Invalid phone number' }));
+    }
+  };
+
+
+
+  const handleSave = async () => {
+    const emailValid = validateEmail(editFields.email);
+    const phoneValid = validatePhone(editFields.phone);
+    setErrors({
+      email: emailValid ? '' : 'Invalid email format',
+      phone: phoneValid ? '' : 'Invalid phone number',
+    });
+    if (!emailValid || !phoneValid) return;
+    setLoading(true);
+    // Simulate API call
+    setTimeout(() => {
+      setFacultyData((prev) => ({
+        ...prev,
+        college: editFields.college,
+        dateOfJoining: editFields.dateOfJoining,
+        email: editFields.email,
+        phone: editFields.phone,
+        address: editFields.address,
+        dateOfBirth: editFields.dateOfBirth,
+        age: editFields.age,
+      }));
+      setEditMode(false);
+      setLoading(false);
+      toast({ title: 'Profile updated', description: 'Your profile was updated successfully.' });
+    }, 1000);
+  };
+
+  const handleCancel = () => {
+    setEditMode(false);
+    setErrors({ email: '', phone: '' });
+  };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -259,69 +334,157 @@ ${memberships.map(m => `${m.society} (ID: ${m.id})`).join('\n')}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="widget-card lg:col-span-1"
+          className="widget-card lg:col-span-1 relative"
         >
+          {/* Edit icon */}
+          {!editMode && (
+            <button
+              className="absolute top-3 right-3 p-1 rounded hover:bg-muted transition"
+              title="Edit Profile"
+              onClick={handleEdit}
+              aria-label="Edit Profile"
+            >
+              <span role="img" aria-label="edit">✏️</span>
+            </button>
+          )}
           <div className="text-center">
             <div className="w-32 h-32 mx-auto rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mb-4">
-               <img
-                  src="/src/assets/prathap.png"
-                  alt="C.Prathap"
-                  className="w-32 h-32 rounded-full object-cover border-2 border-white"
-                  onError={(e) => {
-                    // Fallback to initials if image fails to load
-                    e.currentTarget.style.display = 'none';
-                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                  }}
-                />
-                <div className="hidden w-12 h-12 rounded-full bg-gradient-to-br from-sidebar-accent to-secondary flex items-center justify-center flex-shrink-0 text-white font-bold text-sm border-2 border-white">
-                  CP
-                </div>
+              <img
+                src={facultyData.profilePhoto || "/src/assets/prathap.png"}
+                alt={facultyData.name}
+                className="w-32 h-32 rounded-full object-cover border-2 border-white"
+              />
+              <div className="hidden w-12 h-12 rounded-full bg-gradient-to-br from-sidebar-accent to-secondary flex items-center justify-center flex-shrink-0 text-white font-bold text-sm border-2 border-white">
+                CP
+              </div>
             </div>
-            <h2 className="font-serif text-xl font-bold text-foreground">
-              {facultyData.name}
-            </h2>
+            {/* Faculty Name */}
+            <h2 className="font-serif text-xl font-bold text-foreground">{facultyData.name}</h2>
+            {/* Designation */}
             <p className="text-secondary font-medium">{facultyData.designation}</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              {facultyData.department}
-            </p>
+            {/* Department */}
+            <p className="text-sm text-muted-foreground mt-1">{facultyData.department}</p>
+            {/* Employee ID */}
             <div className="mt-4 p-3 bg-muted rounded-lg">
               <p className="text-xs text-muted-foreground">Employee ID</p>
-              <p className="font-mono font-semibold text-foreground">
-                {facultyData.employeeId}
-              </p>
+              <p className="font-mono font-semibold text-foreground">{facultyData.employeeId}</p>
             </div>
           </div>
 
           <div className="mt-6 space-y-4">
+            {/* College Name */}
             <div className="flex items-center gap-3 text-sm">
               <Building className="w-4 h-4 text-primary flex-shrink-0" />
-              <span className="text-muted-foreground line-clamp-2">{facultyData.college}</span>
+              {editMode ? (
+                <input
+                  name="college"
+                  value={editFields.college}
+                  onChange={handleFieldChange}
+                  className="input input-bordered w-full text-sm"
+                  disabled={loading}
+                />
+              ) : (
+                <span className="text-muted-foreground line-clamp-2">{facultyData.college}</span>
+              )}
             </div>
+            {/* DOB & Age */}
             <div className="flex items-center gap-3 text-sm">
               <Calendar className="w-4 h-4 text-primary flex-shrink-0" />
               <span className="text-muted-foreground">DOB:</span>
-              <span className="font-medium">{facultyData.dateOfBirth} (Age: {facultyData.age})</span>
+              {editMode ? (
+                <>
+                  <input
+                    name="dateOfBirth"
+                    type="text"
+                    value={editFields.dateOfBirth}
+                    onChange={handleFieldChange}
+                    className="input input-bordered w-auto text-sm mr-2"
+                    disabled={loading}
+                  />
+                  <input
+                    name="age"
+                    type="number"
+                    value={editFields.age}
+                    onChange={handleFieldChange}
+                    className="input input-bordered w-16 text-sm"
+                    disabled={loading}
+                  />
+                </>
+              ) : (
+                <span className="font-medium">{facultyData.dateOfBirth} (Age: {facultyData.age})</span>
+              )}
             </div>
+            {/* Date of Joining */}
             <div className="flex items-center gap-3 text-sm">
               <Briefcase className="w-4 h-4 text-primary flex-shrink-0" />
               <span className="text-muted-foreground">Joined:</span>
-              <span className="font-medium">{facultyData.dateOfJoining}</span>
+              {editMode ? (
+                <input
+                  name="dateOfJoining"
+                  type="date"
+                  value={editFields.dateOfJoining}
+                  onChange={handleFieldChange}
+                  className="input input-bordered w-full text-sm"
+                  disabled={loading}
+                />
+              ) : (
+                <span className="font-medium">{facultyData.dateOfJoining}</span>
+              )}
             </div>
+            {/* Email */}
             <div className="flex items-center gap-3 text-sm">
               <Mail className="w-4 h-4 text-primary flex-shrink-0" />
-              <span className="font-medium text-sm break-all">{facultyData.email}</span>
+              {editMode ? (
+                <div className="w-full">
+                  <input
+                    name="email"
+                    value={editFields.email}
+                    onChange={handleFieldChange}
+                    className="input input-bordered w-full text-sm"
+                    disabled={loading}
+                  />
+                  {errors.email && <span className="text-xs text-red-500">{errors.email}</span>}
+                </div>
+              ) : (
+                <span className="font-medium text-sm break-all">{facultyData.email}</span>
+              )}
             </div>
+            {/* Phone */}
             <div className="flex items-center gap-3 text-sm">
               <Phone className="w-4 h-4 text-primary flex-shrink-0" />
-              <span className="font-medium">{facultyData.phone}</span>
+              {editMode ? (
+                <div className="w-full">
+                  <input
+                    name="phone"
+                    value={editFields.phone}
+                    onChange={handleFieldChange}
+                    className="input input-bordered w-full text-sm"
+                    disabled={loading}
+                  />
+                  {errors.phone && <span className="text-xs text-red-500">{errors.phone}</span>}
+                </div>
+              ) : (
+                <span className="font-medium">{facultyData.phone}</span>
+              )}
             </div>
+            {/* Address */}
             <div className="flex items-center gap-3 text-sm">
               <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
-              <span className="font-medium text-sm">{facultyData.address}</span>
+              {editMode ? (
+                <input
+                  name="address"
+                  value={editFields.address}
+                  onChange={handleFieldChange}
+                  className="input input-bordered w-full text-sm"
+                  disabled={loading}
+                />
+              ) : (
+                <span className="font-medium text-sm">{facultyData.address}</span>
+              )}
             </div>
           </div>
 
-          {/* Leave Summary */}
+            {/* Attendance Summary (read-only always) */}
           <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
             <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
               <Clock className="w-4 h-4 text-secondary" />
@@ -346,6 +509,18 @@ ${memberships.map(m => `${m.society} (ID: ${m.id})`).join('\n')}
               </div>
             </div>
           </div>
+
+          {/* Save/Cancel buttons */}
+          {editMode && (
+            <div className="flex gap-3 mt-6 justify-center">
+              <Button onClick={handleSave} disabled={loading || !!errors.email || !!errors.phone}>
+                {loading ? 'Saving...' : 'Save'}
+              </Button>
+              <Button variant="outline" onClick={handleCancel} disabled={loading}>
+                Cancel
+              </Button>
+            </div>
+          )}
         </motion.div>
 
         {/* Tabs Section */}
@@ -442,44 +617,98 @@ ${memberships.map(m => `${m.society} (ID: ${m.id})`).join('\n')}
               </div>
             </TabsContent>
 
-            {/* Experience Details */}
+            {/* Experience Details - Split into Teaching and Industry */}
             <TabsContent value="experience">
               <h3 className="section-title flex items-center gap-2">
                 <Briefcase className="w-5 h-5 text-secondary" />
-                Experience Details
+                Experience
               </h3>
-              <div className="space-y-4">
-                {experienceDetails.map((exp, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="relative p-4 bg-muted/30 rounded-lg border border-border hover:border-primary/30 transition-colors"
-                  >
-                    {index === 0 && (
-                      <Badge className="absolute -top-2 right-4 bg-success">Current</Badge>
-                    )}
-                    <div className="flex items-start gap-4">
-                      <div className="p-2 bg-primary/10 rounded-lg">
-                        <Building className="w-5 h-5 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-semibold text-foreground">{exp.position}</p>
-                        <p className="text-sm text-muted-foreground mt-1">{exp.institution}</p>
-                        <div className="flex items-center gap-4 mt-3">
-                          <div className="flex items-center gap-2 text-xs">
-                            <Calendar className="w-3 h-3 text-muted-foreground" />
-                            <span className="text-muted-foreground">
-                              {exp.from} - {exp.to}
-                            </span>
+              {/* Teaching Experience Section */}
+              <div className="mb-8">
+                <h4 className="font-semibold text-base mb-3 text-primary">Teaching Experience</h4>
+                <div className="space-y-4">
+                  {teachingExperience.length === 0 && (
+                    <div className="text-muted-foreground text-sm">No teaching experience records.</div>
+                  )}
+                  {teachingExperience.map((exp, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="relative p-4 bg-muted/30 rounded-lg border border-border hover:border-primary/30 transition-colors"
+                    >
+                      {exp.current && (
+                        <Badge className="absolute -top-2 right-4 bg-success">Current</Badge>
+                      )}
+                      <div className="flex items-start gap-4">
+                        <div className="p-2 bg-primary/10 rounded-lg">
+                          <Building className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex flex-col md:flex-row md:items-center md:gap-3">
+                            <p className="font-semibold text-foreground">{exp.designation}</p>
+                            <span className="text-xs text-muted-foreground">{exp.department}</span>
                           </div>
-                          <Badge variant="outline">{exp.period}</Badge>
+                          <p className="text-sm text-muted-foreground mt-1">{exp.institution}</p>
+                          <div className="flex items-center gap-4 mt-3">
+                            <div className="flex items-center gap-2 text-xs">
+                              <Calendar className="w-3 h-3 text-muted-foreground" />
+                              <span className="text-muted-foreground">
+                                {exp.from} - {exp.to}
+                              </span>
+                            </div>
+                            <Badge variant="outline">{exp.period}</Badge>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+              {/* Industry Experience Section */}
+              <div>
+                <h4 className="font-semibold text-base mb-3 text-primary">Industry Experience</h4>
+                <div className="space-y-4">
+                  {industryExperience.length === 0 && (
+                    <div className="text-muted-foreground text-sm">No industry experience records.</div>
+                  )}
+                  {industryExperience.map((exp, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="relative p-4 bg-muted/30 rounded-lg border border-border hover:border-primary/30 transition-colors"
+                    >
+                      {exp.current && (
+                        <Badge className="absolute -top-2 right-4 bg-success">Current</Badge>
+                      )}
+                      <div className="flex items-start gap-4">
+                        <div className="p-2 bg-secondary/10 rounded-lg">
+                          <Briefcase className="w-5 h-5 text-secondary" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-foreground">{exp.jobTitle}</p>
+                          <p className="text-sm text-muted-foreground mt-1">{exp.company}</p>
+                          <div className="flex items-center gap-4 mt-3">
+                            <div className="flex items-center gap-2 text-xs">
+                              <MapPin className="w-3 h-3 text-muted-foreground" />
+                              <span className="text-muted-foreground">{exp.location}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs">
+                              <Calendar className="w-3 h-3 text-muted-foreground" />
+                              <span className="text-muted-foreground">
+                                {exp.from} - {exp.to}
+                              </span>
+                            </div>
+                            <Badge variant="outline">{exp.period}</Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
             </TabsContent>
 
