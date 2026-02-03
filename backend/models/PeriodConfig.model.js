@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const PeriodConfigSchema = new mongoose.Schema({
   name: {
@@ -46,4 +46,4 @@ const PeriodConfigSchema = new mongoose.Schema({
   }
 });
 
-module.exports = mongoose.model('PeriodConfig', PeriodConfigSchema);
+export default mongoose.model('PeriodConfig', PeriodConfigSchema);

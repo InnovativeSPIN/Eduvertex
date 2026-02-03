@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const StudentSchema = new mongoose.Schema({
   user: {
@@ -151,21 +151,21 @@ const StudentSchema = new mongoose.Schema({
 });
 
 // Update the updatedAt field before saving
-StudentSchema.pre('save', function(next) {
+StudentSchema.pre('save', function (next) {
   this.updatedAt = Date.now();
   next();
 });
 
 // Virtual for full name
-StudentSchema.virtual('fullName').get(function() {
+StudentSchema.virtual('fullName').get(function () {
   return `${this.firstName} ${this.lastName}`;
 });
 
 // Generate student ID
-StudentSchema.statics.generateStudentId = async function(batch, department) {
+StudentSchema.statics.generateStudentId = async function (batch, department) {
   const count = await this.countDocuments({ batch });
   const deptCode = department.slice(0, 3).toUpperCase();
   return `${batch}${deptCode}${String(count + 1).padStart(4, '0')}`;
 };
 
-module.exports = mongoose.model('Student', StudentSchema);
+export default mongoose.model('Student', StudentSchema);

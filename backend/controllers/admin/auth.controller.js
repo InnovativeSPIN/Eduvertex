@@ -1,14 +1,14 @@
-const crypto = require('crypto');
-const ErrorResponse = require('../../utils/errorResponse');
-const asyncHandler = require('../../middleware/async');
-const sendEmail = require('../../utils/sendEmail');
-const sendTokenResponse = require('../../utils/sendTokenResponse');
-const User = require('../../models/User.model');
+import crypto from 'crypto';
+import ErrorResponse from '../../utils/errorResponse.js';
+import asyncHandler from '../../middleware/async.js';
+import sendEmail from '../../utils/sendEmail.js';
+import sendTokenResponse from '../../utils/sendTokenResponse.js';
+import User from '../../models/User.model.js';
 
 // @desc      Register user
 // @route     POST /api/v1/auth/register
 // @access    Public
-exports.register = asyncHandler(async (req, res, next) => {
+export const register = asyncHandler(async (req, res, next) => {
   const { name, email, password, role, phone, department } = req.body;
 
   // Create user
@@ -27,7 +27,7 @@ exports.register = asyncHandler(async (req, res, next) => {
 // @desc      Login user
 // @route     POST /api/v1/auth/login
 // @access    Public
-exports.login = asyncHandler(async (req, res, next) => {
+export const login = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
 
   // Validate email & password
@@ -64,7 +64,7 @@ exports.login = asyncHandler(async (req, res, next) => {
 // @desc      Log user out / clear cookie
 // @route     GET /api/v1/auth/logout
 // @access    Private
-exports.logout = asyncHandler(async (req, res, next) => {
+export const logout = asyncHandler(async (req, res, next) => {
   res.cookie('token', 'none', {
     expires: new Date(Date.now() + 10 * 1000),
     httpOnly: true
@@ -79,7 +79,7 @@ exports.logout = asyncHandler(async (req, res, next) => {
 // @desc      Get current logged in user
 // @route     GET /api/v1/auth/me
 // @access    Private
-exports.getMe = asyncHandler(async (req, res, next) => {
+export const getMe = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.user.id);
 
   res.status(200).json({
@@ -91,7 +91,7 @@ exports.getMe = asyncHandler(async (req, res, next) => {
 // @desc      Update user details
 // @route     PUT /api/v1/auth/updatedetails
 // @access    Private
-exports.updateDetails = asyncHandler(async (req, res, next) => {
+export const updateDetails = asyncHandler(async (req, res, next) => {
   const fieldsToUpdate = {
     name: req.body.name,
     email: req.body.email,
@@ -112,7 +112,7 @@ exports.updateDetails = asyncHandler(async (req, res, next) => {
 // @desc      Update password
 // @route     PUT /api/v1/auth/updatepassword
 // @access    Private
-exports.updatePassword = asyncHandler(async (req, res, next) => {
+export const updatePassword = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.user.id).select('+password');
 
   // Check current password
@@ -129,7 +129,7 @@ exports.updatePassword = asyncHandler(async (req, res, next) => {
 // @desc      Forgot password
 // @route     POST /api/v1/auth/forgotpassword
 // @access    Public
-exports.forgotPassword = asyncHandler(async (req, res, next) => {
+export const forgotPassword = asyncHandler(async (req, res, next) => {
   const user = await User.findOne({ email: req.body.email });
 
   if (!user) {
@@ -168,7 +168,7 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
 // @desc      Reset password
 // @route     PUT /api/v1/auth/resetpassword/:resettoken
 // @access    Public
-exports.resetPassword = asyncHandler(async (req, res, next) => {
+export const resetPassword = asyncHandler(async (req, res, next) => {
   // Get hashed token
   const resetPasswordToken = crypto
     .createHash('sha256')

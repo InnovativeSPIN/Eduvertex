@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const FacultyAttendanceSchema = new mongoose.Schema({
   faculty: {
@@ -40,7 +40,7 @@ const FacultyAttendanceSchema = new mongoose.Schema({
 });
 
 // Calculate working hours before saving
-FacultyAttendanceSchema.pre('save', function(next) {
+FacultyAttendanceSchema.pre('save', function (next) {
   if (this.checkIn && this.checkOut) {
     const diffTime = Math.abs(this.checkOut - this.checkIn);
     this.workingHours = diffTime / (1000 * 60 * 60); // hours
@@ -51,4 +51,4 @@ FacultyAttendanceSchema.pre('save', function(next) {
 // Index for efficient queries
 FacultyAttendanceSchema.index({ faculty: 1, date: 1 }, { unique: true });
 
-module.exports = mongoose.model('FacultyAttendance', FacultyAttendanceSchema);
+export default mongoose.model('FacultyAttendance', FacultyAttendanceSchema);

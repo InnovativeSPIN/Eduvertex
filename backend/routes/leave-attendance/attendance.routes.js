@@ -1,5 +1,5 @@
-const express = require('express');
-const {
+import express from 'express';
+import {
   getAllAttendance,
   getAttendance,
   markAttendance,
@@ -11,11 +11,11 @@ const {
   markFacultyAttendance,
   getFacultyAttendance,
   getAttendanceStats
-} = require('../../controllers/leave-attendance/attendance.controller');
+} from '../../controllers/leave-attendance/attendance.controller.js';
+
+import { protect, authorize } from '../../middleware/auth.js';
 
 const router = express.Router();
-
-const { protect, authorize } = require('../../middleware/auth');
 
 // All routes require authentication
 router.use(protect);
@@ -45,4 +45,4 @@ router.route('/:id')
   .put(authorize('superadmin', 'executiveadmin', 'academicadmin', 'faculty'), updateAttendance)
   .delete(authorize('superadmin', 'executiveadmin', 'academicadmin'), deleteAttendance);
 
-module.exports = router;
+export default router;

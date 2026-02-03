@@ -1,16 +1,21 @@
-const fs = require('fs');
-const mongoose = require('mongoose');
-const colors = require('colors');
-const dotenv = require('dotenv');
+import fs from 'fs';
+import mongoose from 'mongoose';
+import colors from 'colors';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Load env vars
 dotenv.config();
 
 // Load models
-const User = require('./modules/admin/models/User.model');
-const Department = require('./modules/faculty/models/Department.model');
-const Subject = require('./modules/faculty/models/Subject.model');
-const PeriodConfig = require('./modules/timetable/models/PeriodConfig.model');
+import User from './models/User.model.js';
+import Department from './models/Department.model.js';
+import Subject from './models/Subject.model.js';
+import PeriodConfig from './models/PeriodConfig.model.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Connect to DB
 mongoose.connect(process.env.MONGODB_URI);

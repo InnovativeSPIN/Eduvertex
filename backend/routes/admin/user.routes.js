@@ -1,5 +1,5 @@
-const express = require('express');
-const {
+import express from 'express';
+import {
   getUsers,
   getUser,
   createUser,
@@ -9,11 +9,11 @@ const {
   activateUser,
   getUsersByRole,
   getDashboardStats
-} = require('../../controllers/admin/user.controller');
+} from '../../controllers/admin/user.controller.js';
+
+import { protect, authorize } from '../../middleware/auth.js';
 
 const router = express.Router();
-
-const { protect, authorize } = require('../../middleware/auth');
 
 // All routes require authentication and admin roles
 router.use(protect);
@@ -34,4 +34,4 @@ router.route('/:id')
 router.route('/:id/deactivate').put(deactivateUser);
 router.route('/:id/activate').put(activateUser);
 
-module.exports = router;
+export default router;

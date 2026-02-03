@@ -1,19 +1,20 @@
-const express = require('express');
-const dotenv = require('dotenv');
-const morgan = require('morgan');
-const colors = require('colors');
-const cookieParser = require('cookie-parser');
-const mongoSanitize = require('express-mongo-sanitize');
-const helmet = require('helmet');
-const xss = require('xss-clean');
-const rateLimit = require('express-rate-limit');
-const hpp = require('hpp');
-const cors = require('cors');
-const fileupload = require('express-fileupload');
-const path = require('path');
+import express from 'express';
+import dotenv from 'dotenv';
+import morgan from 'morgan';
+import colors from 'colors';
+import cookieParser from 'cookie-parser';
+import mongoSanitize from 'express-mongo-sanitize';
+import helmet from 'helmet';
+import xss from 'xss-clean';
+import rateLimit from 'express-rate-limit';
+import hpp from 'hpp';
+import cors from 'cors';
+import fileupload from 'express-fileupload';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const errorHandler = require('./middleware/error');
-const connectDB = require('./config/db');
+import errorHandler from './middleware/error.js';
+import connectDB from './config/db.js';
 
 // Load env vars
 dotenv.config();
@@ -22,13 +23,16 @@ dotenv.config();
 connectDB();
 
 // Route files
-const authRoutes = require('./routes/admin/auth.routes');
-const userRoutes = require('./routes/admin/user.routes');
-const facultyRoutes = require('./routes/faculty/faculty.routes');
-const studentRoutes = require('./routes/student/student.routes');
-const timetableRoutes = require('./routes/timetable/timetable.routes');
-const leaveRoutes = require('./routes/leave-attendance/leave.routes');
-const attendanceRoutes = require('./routes/leave-attendance/attendance.routes');
+import authRoutes from './routes/admin/auth.routes.js';
+import userRoutes from './routes/admin/user.routes.js';
+import facultyRoutes from './routes/faculty/faculty.routes.js';
+import studentRoutes from './routes/student/student.routes.js';
+import timetableRoutes from './routes/timetable/timetable.routes.js';
+import leaveRoutes from './routes/leave-attendance/leave.routes.js';
+import attendanceRoutes from './routes/leave-attendance/attendance.routes.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const LeaveBalanceSchema = new mongoose.Schema({
   user: {
@@ -58,4 +58,4 @@ const LeaveBalanceSchema = new mongoose.Schema({
 // Index for efficient queries
 LeaveBalanceSchema.index({ user: 1, academicYear: 1 }, { unique: true });
 
-module.exports = mongoose.model('LeaveBalance', LeaveBalanceSchema);
+export default mongoose.model('LeaveBalance', LeaveBalanceSchema);

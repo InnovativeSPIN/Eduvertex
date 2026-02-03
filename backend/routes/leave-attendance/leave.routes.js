@@ -1,5 +1,5 @@
-const express = require('express');
-const {
+import express from 'express';
+import {
   getAllLeaves,
   getLeave,
   createLeave,
@@ -10,11 +10,11 @@ const {
   getMyLeaves,
   getLeaveBalance,
   getPendingCount
-} = require('../../controllers/leave-attendance/leave.controller');
+} from '../../controllers/leave-attendance/leave.controller.js';
+
+import { protect, authorize } from '../../middleware/auth.js';
 
 const router = express.Router();
-
-const { protect, authorize } = require('../../middleware/auth');
 
 // All routes require authentication
 router.use(protect);
@@ -39,4 +39,4 @@ router.route('/:id')
 
 router.put('/:id/status', authorize('superadmin', 'executiveadmin', 'academicadmin'), updateLeaveStatus);
 
-module.exports = router;
+export default router;

@@ -1,12 +1,12 @@
-const ErrorResponse = require('../../utils/errorResponse');
-const asyncHandler = require('../../middleware/async');
-const Student = require('../../models/Student.model');
-const User = require('../../models/User.model');
+import ErrorResponse from '../../utils/errorResponse.js';
+import asyncHandler from '../../middleware/async.js';
+import Student from '../../models/Student.model.js';
+import User from '../../models/User.model.js';
 
 // @desc      Get all students
 // @route     GET /api/v1/students
 // @access    Private
-exports.getAllStudents = asyncHandler(async (req, res, next) => {
+export const getAllStudents = asyncHandler(async (req, res, next) => {
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 25;
   const startIndex = (page - 1) * limit;
@@ -74,7 +74,7 @@ exports.getAllStudents = asyncHandler(async (req, res, next) => {
 // @desc      Get single student
 // @route     GET /api/v1/students/:id
 // @access    Private
-exports.getStudent = asyncHandler(async (req, res, next) => {
+export const getStudent = asyncHandler(async (req, res, next) => {
   const student = await Student.findById(req.params.id)
     .populate('department', 'name code')
     .populate('class', 'name section room')
@@ -94,7 +94,7 @@ exports.getStudent = asyncHandler(async (req, res, next) => {
 // @desc      Create student
 // @route     POST /api/v1/students
 // @access    Private/Admin
-exports.createStudent = asyncHandler(async (req, res, next) => {
+export const createStudent = asyncHandler(async (req, res, next) => {
   // Create user account first
   const userData = {
     name: `${req.body.firstName} ${req.body.lastName}`,
@@ -124,7 +124,7 @@ exports.createStudent = asyncHandler(async (req, res, next) => {
 // @desc      Update student
 // @route     PUT /api/v1/students/:id
 // @access    Private/Admin
-exports.updateStudent = asyncHandler(async (req, res, next) => {
+export const updateStudent = asyncHandler(async (req, res, next) => {
   let student = await Student.findById(req.params.id);
 
   if (!student) {
@@ -145,7 +145,7 @@ exports.updateStudent = asyncHandler(async (req, res, next) => {
 // @desc      Delete student
 // @route     DELETE /api/v1/students/:id
 // @access    Private/Admin
-exports.deleteStudent = asyncHandler(async (req, res, next) => {
+export const deleteStudent = asyncHandler(async (req, res, next) => {
   const student = await Student.findById(req.params.id);
 
   if (!student) {
@@ -165,7 +165,7 @@ exports.deleteStudent = asyncHandler(async (req, res, next) => {
 // @desc      Get students by class
 // @route     GET /api/v1/students/class/:classId
 // @access    Private
-exports.getStudentsByClass = asyncHandler(async (req, res, next) => {
+export const getStudentsByClass = asyncHandler(async (req, res, next) => {
   const students = await Student.find({
     class: req.params.classId,
     status: 'active'
@@ -183,7 +183,7 @@ exports.getStudentsByClass = asyncHandler(async (req, res, next) => {
 // @desc      Get students by department
 // @route     GET /api/v1/students/department/:departmentId
 // @access    Private
-exports.getStudentsByDepartment = asyncHandler(async (req, res, next) => {
+export const getStudentsByDepartment = asyncHandler(async (req, res, next) => {
   const students = await Student.find({
     department: req.params.departmentId,
     status: 'active'
@@ -201,7 +201,7 @@ exports.getStudentsByDepartment = asyncHandler(async (req, res, next) => {
 // @desc      Update student status
 // @route     PUT /api/v1/students/:id/status
 // @access    Private/Admin
-exports.updateStudentStatus = asyncHandler(async (req, res, next) => {
+export const updateStudentStatus = asyncHandler(async (req, res, next) => {
   const student = await Student.findByIdAndUpdate(
     req.params.id,
     { status: req.body.status },
@@ -226,7 +226,7 @@ exports.updateStudentStatus = asyncHandler(async (req, res, next) => {
 // @desc      Promote students to next semester
 // @route     PUT /api/v1/students/promote
 // @access    Private/Admin
-exports.promoteStudents = asyncHandler(async (req, res, next) => {
+export const promoteStudents = asyncHandler(async (req, res, next) => {
   const { studentIds, newSemester, newClass } = req.body;
 
   const result = await Student.updateMany(
@@ -246,7 +246,7 @@ exports.promoteStudents = asyncHandler(async (req, res, next) => {
 // @desc      Get student profile (for logged in student)
 // @route     GET /api/v1/students/me/profile
 // @access    Private/Student
-exports.getMyProfile = asyncHandler(async (req, res, next) => {
+export const getMyProfile = asyncHandler(async (req, res, next) => {
   const student = await Student.findOne({ user: req.user.id })
     .populate('department', 'name code')
     .populate('class', 'name section room')
@@ -265,7 +265,7 @@ exports.getMyProfile = asyncHandler(async (req, res, next) => {
 // @desc      Get student statistics
 // @route     GET /api/v1/students/stats
 // @access    Private/Admin
-exports.getStudentStats = asyncHandler(async (req, res, next) => {
+export const getStudentStats = asyncHandler(async (req, res, next) => {
   const totalStudents = await Student.countDocuments();
   const activeStudents = await Student.countDocuments({ status: 'active' });
   const graduatedStudents = await Student.countDocuments({ status: 'graduated' });

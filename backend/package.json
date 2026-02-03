@@ -2,6 +2,7 @@
   "name": "eduvertex-erp-backend",
   "version": "1.0.0",
   "description": "Eduvertex ERP System Backend - Node.js & MongoDB",
+  "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

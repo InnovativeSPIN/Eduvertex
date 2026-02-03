@@ -1,5 +1,5 @@
-const express = require('express');
-const {
+import express from 'express';
+import {
   getAllFaculty,
   getFaculty,
   createFaculty,
@@ -10,12 +10,12 @@ const {
   assignClasses,
   updateFacultyStatus,
   getMyProfile
-} = require('../../controllers/faculty/faculty.controller');
-const { handleDownloadProfile } = require('../../controllers/faculty/handleDownloadProfile');
+} from '../../controllers/faculty/faculty.controller.js';
+import { handleDownloadProfile } from '../../controllers/faculty/handleDownloadProfile.js';
+
+import { protect, authorize } from '../../middleware/auth.js';
 
 const router = express.Router();
-
-const { protect, authorize } = require('../../middleware/auth');
 
 // All routes require authentication
 router.use(protect);
@@ -40,4 +40,4 @@ router.put('/:id/subjects', authorize('superadmin', 'executiveadmin', 'academica
 router.put('/:id/classes', authorize('superadmin', 'executiveadmin', 'academicadmin'), assignClasses);
 router.put('/:id/status', authorize('superadmin', 'executiveadmin', 'academicadmin'), updateFacultyStatus);
 
-module.exports = router;
+export default router;

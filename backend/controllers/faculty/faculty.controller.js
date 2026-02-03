@@ -1,12 +1,12 @@
-const ErrorResponse = require('../../utils/errorResponse');
-const asyncHandler = require('../../middleware/async');
-const Faculty = require('../../models/Faculty.model');
-const User = require('../../models/User.model');
+import ErrorResponse from '../../utils/errorResponse.js';
+import asyncHandler from '../../middleware/async.js';
+import Faculty from '../../models/Faculty.model.js';
+import User from '../../models/User.model.js';
 
 // @desc      Get all faculty
 // @route     GET /api/v1/faculty
 // @access    Private
-exports.getAllFaculty = asyncHandler(async (req, res, next) => {
+export const getAllFaculty = asyncHandler(async (req, res, next) => {
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 25;
   const startIndex = (page - 1) * limit;
@@ -63,7 +63,7 @@ exports.getAllFaculty = asyncHandler(async (req, res, next) => {
 // @desc      Get single faculty
 // @route     GET /api/v1/faculty/:id
 // @access    Private
-exports.getFaculty = asyncHandler(async (req, res, next) => {
+export const getFaculty = asyncHandler(async (req, res, next) => {
   const faculty = await Faculty.findById(req.params.id)
     .populate('department', 'name code')
     .populate('subjects', 'name code credits')
@@ -83,7 +83,7 @@ exports.getFaculty = asyncHandler(async (req, res, next) => {
 // @desc      Create faculty
 // @route     POST /api/v1/faculty
 // @access    Private/Admin
-exports.createFaculty = asyncHandler(async (req, res, next) => {
+export const createFaculty = asyncHandler(async (req, res, next) => {
   // Create user account first
   const userData = {
     name: `${req.body.firstName} ${req.body.lastName}`,
@@ -109,7 +109,7 @@ exports.createFaculty = asyncHandler(async (req, res, next) => {
 // @desc      Update faculty
 // @route     PUT /api/v1/faculty/:id
 // @access    Private/Admin
-exports.updateFaculty = asyncHandler(async (req, res, next) => {
+export const updateFaculty = asyncHandler(async (req, res, next) => {
   let faculty = await Faculty.findById(req.params.id);
 
   if (!faculty) {
@@ -130,7 +130,7 @@ exports.updateFaculty = asyncHandler(async (req, res, next) => {
 // @desc      Delete faculty
 // @route     DELETE /api/v1/faculty/:id
 // @access    Private/Admin
-exports.deleteFaculty = asyncHandler(async (req, res, next) => {
+export const deleteFaculty = asyncHandler(async (req, res, next) => {
   const faculty = await Faculty.findById(req.params.id);
 
   if (!faculty) {
@@ -150,7 +150,7 @@ exports.deleteFaculty = asyncHandler(async (req, res, next) => {
 // @desc      Get faculty by department
 // @route     GET /api/v1/faculty/department/:departmentId
 // @access    Private
-exports.getFacultyByDepartment = asyncHandler(async (req, res, next) => {
+export const getFacultyByDepartment = asyncHandler(async (req, res, next) => {
   const faculty = await Faculty.find({
     department: req.params.departmentId,
     status: 'active'
@@ -168,7 +168,7 @@ exports.getFacultyByDepartment = asyncHandler(async (req, res, next) => {
 // @desc      Assign subjects to faculty
 // @route     PUT /api/v1/faculty/:id/subjects
 // @access    Private/Admin
-exports.assignSubjects = asyncHandler(async (req, res, next) => {
+export const assignSubjects = asyncHandler(async (req, res, next) => {
   const faculty = await Faculty.findByIdAndUpdate(
     req.params.id,
     { subjects: req.body.subjects },
@@ -188,7 +188,7 @@ exports.assignSubjects = asyncHandler(async (req, res, next) => {
 // @desc      Assign classes to faculty
 // @route     PUT /api/v1/faculty/:id/classes
 // @access    Private/Admin
-exports.assignClasses = asyncHandler(async (req, res, next) => {
+export const assignClasses = asyncHandler(async (req, res, next) => {
   const faculty = await Faculty.findByIdAndUpdate(
     req.params.id,
     { assignedClasses: req.body.classes },
@@ -208,7 +208,7 @@ exports.assignClasses = asyncHandler(async (req, res, next) => {
 // @desc      Update faculty status
 // @route     PUT /api/v1/faculty/:id/status
 // @access    Private/Admin
-exports.updateFacultyStatus = asyncHandler(async (req, res, next) => {
+export const updateFacultyStatus = asyncHandler(async (req, res, next) => {
   const faculty = await Faculty.findByIdAndUpdate(
     req.params.id,
     { status: req.body.status },
@@ -233,7 +233,7 @@ exports.updateFacultyStatus = asyncHandler(async (req, res, next) => {
 // @desc      Get faculty profile (for logged in faculty)
 // @route     GET /api/v1/faculty/me/profile
 // @access    Private/Faculty
-exports.getMyProfile = asyncHandler(async (req, res, next) => {
+export const getMyProfile = asyncHandler(async (req, res, next) => {
   const faculty = await Faculty.findOne({ user: req.user.id })
     .populate('department', 'name code')
     .populate('subjects', 'name code credits')

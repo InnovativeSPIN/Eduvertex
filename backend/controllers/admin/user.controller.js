@@ -1,11 +1,11 @@
-const ErrorResponse = require('../../utils/errorResponse');
-const asyncHandler = require('../../middleware/async');
-const User = require('../../models/User.model');
+import ErrorResponse from '../../utils/errorResponse.js';
+import asyncHandler from '../../middleware/async.js';
+import User from '../../models/User.model.js';
 
 // @desc      Get all users
 // @route     GET /api/v1/users
 // @access    Private/Admin
-exports.getUsers = asyncHandler(async (req, res, next) => {
+export const getUsers = asyncHandler(async (req, res, next) => {
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 25;
   const startIndex = (page - 1) * limit;
@@ -52,7 +52,7 @@ exports.getUsers = asyncHandler(async (req, res, next) => {
 // @desc      Get single user
 // @route     GET /api/v1/users/:id
 // @access    Private/Admin
-exports.getUser = asyncHandler(async (req, res, next) => {
+export const getUser = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.params.id);
 
   if (!user) {
@@ -68,7 +68,7 @@ exports.getUser = asyncHandler(async (req, res, next) => {
 // @desc      Create user
 // @route     POST /api/v1/users
 // @access    Private/Admin
-exports.createUser = asyncHandler(async (req, res, next) => {
+export const createUser = asyncHandler(async (req, res, next) => {
   const user = await User.create(req.body);
 
   res.status(201).json({
@@ -80,7 +80,7 @@ exports.createUser = asyncHandler(async (req, res, next) => {
 // @desc      Update user
 // @route     PUT /api/v1/users/:id
 // @access    Private/Admin
-exports.updateUser = asyncHandler(async (req, res, next) => {
+export const updateUser = asyncHandler(async (req, res, next) => {
   // Prevent password update through this route
   if (req.body.password) {
     delete req.body.password;
@@ -104,7 +104,7 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
 // @desc      Delete user
 // @route     DELETE /api/v1/users/:id
 // @access    Private/Admin
-exports.deleteUser = asyncHandler(async (req, res, next) => {
+export const deleteUser = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.params.id);
 
   if (!user) {
@@ -122,7 +122,7 @@ exports.deleteUser = asyncHandler(async (req, res, next) => {
 // @desc      Deactivate user
 // @route     PUT /api/v1/users/:id/deactivate
 // @access    Private/Admin
-exports.deactivateUser = asyncHandler(async (req, res, next) => {
+export const deactivateUser = asyncHandler(async (req, res, next) => {
   const user = await User.findByIdAndUpdate(
     req.params.id,
     { isActive: false },
@@ -142,7 +142,7 @@ exports.deactivateUser = asyncHandler(async (req, res, next) => {
 // @desc      Activate user
 // @route     PUT /api/v1/users/:id/activate
 // @access    Private/Admin
-exports.activateUser = asyncHandler(async (req, res, next) => {
+export const activateUser = asyncHandler(async (req, res, next) => {
   const user = await User.findByIdAndUpdate(
     req.params.id,
     { isActive: true },
@@ -162,7 +162,7 @@ exports.activateUser = asyncHandler(async (req, res, next) => {
 // @desc      Get users by role
 // @route     GET /api/v1/users/role/:role
 // @access    Private/Admin
-exports.getUsersByRole = asyncHandler(async (req, res, next) => {
+export const getUsersByRole = asyncHandler(async (req, res, next) => {
   const users = await User.find({ role: req.params.role, isActive: true });
 
   res.status(200).json({
@@ -175,7 +175,7 @@ exports.getUsersByRole = asyncHandler(async (req, res, next) => {
 // @desc      Get admin dashboard stats
 // @route     GET /api/v1/users/stats/dashboard
 // @access    Private/Admin
-exports.getDashboardStats = asyncHandler(async (req, res, next) => {
+export const getDashboardStats = asyncHandler(async (req, res, next) => {
   const totalUsers = await User.countDocuments();
   const totalFaculty = await User.countDocuments({ role: 'faculty' });
   const totalStudents = await User.countDocuments({ role: 'student' });

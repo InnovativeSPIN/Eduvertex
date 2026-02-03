@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const FacultySchema = new mongoose.Schema({
   user: {
@@ -119,14 +119,14 @@ const FacultySchema = new mongoose.Schema({
 });
 
 // Update the updatedAt field before saving
-FacultySchema.pre('save', function(next) {
+FacultySchema.pre('save', function (next) {
   this.updatedAt = Date.now();
   next();
 });
 
 // Virtual for full name
-FacultySchema.virtual('fullName').get(function() {
+FacultySchema.virtual('fullName').get(function () {
   return `${this.firstName} ${this.lastName}`;
 });
 
-module.exports = mongoose.model('Faculty', FacultySchema);
+export default mongoose.model('Faculty', FacultySchema);

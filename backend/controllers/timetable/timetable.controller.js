@@ -1,12 +1,14 @@
-const ErrorResponse = require('../../utils/errorResponse');
-const asyncHandler = require('../../middleware/async');
-const Timetable = require('../../models/Timetable.model');
-const PeriodConfig = require('../../models/PeriodConfig.model');
+import ErrorResponse from '../../utils/errorResponse.js';
+import asyncHandler from '../../middleware/async.js';
+import Timetable from '../../models/Timetable.model.js';
+import PeriodConfig from '../../models/PeriodConfig.model.js';
+import Faculty from '../../models/Faculty.model.js';
+import Student from '../../models/Student.model.js';
 
 // @desc      Get all timetables
 // @route     GET /api/v1/timetable
 // @access    Private
-exports.getAllTimetables = asyncHandler(async (req, res, next) => {
+export const getAllTimetables = asyncHandler(async (req, res, next) => {
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 25;
   const startIndex = (page - 1) * limit;
@@ -60,7 +62,7 @@ exports.getAllTimetables = asyncHandler(async (req, res, next) => {
 // @desc      Get single timetable
 // @route     GET /api/v1/timetable/:id
 // @access    Private
-exports.getTimetable = asyncHandler(async (req, res, next) => {
+export const getTimetable = asyncHandler(async (req, res, next) => {
   const timetable = await Timetable.findById(req.params.id)
     .populate('class', 'name section room')
     .populate('department', 'name code')
@@ -81,7 +83,7 @@ exports.getTimetable = asyncHandler(async (req, res, next) => {
 // @desc      Get timetable by class
 // @route     GET /api/v1/timetable/class/:classId
 // @access    Private
-exports.getTimetableByClass = asyncHandler(async (req, res, next) => {
+export const getTimetableByClass = asyncHandler(async (req, res, next) => {
   const timetable = await Timetable.findOne({
     class: req.params.classId,
     isActive: true
@@ -104,7 +106,7 @@ exports.getTimetableByClass = asyncHandler(async (req, res, next) => {
 // @desc      Get timetable for faculty
 // @route     GET /api/v1/timetable/faculty/:facultyId
 // @access    Private
-exports.getTimetableByFaculty = asyncHandler(async (req, res, next) => {
+export const getTimetableByFaculty = asyncHandler(async (req, res, next) => {
   const timetables = await Timetable.find({
     'slots.faculty': req.params.facultyId,
     isActive: true
@@ -139,7 +141,7 @@ exports.getTimetableByFaculty = asyncHandler(async (req, res, next) => {
 // @desc      Create timetable
 // @route     POST /api/v1/timetable
 // @access    Private/Admin
-exports.createTimetable = asyncHandler(async (req, res, next) => {
+export const createTimetable = asyncHandler(async (req, res, next) => {
   req.body.createdBy = req.user.id;
 
   // Deactivate existing timetable for the same class
@@ -159,7 +161,7 @@ exports.createTimetable = asyncHandler(async (req, res, next) => {
 // @desc      Update timetable
 // @route     PUT /api/v1/timetable/:id
 // @access    Private/Admin
-exports.updateTimetable = asyncHandler(async (req, res, next) => {
+export const updateTimetable = asyncHandler(async (req, res, next) => {
   let timetable = await Timetable.findById(req.params.id);
 
   if (!timetable) {
@@ -180,7 +182,7 @@ exports.updateTimetable = asyncHandler(async (req, res, next) => {
 // @desc      Delete timetable
 // @route     DELETE /api/v1/timetable/:id
 // @access    Private/Admin
-exports.deleteTimetable = asyncHandler(async (req, res, next) => {
+export const deleteTimetable = asyncHandler(async (req, res, next) => {
   const timetable = await Timetable.findById(req.params.id);
 
   if (!timetable) {
@@ -198,7 +200,7 @@ exports.deleteTimetable = asyncHandler(async (req, res, next) => {
 // @desc      Add slot to timetable
 // @route     POST /api/v1/timetable/:id/slots
 // @access    Private/Admin
-exports.addSlot = asyncHandler(async (req, res, next) => {
+export const addSlot = asyncHandler(async (req, res, next) => {
   const timetable = await Timetable.findById(req.params.id);
 
   if (!timetable) {
@@ -226,7 +228,7 @@ exports.addSlot = asyncHandler(async (req, res, next) => {
 // @desc      Update slot in timetable
 // @route     PUT /api/v1/timetable/:id/slots/:slotId
 // @access    Private/Admin
-exports.updateSlot = asyncHandler(async (req, res, next) => {
+export const updateSlot = asyncHandler(async (req, res, next) => {
   const timetable = await Timetable.findById(req.params.id);
 
   if (!timetable) {
@@ -253,7 +255,7 @@ exports.updateSlot = asyncHandler(async (req, res, next) => {
 // @desc      Remove slot from timetable
 // @route     DELETE /api/v1/timetable/:id/slots/:slotId
 // @access    Private/Admin
-exports.removeSlot = asyncHandler(async (req, res, next) => {
+export const removeSlot = asyncHandler(async (req, res, next) => {
   const timetable = await Timetable.findById(req.params.id);
 
   if (!timetable) {
@@ -275,7 +277,7 @@ exports.removeSlot = asyncHandler(async (req, res, next) => {
 // @desc      Get period configurations
 // @route     GET /api/v1/timetable/config/periods
 // @access    Private
-exports.getPeriodConfigs = asyncHandler(async (req, res, next) => {
+export const getPeriodConfigs = asyncHandler(async (req, res, next) => {
   const configs = await PeriodConfig.find({ isActive: true });
 
   res.status(200).json({
@@ -288,7 +290,7 @@ exports.getPeriodConfigs = asyncHandler(async (req, res, next) => {
 // @desc      Create period configuration
 // @route     POST /api/v1/timetable/config/periods
 // @access    Private/Admin
-exports.createPeriodConfig = asyncHandler(async (req, res, next) => {
+export const createPeriodConfig = asyncHandler(async (req, res, next) => {
   // If this is set as default, remove default from others
   if (req.body.isDefault) {
     await PeriodConfig.updateMany({}, { isDefault: false });
@@ -305,7 +307,7 @@ exports.createPeriodConfig = asyncHandler(async (req, res, next) => {
 // @desc      Get today's schedule for logged in user
 // @route     GET /api/v1/timetable/today
 // @access    Private
-exports.getTodaySchedule = asyncHandler(async (req, res, next) => {
+export const getTodaySchedule = asyncHandler(async (req, res, next) => {
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const today = days[new Date().getDay()];
 
@@ -313,7 +315,6 @@ exports.getTodaySchedule = asyncHandler(async (req, res, next) => {
 
   if (req.user.role === 'faculty') {
     // Get faculty's schedule for today
-    const Faculty = require('../../faculty/models/Faculty.model');
     const faculty = await Faculty.findOne({ user: req.user.id });
 
     if (faculty) {
@@ -338,7 +339,6 @@ exports.getTodaySchedule = asyncHandler(async (req, res, next) => {
     }
   } else if (req.user.role === 'student') {
     // Get student's class schedule for today
-    const Student = require('../../student/models/Student.model');
     const student = await Student.findOne({ user: req.user.id });
 
     if (student && student.class) {

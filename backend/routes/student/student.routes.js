@@ -1,5 +1,5 @@
-const express = require('express');
-const {
+import express from 'express';
+import {
   getAllStudents,
   getStudent,
   createStudent,
@@ -11,11 +11,11 @@ const {
   promoteStudents,
   getMyProfile,
   getStudentStats
-} = require('../../controllers/student/student.controller');
+} from '../../controllers/student/student.controller.js';
+
+import { protect, authorize } from '../../middleware/auth.js';
 
 const router = express.Router();
-
-const { protect, authorize } = require('../../middleware/auth');
 
 // All routes require authentication
 router.use(protect);
@@ -34,11 +34,11 @@ router.route('/')
 router.route('/:id')
   .get(authorize('superadmin', 'executiveadmin', 'academicadmin', 'faculty', 'student'), getStudent)
   .put(authorize('superadmin', 'executiveadmin', 'academicadmin'), updateStudent)
-  .delete(authorize('superadmin'), deleteStudent);
+  .delete(authorize('superadmin', 'deleteStudent'));
 
 router.get('/class/:classId', authorize('superadmin', 'executiveadmin', 'academicadmin', 'faculty'), getStudentsByClass);
 router.get('/department/:departmentId', authorize('superadmin', 'executiveadmin', 'academicadmin', 'faculty'), getStudentsByDepartment);
 router.put('/:id/status', authorize('superadmin', 'executiveadmin', 'academicadmin'), updateStudentStatus);
 router.put('/promote', authorize('superadmin', 'executiveadmin', 'academicadmin'), promoteStudents);
 
-module.exports = router;
+export default router;

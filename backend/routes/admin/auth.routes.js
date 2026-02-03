@@ -1,5 +1,5 @@
-const express = require('express');
-const {
+import express from 'express';
+import {
   register,
   login,
   logout,
@@ -8,11 +8,11 @@ const {
   resetPassword,
   updateDetails,
   updatePassword
-} = require('../../controllers/admin/auth.controller');
+} from '../../controllers/admin/auth.controller.js';
+
+import { protect } from '../../middleware/auth.js';
 
 const router = express.Router();
-
-const { protect } = require('../../middleware/auth');
 
 router.post('/register', register);
 router.post('/login', login);
@@ -23,4 +23,4 @@ router.put('/updatepassword', protect, updatePassword);
 router.post('/forgotpassword', forgotPassword);
 router.put('/resetpassword/:resettoken', resetPassword);
 
-module.exports = router;
+export default router;

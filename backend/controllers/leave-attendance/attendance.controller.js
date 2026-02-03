@@ -1,13 +1,13 @@
-const ErrorResponse = require('../../utils/errorResponse');
-const asyncHandler = require('../../middleware/async');
-const Attendance = require('../../models/Attendance.model');
-const FacultyAttendance = require('../../models/FacultyAttendance.model');
-const Student = require('../../student/models/Student.model');
+import ErrorResponse from '../../utils/errorResponse.js';
+import asyncHandler from '../../middleware/async.js';
+import Attendance from '../../models/Attendance.model.js';
+import FacultyAttendance from '../../models/FacultyAttendance.model.js';
+import Student from '../../models/Student.model.js';
 
 // @desc      Get all attendance records
 // @route     GET /api/v1/attendance
 // @access    Private
-exports.getAllAttendance = asyncHandler(async (req, res, next) => {
+export const getAllAttendance = asyncHandler(async (req, res, next) => {
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 25;
   const startIndex = (page - 1) * limit;
@@ -66,7 +66,7 @@ exports.getAllAttendance = asyncHandler(async (req, res, next) => {
 // @desc      Get single attendance record
 // @route     GET /api/v1/attendance/:id
 // @access    Private
-exports.getAttendance = asyncHandler(async (req, res, next) => {
+export const getAttendance = asyncHandler(async (req, res, next) => {
   const attendance = await Attendance.findById(req.params.id)
     .populate('class', 'name section')
     .populate('subject', 'name code')
@@ -86,7 +86,7 @@ exports.getAttendance = asyncHandler(async (req, res, next) => {
 // @desc      Mark attendance
 // @route     POST /api/v1/attendance
 // @access    Private/Faculty
-exports.markAttendance = asyncHandler(async (req, res, next) => {
+export const markAttendance = asyncHandler(async (req, res, next) => {
   req.body.markedBy = req.user.id;
 
   // Check if attendance already marked for this class, subject, date, and period
@@ -115,7 +115,7 @@ exports.markAttendance = asyncHandler(async (req, res, next) => {
 // @desc      Update attendance
 // @route     PUT /api/v1/attendance/:id
 // @access    Private/Faculty
-exports.updateAttendance = asyncHandler(async (req, res, next) => {
+export const updateAttendance = asyncHandler(async (req, res, next) => {
   let attendance = await Attendance.findById(req.params.id);
 
   if (!attendance) {
@@ -136,7 +136,7 @@ exports.updateAttendance = asyncHandler(async (req, res, next) => {
 // @desc      Delete attendance
 // @route     DELETE /api/v1/attendance/:id
 // @access    Private/Admin
-exports.deleteAttendance = asyncHandler(async (req, res, next) => {
+export const deleteAttendance = asyncHandler(async (req, res, next) => {
   const attendance = await Attendance.findById(req.params.id);
 
   if (!attendance) {
@@ -154,7 +154,7 @@ exports.deleteAttendance = asyncHandler(async (req, res, next) => {
 // @desc      Get attendance by class and date range
 // @route     GET /api/v1/attendance/class/:classId
 // @access    Private
-exports.getAttendanceByClass = asyncHandler(async (req, res, next) => {
+export const getAttendanceByClass = asyncHandler(async (req, res, next) => {
   let query = { class: req.params.classId };
 
   if (req.query.startDate && req.query.endDate) {
@@ -180,7 +180,7 @@ exports.getAttendanceByClass = asyncHandler(async (req, res, next) => {
 // @desc      Get student attendance report
 // @route     GET /api/v1/attendance/student/:studentId
 // @access    Private
-exports.getStudentAttendance = asyncHandler(async (req, res, next) => {
+export const getStudentAttendance = asyncHandler(async (req, res, next) => {
   let query = { 'students.student': req.params.studentId };
 
   if (req.query.startDate && req.query.endDate) {
@@ -238,7 +238,7 @@ exports.getStudentAttendance = asyncHandler(async (req, res, next) => {
 // @desc      Get my attendance (for logged in student)
 // @route     GET /api/v1/attendance/my-attendance
 // @access    Private/Student
-exports.getMyAttendance = asyncHandler(async (req, res, next) => {
+export const getMyAttendance = asyncHandler(async (req, res, next) => {
   const student = await Student.findOne({ user: req.user.id });
 
   if (!student) {
@@ -294,7 +294,7 @@ exports.getMyAttendance = asyncHandler(async (req, res, next) => {
 // @desc      Mark faculty attendance
 // @route     POST /api/v1/attendance/faculty
 // @access    Private/Admin
-exports.markFacultyAttendance = asyncHandler(async (req, res, next) => {
+export const markFacultyAttendance = asyncHandler(async (req, res, next) => {
   req.body.markedBy = req.user.id;
 
   // Check if attendance already marked for this date
@@ -330,7 +330,7 @@ exports.markFacultyAttendance = asyncHandler(async (req, res, next) => {
 // @desc      Get faculty attendance
 // @route     GET /api/v1/attendance/faculty/:facultyId
 // @access    Private
-exports.getFacultyAttendance = asyncHandler(async (req, res, next) => {
+export const getFacultyAttendance = asyncHandler(async (req, res, next) => {
   let query = { faculty: req.params.facultyId };
 
   if (req.query.startDate && req.query.endDate) {
@@ -370,7 +370,7 @@ exports.getFacultyAttendance = asyncHandler(async (req, res, next) => {
 // @desc      Get attendance statistics
 // @route     GET /api/v1/attendance/stats
 // @access    Private/Admin
-exports.getAttendanceStats = asyncHandler(async (req, res, next) => {
+export const getAttendanceStats = asyncHandler(async (req, res, next) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 

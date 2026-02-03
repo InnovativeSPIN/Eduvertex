@@ -1,4 +1,4 @@
-const {
+import {
     Document,
     Packer,
     Paragraph,
@@ -8,9 +8,9 @@ const {
     TextRun,
     WidthType,
     AlignmentType,
-} = require("docx");
+} from "docx";
 
-const handleDownloadProfile = async (req, res) => {
+export const handleDownloadProfile = async (req, res) => {
     try {
         const {
             facultyData,
@@ -110,5 +110,3 @@ const handleDownloadProfile = async (req, res) => {
         res.status(500).json({ message: "Failed to generate document" });
     }
 };
-
-module.exports = { handleDownloadProfile };

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const TimetableSchema = new mongoose.Schema({
   class: {
@@ -82,7 +82,7 @@ const TimetableSchema = new mongoose.Schema({
 });
 
 // Update the updatedAt field before saving
-TimetableSchema.pre('save', function(next) {
+TimetableSchema.pre('save', function (next) {
   this.updatedAt = Date.now();
   next();
 });
@@ -91,4 +91,4 @@ TimetableSchema.pre('save', function(next) {
 TimetableSchema.index({ class: 1, academicYear: 1, isActive: 1 });
 TimetableSchema.index({ department: 1, semester: 1, academicYear: 1 });
 
-module.exports = mongoose.model('Timetable', TimetableSchema);
+export default mongoose.model('Timetable', TimetableSchema);

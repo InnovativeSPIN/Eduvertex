@@ -1,5 +1,5 @@
-const express = require('express');
-const {
+import express from 'express';
+import {
   getAllTimetables,
   getTimetable,
   getTimetableByClass,
@@ -13,11 +13,11 @@ const {
   getPeriodConfigs,
   createPeriodConfig,
   getTodaySchedule
-} = require('../../controllers/timetable/timetable.controller');
+} from '../../controllers/timetable/timetable.controller.js';
+
+import { protect, authorize } from '../../middleware/auth.js';
 
 const router = express.Router();
-
-const { protect, authorize } = require('../../middleware/auth');
 
 // All routes require authentication
 router.use(protect);
@@ -52,4 +52,4 @@ router.route('/:id/slots/:slotId')
   .put(authorize('superadmin', 'executiveadmin', 'academicadmin'), updateSlot)
   .delete(authorize('superadmin', 'executiveadmin', 'academicadmin'), removeSlot);
 
-module.exports = router;
+export default router;

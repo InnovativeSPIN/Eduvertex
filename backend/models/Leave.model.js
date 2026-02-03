@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const LeaveSchema = new mongoose.Schema({
   applicant: {
@@ -72,7 +72,7 @@ const LeaveSchema = new mongoose.Schema({
 });
 
 // Calculate total days before saving
-LeaveSchema.pre('save', function(next) {
+LeaveSchema.pre('save', function (next) {
   if (this.isModified('startDate') || this.isModified('endDate')) {
     const start = new Date(this.startDate);
     const end = new Date(this.endDate);
@@ -87,4 +87,4 @@ LeaveSchema.pre('save', function(next) {
 LeaveSchema.index({ applicant: 1, startDate: 1 });
 LeaveSchema.index({ status: 1, department: 1 });
 
-module.exports = mongoose.model('Leave', LeaveSchema);
+export default mongoose.model('Leave', LeaveSchema);

@@ -1,12 +1,12 @@
-const ErrorResponse = require('../../utils/errorResponse');
-const asyncHandler = require('../../middleware/async');
-const Leave = require('../../models/Leave.model');
-const LeaveBalance = require('../../models/LeaveBalance.model');
+import ErrorResponse from '../../utils/errorResponse.js';
+import asyncHandler from '../../middleware/async.js';
+import Leave from '../../models/Leave.model.js';
+import LeaveBalance from '../../models/LeaveBalance.model.js';
 
 // @desc      Get all leave applications
 // @route     GET /api/v1/leave
 // @access    Private
-exports.getAllLeaves = asyncHandler(async (req, res, next) => {
+export const getAllLeaves = asyncHandler(async (req, res, next) => {
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 25;
   const startIndex = (page - 1) * limit;
@@ -69,7 +69,7 @@ exports.getAllLeaves = asyncHandler(async (req, res, next) => {
 // @desc      Get single leave application
 // @route     GET /api/v1/leave/:id
 // @access    Private
-exports.getLeave = asyncHandler(async (req, res, next) => {
+export const getLeave = asyncHandler(async (req, res, next) => {
   const leave = await Leave.findById(req.params.id)
     .populate('applicant', 'name email role')
     .populate('approvedBy', 'name')
@@ -96,7 +96,7 @@ exports.getLeave = asyncHandler(async (req, res, next) => {
 // @desc      Create leave application
 // @route     POST /api/v1/leave
 // @access    Private
-exports.createLeave = asyncHandler(async (req, res, next) => {
+export const createLeave = asyncHandler(async (req, res, next) => {
   req.body.applicant = req.user.id;
   req.body.applicantType = req.user.role === 'faculty' ? 'faculty' : 'student';
 
@@ -131,7 +131,7 @@ exports.createLeave = asyncHandler(async (req, res, next) => {
 // @desc      Update leave application
 // @route     PUT /api/v1/leave/:id
 // @access    Private
-exports.updateLeave = asyncHandler(async (req, res, next) => {
+export const updateLeave = asyncHandler(async (req, res, next) => {
   let leave = await Leave.findById(req.params.id);
 
   if (!leave) {
@@ -161,7 +161,7 @@ exports.updateLeave = asyncHandler(async (req, res, next) => {
 // @desc      Approve/Reject leave application
 // @route     PUT /api/v1/leave/:id/status
 // @access    Private/Admin
-exports.updateLeaveStatus = asyncHandler(async (req, res, next) => {
+export const updateLeaveStatus = asyncHandler(async (req, res, next) => {
   const leave = await Leave.findById(req.params.id);
 
   if (!leave) {
@@ -203,7 +203,7 @@ exports.updateLeaveStatus = asyncHandler(async (req, res, next) => {
 // @desc      Cancel leave application
 // @route     PUT /api/v1/leave/:id/cancel
 // @access    Private
-exports.cancelLeave = asyncHandler(async (req, res, next) => {
+export const cancelLeave = asyncHandler(async (req, res, next) => {
   const leave = await Leave.findById(req.params.id);
 
   if (!leave) {
@@ -241,7 +241,7 @@ exports.cancelLeave = asyncHandler(async (req, res, next) => {
 // @desc      Delete leave application
 // @route     DELETE /api/v1/leave/:id
 // @access    Private/Admin
-exports.deleteLeave = asyncHandler(async (req, res, next) => {
+export const deleteLeave = asyncHandler(async (req, res, next) => {
   const leave = await Leave.findById(req.params.id);
 
   if (!leave) {
@@ -259,7 +259,7 @@ exports.deleteLeave = asyncHandler(async (req, res, next) => {
 // @desc      Get my leave applications
 // @route     GET /api/v1/leave/my-leaves
 // @access    Private
-exports.getMyLeaves = asyncHandler(async (req, res, next) => {
+export const getMyLeaves = asyncHandler(async (req, res, next) => {
   const leaves = await Leave.find({ applicant: req.user.id })
     .populate('approvedBy', 'name')
     .sort('-createdAt');
@@ -274,7 +274,7 @@ exports.getMyLeaves = asyncHandler(async (req, res, next) => {
 // @desc      Get leave balance
 // @route     GET /api/v1/leave/balance
 // @access    Private
-exports.getLeaveBalance = asyncHandler(async (req, res, next) => {
+export const getLeaveBalance = asyncHandler(async (req, res, next) => {
   const currentYear = new Date().getFullYear().toString();
 
   let leaveBalance = await LeaveBalance.findOne({
@@ -300,7 +300,7 @@ exports.getLeaveBalance = asyncHandler(async (req, res, next) => {
 // @desc      Get pending leave count (for admin dashboard)
 // @route     GET /api/v1/leave/pending-count
 // @access    Private/Admin
-exports.getPendingCount = asyncHandler(async (req, res, next) => {
+export const getPendingCount = asyncHandler(async (req, res, next) => {
   const count = await Leave.countDocuments({ status: 'pending' });
 
   res.status(200).json({

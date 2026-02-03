@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const AttendanceSchema = new mongoose.Schema({
   class: {
@@ -69,7 +69,7 @@ const AttendanceSchema = new mongoose.Schema({
 });
 
 // Calculate totals before saving
-AttendanceSchema.pre('save', function(next) {
+AttendanceSchema.pre('save', function (next) {
   this.totalPresent = this.students.filter(s => s.status === 'present').length;
   this.totalAbsent = this.students.filter(s => s.status === 'absent').length;
   this.totalLate = this.students.filter(s => s.status === 'late').length;
@@ -83,4 +83,4 @@ AttendanceSchema.index({ class: 1, date: 1 });
 AttendanceSchema.index({ faculty: 1, date: 1 });
 AttendanceSchema.index({ 'students.student': 1, date: 1 });
 
-module.exports = mongoose.model('Attendance', AttendanceSchema);
+export default mongoose.model('Attendance', AttendanceSchema);
