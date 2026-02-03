@@ -23,9 +23,6 @@ import Leave from './pages/academics/Leave';
 // Portfolio (combines Records and Extra-curricular)
 import StudentPortfolio from './pages/portfolio/StudentPortfolio';
 
-// Knowledge
-import Materials from './pages/knowledge/Materials';
-import Discussions from './pages/knowledge/Discussions';
 
 // Notifications
 import Notifications from './pages/notifications/Notifications';
@@ -76,9 +73,6 @@ const StudentRoutes = () => {
           <Route path="portfolio/certifications" element={<StudentPortfolio />} />
           <Route path="portfolio/projects" element={<StudentPortfolio />} />
 
-          {/* Knowledge */}
-          <Route path="knowledge/materials" element={<Materials />} />
-          <Route path="knowledge/discussions" element={<Discussions />} />
 
           {/* Notifications */}
           <Route path="notifications" element={<Notifications />} />
