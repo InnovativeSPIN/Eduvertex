@@ -181,20 +181,6 @@ export default function Marks() {
                 </tr>
               ))}
             </tbody>
-            <tfoot>
-              <tr className="bg-muted/50">
-                <td colSpan={2} className="font-semibold">Total</td>
-                <td className="text-center font-semibold">
-                  {data.internal1.reduce((sum, s) => sum + s.internal, 0)}
-                </td>
-                <td className="text-center font-semibold">
-                  {data.internal1.reduce((sum, s) => sum + s.assessment, 0)}
-                </td>
-                <td className="text-center font-semibold">
-                  {data.internal1.reduce((sum, s) => sum + s.total, 0)}
-                </td>
-              </tr>
-            </tfoot>
           </table>
         </div>
       </SectionCard>
@@ -223,20 +209,6 @@ export default function Marks() {
                 </tr>
               ))}
             </tbody>
-            <tfoot>
-              <tr className="bg-muted/50">
-                <td colSpan={2} className="font-semibold">Total</td>
-                <td className="text-center font-semibold">
-                  {data.internal2.reduce((sum, s) => sum + s.internal, 0)}
-                </td>
-                <td className="text-center font-semibold">
-                  {data.internal2.reduce((sum, s) => sum + s.assessment, 0)}
-                </td>
-                <td className="text-center font-semibold">
-                  {data.internal2.reduce((sum, s) => sum + s.total, 0)}
-                </td>
-              </tr>
-            </tfoot>
           </table>
         </div>
       </SectionCard>
@@ -271,20 +243,6 @@ export default function Marks() {
                 </tr>
               ))}
             </tbody>
-            <tfoot>
-              <tr className="bg-muted/50">
-                <td colSpan={2} className="font-semibold">Total</td>
-                <td className="text-center font-semibold">{data.totalCredits}</td>
-                <td className="text-center font-semibold">
-                  {data.subjects.reduce((sum, s) => sum + s.internal, 0)}
-                </td>
-                <td className="text-center font-semibold">
-                  {data.subjects.reduce((sum, s) => sum + s.external, 0)}
-                </td>
-                <td className="text-center font-semibold">{totalMarks}</td>
-                <td></td>
-              </tr>
-            </tfoot>
           </table>
         </div>
       </SectionCard>
