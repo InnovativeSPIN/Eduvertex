@@ -111,10 +111,6 @@ export default function Assessments() {
 
       <Tabs defaultValue="invigilation" className="w-full">
         <TabsList className="mb-6">
-          <TabsTrigger value="invigilation" className="flex items-center gap-2">
-            <Eye className="w-4 h-4" />
-            Invigilation Schedule
-          </TabsTrigger>
           <TabsTrigger value="papers" className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
             Question Papers

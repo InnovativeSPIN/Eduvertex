@@ -30,6 +30,13 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/pages/faculty/lib/utils";
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+} from "recharts";
 
 interface ClassSubject {
   id: string;
@@ -410,16 +417,16 @@ export default function Academics() {
       alert(error);
       return;
     }
-    
-    const platformText = platform === "google" ? "Google Classroom" : 
-                        platform === "canvas" ? "Canvas LMS" : "Google Classroom and Canvas";
-    
+
+    const platformText = platform === "google" ? "Google Classroom" :
+      platform === "canvas" ? "Canvas LMS" : "Google Classroom and Canvas";
+
     setSuccessMessage(`Study material shared successfully!\nSubject: ${materialFormData.subjectName}\nPlatform: ${platformText}`);
-    
+
     if (platform === "google") setShowGoogleModal(false);
     if (platform === "canvas") setShowCanvasModal(false);
     if (platform === "both") setShowBothModal(false);
-    
+
     setMaterialFormData({
       subjectName: "",
       materialType: "",
@@ -429,7 +436,7 @@ export default function Academics() {
       linkUrl: "",
       targetPlatform: "google"
     });
-    
+
     setTimeout(() => setSuccessMessage(null), 4000);
   };
 
@@ -447,18 +454,18 @@ export default function Academics() {
       [selectedClassId]: prev[selectedClassId].map(student => {
         if (student.id === studentId) {
           const updatedStudent = { ...student, [field]: value };
-          
+
           // Auto-calculate Total Marks when internalMarks or assignmentMarks change
           if (field === 'internalMarks' || field === 'assignmentMarks') {
             updatedStudent.totalMarks = updatedStudent.internalMarks + updatedStudent.assignmentMarks;
           }
-          
+
           // Auto-calculate Pass Percentage and Exam Status based on Total Marks
           if (field === 'internalMarks' || field === 'assignmentMarks') {
             updatedStudent.passPercentage = updatedStudent.totalMarks;
             updatedStudent.examStatus = updatedStudent.totalMarks >= 40 ? 'Pass' : 'Fail';
           }
-          
+
           return updatedStudent;
         }
         return student;
@@ -548,10 +555,10 @@ export default function Academics() {
             <FileUp className="w-4 h-4" />
             Study Materials
           </TabsTrigger>
-         
+
           <TabsTrigger value="coursefile" className="flex items-center gap-2">
             <ClipboardList className="w-4 h-4" />
-            Course File 
+            Course File
           </TabsTrigger>
           <TabsTrigger value="credits" className="flex items-center gap-2">
             <GraduationCap className="w-4 h-4" />
@@ -560,34 +567,201 @@ export default function Academics() {
         </TabsList>
 
         <TabsContent value="syllabus">
-          {/* Progress Overview */}
+          {/* Subject Information Card */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="widget-card mb-6"
           >
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+            <div className="space-y-4">
               <div>
-                <h3 className="text-lg font-semibold text-foreground">
+                <h3 className="text-2xl font-bold text-foreground mb-1">
                   {selectedClass.subject}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  {selectedClass.program} Semester {selectedClass.semester} Section {selectedClass.section}
+                  {selectedClass.program} • Semester {selectedClass.semester} • Section {selectedClass.section}
                 </p>
               </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-secondary">
-                  {completedTopics}/{topics.length}
-                </p>
-                <p className="text-xs text-muted-foreground">Topics Completed</p>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="p-4 bg-primary/5 rounded-xl border border-primary/10 hover:border-primary/30 transition-colors">
+                  <p className="text-3xl font-bold text-primary mb-1">
+                    {completedTopics}
+                  </p>
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Topics Completed</p>
+                </div>
+                <div className="p-4 bg-muted/50 rounded-xl border border-border">
+                  <p className="text-3xl font-bold text-muted-foreground mb-1">
+                    {topics.length}
+                  </p>
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Topics</p>
+                </div>
+                <div className="p-4 bg-secondary/5 rounded-xl border border-secondary/10 hover:border-secondary/30 transition-colors">
+                  <p className="text-3xl font-bold text-secondary mb-1">
+                    {completedHours}
+                  </p>
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Hours Covered</p>
+                </div>
+                <div className="p-4 bg-muted/50 rounded-xl border border-border">
+                  <p className="text-3xl font-bold text-muted-foreground mb-1">
+                    {totalHours}
+                  </p>
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Hours</p>
+                </div>
               </div>
             </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Hours Covered</span>
-                <span className="font-medium">{completedHours}/{totalHours} hrs</span>
+          </motion.div>
+
+          {/* Coverage Analytics Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="widget-card mb-6"
+          >
+            <h3 className="section-title mb-6">Syllabus Coverage Analytics</h3>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Pie Chart */}
+              <div className="flex items-center justify-center">
+                <div className="relative w-80 h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <defs>
+                        <linearGradient id="completedGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(var(--secondary))" stopOpacity={1} />
+                          <stop offset="100%" stopColor="hsl(var(--secondary))" stopOpacity={0.7} />
+                        </linearGradient>
+                        <linearGradient id="remainingGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(var(--muted))" stopOpacity={0.5} />
+                          <stop offset="100%" stopColor="hsl(var(--muted))" stopOpacity={0.3} />
+                        </linearGradient>
+                      </defs>
+                      <Pie
+                        data={[
+                          { name: 'Completed', value: progressPercentage, color: 'url(#completedGradient)' },
+                          { name: 'Remaining', value: 100 - progressPercentage, color: 'url(#remainingGradient)' }
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={85}
+                        outerRadius={130}
+                        paddingAngle={2}
+                        dataKey="value"
+                        startAngle={90}
+                        endAngle={-270}
+                      >
+                        {[
+                          { name: 'Completed', value: progressPercentage, color: 'url(#completedGradient)' },
+                          { name: 'Remaining', value: 100 - progressPercentage, color: 'url(#remainingGradient)' }
+                        ].map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} stroke="hsl(var(--background))" strokeWidth={3} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          fontSize: '12px'
+                        }}
+                        formatter={(value: number) => `${value.toFixed(1)}%`}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+
+                  {/* Center Content */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <div className="text-center">
+                      <div className="text-6xl font-bold bg-gradient-to-br from-secondary to-secondary/60 bg-clip-text text-transparent mb-2">
+                        {Math.round(progressPercentage)}%
+                      </div>
+                      <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                        Coverage
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {completedTopics} of {topics.length} topics
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Legend */}
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex gap-4 text-xs">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-secondary"></div>
+                      <span className="text-muted-foreground">Completed</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-muted"></div>
+                      <span className="text-muted-foreground">Remaining</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <Progress value={progressPercentage} className="h-3" />
+
+              {/* Statistics Panel */}
+              <div className="space-y-4">
+                <div className="p-5 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold text-foreground">Progress Status</span>
+                    <Badge className={cn(
+                      "font-semibold",
+                      progressPercentage >= 75 ? "bg-success/20 text-success border-success/30" :
+                        progressPercentage >= 50 ? "bg-warning/20 text-warning border-warning/30" :
+                          "bg-destructive/20 text-destructive border-destructive/30"
+                    )} variant="outline">
+                      {progressPercentage >= 75 ? "On Track" : progressPercentage >= 50 ? "In Progress" : "Behind Schedule"}
+                    </Badge>
+                  </div>
+                  <Progress value={progressPercentage} className="h-3 mb-2" />
+                  <p className="text-xs text-muted-foreground">
+                    {Math.round(progressPercentage)}% of syllabus completed
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-success/5 rounded-xl border border-success/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Check className="w-4 h-4 text-success" />
+                      <span className="text-xs font-medium text-muted-foreground uppercase">Completed</span>
+                    </div>
+                    <p className="text-2xl font-bold text-success">{completedTopics}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{completedHours} hours</p>
+                  </div>
+
+                  <div className="p-4 bg-muted/50 rounded-xl border border-border">
+                    <div className="flex items-center gap-2 mb-2">
+                      <BookOpen className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-xs font-medium text-muted-foreground uppercase">Remaining</span>
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">{topics.length - completedTopics}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{totalHours - completedHours} hours</p>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-secondary/5 rounded-xl border border-secondary/20">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold text-foreground">Completion Rate</span>
+                    <span className="text-lg font-bold text-secondary">
+                      {topics.length > 0 ? Math.round((completedTopics / topics.length) * 100) : 0}%
+                    </span>
+                  </div>
+                  <div className="space-y-2 text-xs text-muted-foreground">
+                    <div className="flex justify-between">
+                      <span>Topics per week (avg)</span>
+                      <span className="font-medium text-foreground">
+                        {(completedTopics / Math.max(1, Math.ceil(completedHours / 7))).toFixed(1)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Hours per topic (avg)</span>
+                      <span className="font-medium text-foreground">
+                        {completedTopics > 0 ? (completedHours / completedTopics).toFixed(1) : 0}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </motion.div>
 
@@ -619,7 +793,7 @@ export default function Academics() {
                     <div>
                       <p className={cn(
                         "font-medium",
-                        topic.completed && "line-through text-muted-foreground"
+                        topic.completed && "text-success"
                       )}>
                         {topic.name}
                       </p>
@@ -659,7 +833,7 @@ export default function Academics() {
               <Send className="w-5 h-5 text-secondary" />
               Share Study Materials
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Button
                 variant="outline"
@@ -717,7 +891,7 @@ export default function Academics() {
                     <X className="w-5 h-5" />
                   </button>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -726,7 +900,7 @@ export default function Academics() {
                       </label>
                       <Input
                         value={materialFormData.subjectName}
-                        onChange={(e) => setMaterialFormData({...materialFormData, subjectName: e.target.value})}
+                        onChange={(e) => setMaterialFormData({ ...materialFormData, subjectName: e.target.value })}
                         placeholder="Enter subject name"
                       />
                     </div>
@@ -734,7 +908,7 @@ export default function Academics() {
                       <label className="text-sm font-medium text-foreground block mb-2">
                         Material Type
                       </label>
-                      <Select value={materialFormData.materialType} onValueChange={(value) => setMaterialFormData({...materialFormData, materialType: value})}>
+                      <Select value={materialFormData.materialType} onValueChange={(value) => setMaterialFormData({ ...materialFormData, materialType: value })}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select type..." />
                         </SelectTrigger>
@@ -756,7 +930,7 @@ export default function Academics() {
                     </label>
                     <Input
                       value={materialFormData.materialTitle}
-                      onChange={(e) => setMaterialFormData({...materialFormData, materialTitle: e.target.value})}
+                      onChange={(e) => setMaterialFormData({ ...materialFormData, materialTitle: e.target.value })}
                       placeholder="e.g., Unit 3 Trees Notes"
                     />
                   </div>
@@ -767,7 +941,7 @@ export default function Academics() {
                     </label>
                     <textarea
                       value={materialFormData.materialDescription}
-                      onChange={(e) => setMaterialFormData({...materialFormData, materialDescription: e.target.value})}
+                      onChange={(e) => setMaterialFormData({ ...materialFormData, materialDescription: e.target.value })}
                       placeholder="Add description for your material..."
                       className="w-full p-3 border border-border rounded-lg bg-muted/50 text-foreground placeholder-muted-foreground text-sm resize-none focus:outline-none focus:border-primary"
                       rows={2}
@@ -780,7 +954,7 @@ export default function Academics() {
                     </label>
                     <Input
                       value={materialFormData.linkUrl}
-                      onChange={(e) => setMaterialFormData({...materialFormData, linkUrl: e.target.value})}
+                      onChange={(e) => setMaterialFormData({ ...materialFormData, linkUrl: e.target.value })}
                       placeholder="Paste Google Classroom / Drive / YouTube link"
                       type="url"
                     />
@@ -835,7 +1009,7 @@ export default function Academics() {
                     <X className="w-5 h-5" />
                   </button>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -844,7 +1018,7 @@ export default function Academics() {
                       </label>
                       <Input
                         value={materialFormData.subjectName}
-                        onChange={(e) => setMaterialFormData({...materialFormData, subjectName: e.target.value})}
+                        onChange={(e) => setMaterialFormData({ ...materialFormData, subjectName: e.target.value })}
                         placeholder="Enter subject name"
                       />
                     </div>
@@ -852,7 +1026,7 @@ export default function Academics() {
                       <label className="text-sm font-medium text-foreground block mb-2">
                         Material Type
                       </label>
-                      <Select value={materialFormData.materialType} onValueChange={(value) => setMaterialFormData({...materialFormData, materialType: value})}>
+                      <Select value={materialFormData.materialType} onValueChange={(value) => setMaterialFormData({ ...materialFormData, materialType: value })}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select type..." />
                         </SelectTrigger>
@@ -874,7 +1048,7 @@ export default function Academics() {
                     </label>
                     <Input
                       value={materialFormData.materialTitle}
-                      onChange={(e) => setMaterialFormData({...materialFormData, materialTitle: e.target.value})}
+                      onChange={(e) => setMaterialFormData({ ...materialFormData, materialTitle: e.target.value })}
                       placeholder="e.g., Unit 3 Trees Notes"
                     />
                   </div>
@@ -885,7 +1059,7 @@ export default function Academics() {
                     </label>
                     <textarea
                       value={materialFormData.materialDescription}
-                      onChange={(e) => setMaterialFormData({...materialFormData, materialDescription: e.target.value})}
+                      onChange={(e) => setMaterialFormData({ ...materialFormData, materialDescription: e.target.value })}
                       placeholder="Add description for your material..."
                       className="w-full p-3 border border-border rounded-lg bg-muted/50 text-foreground placeholder-muted-foreground text-sm resize-none focus:outline-none focus:border-primary"
                       rows={2}
@@ -898,7 +1072,7 @@ export default function Academics() {
                     </label>
                     <Input
                       value={materialFormData.linkUrl}
-                      onChange={(e) => setMaterialFormData({...materialFormData, linkUrl: e.target.value})}
+                      onChange={(e) => setMaterialFormData({ ...materialFormData, linkUrl: e.target.value })}
                       placeholder="Paste Canvas / Drive / YouTube link"
                       type="url"
                     />
@@ -953,7 +1127,7 @@ export default function Academics() {
                     <X className="w-5 h-5" />
                   </button>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -962,7 +1136,7 @@ export default function Academics() {
                       </label>
                       <Input
                         value={materialFormData.subjectName}
-                        onChange={(e) => setMaterialFormData({...materialFormData, subjectName: e.target.value})}
+                        onChange={(e) => setMaterialFormData({ ...materialFormData, subjectName: e.target.value })}
                         placeholder="Enter subject name"
                       />
                     </div>
@@ -970,7 +1144,7 @@ export default function Academics() {
                       <label className="text-sm font-medium text-foreground block mb-2">
                         Material Type
                       </label>
-                      <Select value={materialFormData.materialType} onValueChange={(value) => setMaterialFormData({...materialFormData, materialType: value})}>
+                      <Select value={materialFormData.materialType} onValueChange={(value) => setMaterialFormData({ ...materialFormData, materialType: value })}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select type..." />
                         </SelectTrigger>
@@ -992,7 +1166,7 @@ export default function Academics() {
                     </label>
                     <Input
                       value={materialFormData.materialTitle}
-                      onChange={(e) => setMaterialFormData({...materialFormData, materialTitle: e.target.value})}
+                      onChange={(e) => setMaterialFormData({ ...materialFormData, materialTitle: e.target.value })}
                       placeholder="e.g., Unit 3 Trees Notes"
                     />
                   </div>
@@ -1003,7 +1177,7 @@ export default function Academics() {
                     </label>
                     <textarea
                       value={materialFormData.materialDescription}
-                      onChange={(e) => setMaterialFormData({...materialFormData, materialDescription: e.target.value})}
+                      onChange={(e) => setMaterialFormData({ ...materialFormData, materialDescription: e.target.value })}
                       placeholder="Add description for your material..."
                       className="w-full p-3 border border-border rounded-lg bg-muted/50 text-foreground placeholder-muted-foreground text-sm resize-none focus:outline-none focus:border-primary"
                       rows={2}
@@ -1016,7 +1190,7 @@ export default function Academics() {
                     </label>
                     <Input
                       value={materialFormData.linkUrl}
-                      onChange={(e) => setMaterialFormData({...materialFormData, linkUrl: e.target.value})}
+                      onChange={(e) => setMaterialFormData({ ...materialFormData, linkUrl: e.target.value })}
                       placeholder="Paste Google Classroom / Canvas / Drive / YouTube link"
                       type="url"
                     />
@@ -1216,11 +1390,10 @@ export default function Academics() {
                         </td>
                         <td className="p-3 text-center">
                           <Badge
-                            className={`mx-auto ${
-                              student.examStatus === 'Pass'
-                                ? 'bg-success/20 text-success border border-success/30'
-                                : 'bg-destructive/20 text-destructive border border-destructive/30'
-                            }`}
+                            className={`mx-auto ${student.examStatus === 'Pass'
+                              ? 'bg-success/20 text-success border border-success/30'
+                              : 'bg-destructive/20 text-destructive border border-destructive/30'
+                              }`}
                             variant="outline"
                           >
                             {student.examStatus}
@@ -1549,8 +1722,8 @@ export default function Academics() {
                         <td className="p-3 text-sm font-mono text-secondary">{subject.code}</td>
                         <td className="p-3 text-sm font-medium">{subject.name}</td>
                         <td className="p-3 text-center">
-                          <Badge 
-                            variant="outline" 
+                          <Badge
+                            variant="outline"
                             className={cn(
                               "text-xs",
                               subject.category === "PCC" && "border-primary/50 text-primary bg-primary/5",
