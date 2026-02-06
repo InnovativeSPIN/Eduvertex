@@ -480,18 +480,6 @@ export default function Leave() {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Request To *</label>
-            <select
-              value={formData.recipient}
-              onChange={(e) => setFormData({ ...formData, recipient: e.target.value })}
-              className="input-field"
-            >
-              <option value="Class Incharge">Class Incharge</option>
-              <option value="HOD">Head of Department (HOD)</option>
-            </select>
-          </div>
-
           <div className="flex justify-end gap-3 pt-4">
             <button
               type="button"
