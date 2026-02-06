@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/pages/faculty/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/pages/faculty/components/ui/tabs";
 import { Badge } from "@/pages/faculty/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/pages/faculty/components/ui/select";
 import { NotificationBell } from "@/pages/faculty/components/notifications/NotificationBell";
 import {
   Mail,
@@ -1156,25 +1157,51 @@ export default function Profile() {
                     <div className="grid grid-cols-2 gap-3">
                       <div className="flex flex-col gap-1">
                         <label className="text-xs font-medium">Degree *</label>
-                        <input
-                          type="text"
-                          placeholder="e.g., Ph.D., M.E., B.E."
+                        <Select
                           value={newEducation.degree}
-                          onChange={(e) => handleNewEducationChange('degree', e.target.value)}
-                          className="input input-bordered text-sm"
+                          onValueChange={(value) => handleNewEducationChange('degree', value)}
                           disabled={loading}
-                        />
+                        >
+                          <SelectTrigger className="h-10 text-sm">
+                            <SelectValue placeholder="Select Degree" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Ph.D.">Ph.D.</SelectItem>
+                            <SelectItem value="M.E.">M.E.</SelectItem>
+                            <SelectItem value="B.E.">B.E.</SelectItem>
+                            <SelectItem value="B.Tech">B.Tech</SelectItem>
+                            <SelectItem value="M.Tech">M.Tech</SelectItem>
+                            <SelectItem value="M.S.">M.S.</SelectItem>
+                            <SelectItem value="Diploma">Diploma</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="flex flex-col gap-1">
                         <label className="text-xs font-medium">Branch *</label>
-                        <input
-                          type="text"
-                          placeholder="e.g., Computer Science"
+                        <Select
                           value={newEducation.branch}
-                          onChange={(e) => handleNewEducationChange('branch', e.target.value)}
-                          className="input input-bordered text-sm"
+                          onValueChange={(value) => handleNewEducationChange('branch', value)}
                           disabled={loading}
-                        />
+                        >
+                          <SelectTrigger className="h-10 text-sm">
+                            <SelectValue placeholder="Select Branch" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Computer Science Engineering">Computer Science Engineering</SelectItem>
+                            <SelectItem value="Electronics & Communication Engineering">Electronics & Communication Engineering</SelectItem>
+                            <SelectItem value="Electrical & Electronics Engineering">Electrical & Electronics Engineering</SelectItem>
+                            <SelectItem value="Mechanical Engineering">Mechanical Engineering</SelectItem>
+                            <SelectItem value="Civil Engineering">Civil Engineering</SelectItem>
+                            <SelectItem value="Information Technology">Information Technology</SelectItem>
+                            <SelectItem value="Artificial Intelligence & Data Science">Artificial Intelligence & Data Science</SelectItem>
+                            <SelectItem value="Artificial Intelligence & Machine Learning">Artificial Intelligence & Machine Learning</SelectItem>
+                            <SelectItem value="Cyber Security">Cyber Security</SelectItem>
+                            <SelectItem value="Internet of Things">Internet of Things</SelectItem>
+                            <SelectItem value="Data Science">Data Science</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                     <div className="flex flex-col gap-1">
