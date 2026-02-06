@@ -6,7 +6,10 @@ import crypto from 'crypto';
 const UserSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, 'Please add a name']
+    required: false
+  },
+  admin_name: {
+    type: String
   },
   email: {
     type: String,
@@ -19,13 +22,34 @@ const UserSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['superadmin', 'executiveadmin', 'academicadmin', 'faculty', 'student'],
+    enum: [
+      'superadmin',
+      'super-admin',
+      'executiveadmin',
+      'academicadmin',
+      'exam_cell_admin',
+      'placement_cell_admin',
+      'research_development_admin',
+      'department-admin',
+      'faculty',
+      'student'
+    ],
     default: 'student'
+  },
+  admintype: {
+    type: String
+  },
+  admin_id: {
+    type: String
   },
   password: {
     type: String,
-    required: [true, 'Please add a password'],
-    minlength: 6,
+    required: false,
+    minlength: 3,
+    select: false
+  },
+  pwd: {
+    type: String,
     select: false
   },
   phone: {
@@ -37,6 +61,9 @@ const UserSchema = new mongoose.Schema({
     default: 'default-avatar.png'
   },
   department: {
+    type: String
+  },
+  departmentCode: {
     type: String
   },
   isActive: {
@@ -52,6 +79,9 @@ const UserSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
+}, {
+  strict: false, // Allow fields not defined in schema
+  collection: 'users' // Explicitly set collection name
 });
 
 // Encrypt password using bcrypt
@@ -73,7 +103,15 @@ UserSchema.methods.getSignedJwtToken = function () {
 
 // Match user entered password to hashed password in database
 UserSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
+  // Check if we have a hashed password
+  if (this.password) {
+    return await bcrypt.compare(enteredPassword, this.password);
+  }
+  // Check legacy plaintext pwd field
+  if (this.pwd) {
+    return enteredPassword === this.pwd;
+  }
+  return false;
 };
 
 // Generate and hash password token
