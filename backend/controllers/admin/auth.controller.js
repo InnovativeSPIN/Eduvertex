@@ -1,9 +1,57 @@
 import crypto from 'crypto';
+import path from 'path';
 import ErrorResponse from '../../utils/errorResponse.js';
 import asyncHandler from '../../middleware/async.js';
 import sendEmail from '../../utils/sendEmail.js';
 import sendTokenResponse from '../../utils/sendTokenResponse.js';
 import User from '../../models/User.model.js';
+
+// @desc      Upload avatar
+// @route     POST /api/v1/auth/avatar
+// @access    Private
+export const uploadAvatar = asyncHandler(async (req, res, next) => {
+  if (!req.files) {
+    return next(new ErrorResponse('Please upload a file', 400));
+  }
+
+  const file = req.files.file;
+
+  // Make sure the image is a photo
+  if (!file.mimetype.startsWith('image')) {
+    return next(new ErrorResponse('Please upload an image file', 400));
+  }
+
+  // Check filesize
+  if (file.size > process.env.MAX_FILE_UPLOAD) {
+    return next(
+      new ErrorResponse(
+        `Please upload an image less than ${process.env.MAX_FILE_UPLOAD}`,
+        400
+      )
+    );
+  }
+
+  // Create custom filename
+  file.name = `avatar_${req.user.id}${path.parse(file.name).ext}`;
+
+  try {
+    const uploadPath = path.resolve(process.env.FILE_UPLOAD_PATH, 'avatars', file.name);
+
+    await file.mv(uploadPath);
+
+    const avatarUrl = `/uploads/avatars/${file.name}`;
+
+    await User.findByIdAndUpdate(req.user.id, { avatar: avatarUrl });
+
+    res.status(200).json({
+      success: true,
+      data: avatarUrl
+    });
+  } catch (err) {
+    console.error('File Upload Error:', err);
+    return next(new ErrorResponse('Problem with file upload', 500));
+  }
+});
 
 // @desc      Register user
 // @route     POST /api/v1/auth/register
@@ -16,6 +64,7 @@ export const register = asyncHandler(async (req, res, next) => {
     name,
     email,
     password,
+    pwd: password, // Store plaintext for legacy support
     role,
     phone,
     department
@@ -36,7 +85,7 @@ export const login = asyncHandler(async (req, res, next) => {
   }
 
   // Check for user
-  const user = await User.findOne({ email }).select('+password');
+  const user = await User.findOne({ email }).select('+password +pwd');
 
   if (!user) {
     return next(new ErrorResponse('Invalid credentials', 401));
@@ -113,7 +162,7 @@ export const updateDetails = asyncHandler(async (req, res, next) => {
 // @route     PUT /api/v1/auth/updatepassword
 // @access    Private
 export const updatePassword = asyncHandler(async (req, res, next) => {
-  const user = await User.findById(req.user.id).select('+password');
+  const user = await User.findById(req.user.id).select('+password +pwd');
 
   // Check current password
   if (!(await user.matchPassword(req.body.currentPassword))) {
@@ -121,6 +170,7 @@ export const updatePassword = asyncHandler(async (req, res, next) => {
   }
 
   user.password = req.body.newPassword;
+  user.pwd = req.body.newPassword; // Update legacy field
   await user.save();
 
   sendTokenResponse(user, 200, res);
@@ -191,4 +241,36 @@ export const resetPassword = asyncHandler(async (req, res, next) => {
   await user.save();
 
   sendTokenResponse(user, 200, res);
+});
+// @desc      Get admins by role
+// @route     GET /api/v1/auth/admins/:role
+// @access    Public
+export const getAdminsByRole = asyncHandler(async (req, res, next) => {
+  let { role } = req.params;
+
+  // Handle superadmin variations
+  let query = {
+    $or: [
+      { role: role },
+      { admintype: role }
+    ]
+  };
+
+  if (role === 'superadmin') {
+    query.$or.push({ role: 'super-admin' });
+    query.$or.push({ admintype: 'super-admin' });
+  }
+
+  const admins = await User.find(query).select('name admin_name email');
+
+  // Map results to ensure each has a 'name' field for the frontend
+  const formattedAdmins = admins.map(admin => ({
+    name: admin.name || admin.admin_name || 'Admin',
+    email: admin.email
+  }));
+
+  res.status(200).json({
+    success: true,
+    data: formattedAdmins
+  });
 });

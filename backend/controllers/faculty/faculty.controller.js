@@ -84,6 +84,18 @@ export const getFaculty = asyncHandler(async (req, res, next) => {
 // @route     POST /api/v1/faculty
 // @access    Private/Admin
 export const createFaculty = asyncHandler(async (req, res, next) => {
+  // Check if adding an HOD
+  if (req.body.designation === 'HOD') {
+    const existingHOD = await Faculty.findOne({
+      department: req.body.department,
+      designation: 'HOD'
+    }).populate('user', 'name');
+
+    if (existingHOD) {
+      return next(new ErrorResponse(`Department already has a Head of Department (${existingHOD.user ? existingHOD.user.name : 'Unknown'}) in faculty records`, 400));
+    }
+  }
+
   // Create user account first
   const userData = {
     name: `${req.body.firstName} ${req.body.lastName}`,
@@ -114,6 +126,19 @@ export const updateFaculty = asyncHandler(async (req, res, next) => {
 
   if (!faculty) {
     return next(new ErrorResponse(`Faculty not found with id of ${req.params.id}`, 404));
+  }
+
+  // Check if updating to an HOD
+  if (req.body.designation === 'HOD') {
+    const existingHOD = await Faculty.findOne({
+      department: req.body.department || faculty.department,
+      designation: 'HOD',
+      _id: { $ne: req.params.id }
+    }).populate('user', 'name');
+
+    if (existingHOD) {
+      return next(new ErrorResponse(`Department already has a Head of Department (${existingHOD.user ? existingHOD.user.name : 'Unknown'}) in faculty records`, 400));
+    }
   }
 
   faculty = await Faculty.findByIdAndUpdate(req.params.id, req.body, {

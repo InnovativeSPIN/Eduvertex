@@ -1,6 +1,62 @@
+import path from 'path';
 import ErrorResponse from '../../utils/errorResponse.js';
 import asyncHandler from '../../middleware/async.js';
 import User from '../../models/User.model.js';
+
+// @desc      Upload photo for user
+// @route     PUT /api/v1/users/:id/photo
+// @access    Private/Admin
+export const uploadUserPhoto = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.params.id);
+
+  if (!user) {
+    return next(
+      new ErrorResponse(`User not found with id of ${req.params.id}`, 404)
+    );
+  }
+
+  if (!req.files) {
+    return next(new ErrorResponse('Please upload a file', 400));
+  }
+
+  const file = req.files.file;
+
+  // Make sure the image is a photo
+  if (!file.mimetype.startsWith('image')) {
+    return next(new ErrorResponse('Please upload an image file', 400));
+  }
+
+  // Check filesize
+  if (file.size > process.env.MAX_FILE_UPLOAD) {
+    return next(
+      new ErrorResponse(
+        `Please upload an image less than ${process.env.MAX_FILE_UPLOAD}`,
+        400
+      )
+    );
+  }
+
+  // Create custom filename
+  file.name = `photo_${user._id}${path.parse(file.name).ext}`;
+
+  try {
+    const uploadPath = path.resolve(process.env.FILE_UPLOAD_PATH, 'avatars', file.name);
+
+    await file.mv(uploadPath);
+
+    const photoUrl = `/uploads/avatars/${file.name}`;
+
+    await User.findByIdAndUpdate(req.params.id, { avatar: photoUrl });
+
+    res.status(200).json({
+      success: true,
+      data: photoUrl
+    });
+  } catch (err) {
+    console.error('File Upload Error:', err);
+    return next(new ErrorResponse('Problem with file upload', 500));
+  }
+});
 
 // @desc      Get all users
 // @route     GET /api/v1/users
@@ -69,6 +125,18 @@ export const getUser = asyncHandler(async (req, res, next) => {
 // @route     POST /api/v1/users
 // @access    Private/Admin
 export const createUser = asyncHandler(async (req, res, next) => {
+  // Check if adding a department admin (HOD)
+  if (req.body.role === 'department-admin' && req.body.departmentCode) {
+    const existingHOD = await User.findOne({
+      role: 'department-admin',
+      departmentCode: req.body.departmentCode
+    });
+
+    if (existingHOD) {
+      return next(new ErrorResponse(`Department ${req.body.departmentCode} already has a Head of Department (${existingHOD.name})`, 400));
+    }
+  }
+
   const user = await User.create(req.body);
 
   res.status(201).json({
@@ -84,6 +152,19 @@ export const updateUser = asyncHandler(async (req, res, next) => {
   // Prevent password update through this route
   if (req.body.password) {
     delete req.body.password;
+  }
+
+  // Check if updating to a department admin (HOD)
+  if (req.body.role === 'department-admin' && req.body.departmentCode) {
+    const existingHOD = await User.findOne({
+      role: 'department-admin',
+      departmentCode: req.body.departmentCode,
+      _id: { $ne: req.params.id }
+    });
+
+    if (existingHOD) {
+      return next(new ErrorResponse(`Department ${req.body.departmentCode} already has a Head of Department (${existingHOD.name})`, 400));
+    }
   }
 
   const user = await User.findByIdAndUpdate(req.params.id, req.body, {
