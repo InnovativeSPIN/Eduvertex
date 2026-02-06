@@ -15,21 +15,26 @@ import { fileURLToPath } from 'url';
 
 import errorHandler from './middleware/error.js';
 import connectDB from './config/db.js';
+import seedSuperAdmin from './utils/initDB.js';
 
 // Load env vars
 dotenv.config();
 
 // Connect to database
-connectDB();
+connectDB().then(() => {
+  seedSuperAdmin();
+});
 
 // Route files
 import authRoutes from './routes/admin/auth.routes.js';
 import userRoutes from './routes/admin/user.routes.js';
+import departmentRoutes from './routes/admin/department.routes.js';
 import facultyRoutes from './routes/faculty/faculty.routes.js';
 import studentRoutes from './routes/student/student.routes.js';
 import timetableRoutes from './routes/timetable/timetable.routes.js';
 import leaveRoutes from './routes/leave-attendance/leave.routes.js';
 import attendanceRoutes from './routes/leave-attendance/attendance.routes.js';
+import announcementRoutes from './routes/admin/announcement.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -81,11 +86,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Mount routers
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/departments', departmentRoutes);
 app.use('/api/v1/faculty', facultyRoutes);
 app.use('/api/v1/students', studentRoutes);
 app.use('/api/v1/timetable', timetableRoutes);
 app.use('/api/v1/leave', leaveRoutes);
 app.use('/api/v1/attendance', attendanceRoutes);
+app.use('/api/v1/announcements', announcementRoutes);
 
 // Health check
 app.get('/api/v1/health', (req, res) => {
