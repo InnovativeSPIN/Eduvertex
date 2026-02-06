@@ -14,5 +14,17 @@ export default defineConfig({
     port: 8086,
     strictPort: true,
     open: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3005',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/uploads': {
+        target: 'http://localhost:3005',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
 })

@@ -2,7 +2,6 @@
 import PageHeader from '@/pages/student/components/layout/PageHeader';
 import InfoCard from '@/pages/student/components/common/InfoCard';
 import SectionCard from '@/pages/student/components/common/SectionCard';
-import Badge from '@/pages/student/components/common/Badge';
 import {
   User,
   Building2,
@@ -27,6 +26,7 @@ import {
   CartesianGrid,
   Tooltip as ChartTooltip,
 } from 'recharts';
+import Badge from '@/pages/student/components/common/Badge';
 
 // Mock data
 const dashboardData = {
@@ -76,20 +76,29 @@ export default function StudentDashboard() {
         subtitle="Here's an overview of your academic progress"
       />
 
-      {/* Alerts */}
-      {dashboardData.alerts.length > 0 && (
-        <div className="mb-6 space-y-2">
-          {dashboardData.alerts.map((alert, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-3 p-4 rounded-lg bg-warning/10 border border-warning/20 animate-slide-in"
-            >
-              <AlertTriangle className="w-5 h-5 text-warning flex-shrink-0" />
-              <span className="text-sm">{alert.message}</span>
+      {/* Alerts & News Header */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className="lg:col-span-3">
+          {/* Alerts */}
+          <SectionCard title="Important Notifications" icon={AlertTriangle}>
+            <div className="grid md:grid-cols-2 gap-4">
+              {dashboardData.alerts.map((alert, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-3 p-4 rounded-xl bg-warning/5 border border-warning/20"
+                >
+                  <AlertTriangle className="w-5 h-5 text-warning flex-shrink-0" />
+                  <span className="text-xs font-medium">{alert.message}</span>
+                </div>
+              ))}
+              <div className="p-4 rounded-xl bg-success/5 border border-success/20 flex gap-3">
+                <TrendingUp className="w-5 h-5 text-success shrink-0" />
+                <span className="text-xs font-medium">Your CGPA increased by 0.15 this semester!</span>
+              </div>
             </div>
-          ))}
+          </SectionCard>
         </div>
-      )}
+      </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -254,5 +263,3 @@ export default function StudentDashboard() {
     </div>
   );
 }
-
-

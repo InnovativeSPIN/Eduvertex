@@ -31,10 +31,12 @@ export const mockFaculty: Faculty[] = [
 ];
 
 export const mockAdmins: Admin[] = [
-  { id: "1", name: "Admin One", email: "admin1@edu.com", role: "executive", status: "active" },
-  { id: "2", name: "Admin Two", email: "admin2@edu.com", role: "academic", department: "Computer Science", status: "active" },
-  { id: "3", name: "Admin Three", email: "admin3@edu.com", role: "faculty_admin", status: "active" },
-  { id: "4", name: "Admin Four", email: "admin4@edu.com", role: "executive", status: "active" },
+  { id: "1", name: "Executive Chief", email: "executive@edu.com", role: "executive", status: "active" },
+  { id: "2", name: "Academic Dean", email: "academic@edu.com", role: "academic", department: "CSE", status: "active" },
+  { id: "3", name: "Exam Controller", email: "exam@edu.com", role: "exam_cell_admin", status: "active" },
+  { id: "4", name: "Placement Officer", email: "placement@edu.com", role: "placement_cell_admin", status: "active" },
+  { id: "5", name: "R&D Director", email: "rnd@edu.com", role: "research_development_admin", status: "active" },
+  { id: "6", name: "CSE Dept Admin", email: "deptadmin@edu.com", role: "department-admin", department: "CSE", status: "active" },
 ];
 
 export const mockDepartments: Department[] = [

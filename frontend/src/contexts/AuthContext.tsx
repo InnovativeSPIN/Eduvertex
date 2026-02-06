@@ -3,72 +3,55 @@ import { User, UserRole } from '@/types/auth';
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string, role: UserRole) => boolean;
+  login: (email: string, password: string, role: UserRole) => Promise<boolean>;
   logout: () => void;
+  updateUserData: (newData: Partial<User>) => void;
   isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined); // Keep existing context creation
 
-// Mock users for demo
-const mockUsers: Record<UserRole, User> = {
-  superadmin: {
-    id: '1',
-    email: 'superadmin@edu.com',
-    name: 'Super Admin',
-    role: 'superadmin',
-  },
-  executive: {
-    id: '2',
-    email: 'executive@edu.com',
-    name: 'Executive Admin',
-    role: 'executive',
-  },
-  academic: {
-    id: '3',
-    email: 'academic@edu.com',
-    name: 'Academic Admin',
-    role: 'academic',
-  },
-  faculty: {
-    id: '4',
-    email: 'faculty@edu.com',
-    name: 'Dr. John Smith',
-    role: 'faculty',
-    department: 'Computer Science',
-  },
-  student: {
-    id: '5',
-    email: 'student@edu.com',
-    name: 'Jane Doe',
-    role: 'student',
-    department: 'Computer Science',
-    rollNo: 'CS2024001',
-    year: 3,
-    semester: 5,
-  },
-  'department-admin': {
-    id: '6',
-    email: 'deptadmin@edu.com',
-    name: 'Department Admin',
-    role: 'department-admin',
-  },
-};
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthContextType['user']>(() => {
-    const savedUser = localStorage.getItem('eduvertex_user');
-    return savedUser ? JSON.parse(savedUser) : null;
+    try {
+      const savedUser = localStorage.getItem('eduvertex_user');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch (error) {
+      console.error('Error parsing user from localStorage:', error);
+      return null;
+    }
   });
 
-  const login = (email: string, password: string, role: UserRole): boolean => {
-    if (password === '123') {
-      const userObj = { ...mockUsers[role], email };
-      setUser(userObj);
-      localStorage.setItem('eduvertex_user', JSON.stringify(userObj));
-      return true;
+  const login = async (email: string, password: string, role: UserRole): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        const userObj = {
+          id: result.data?._id || result.user?.id || result.data?.id,
+          email: result.data?.email || result.user?.email,
+          name: result.data?.name || result.data?.admin_name || result.user?.name || 'Admin',
+          role: role,
+          avatar: result.data?.avatar || result.user?.avatar,
+          department: result.data?.department || result.user?.department,
+          token: result.token
+        };
+        setUser(userObj);
+        localStorage.setItem('eduvertex_user', JSON.stringify(userObj));
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     }
-    return false;
   };
 
   const logout = () => {
@@ -76,8 +59,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('eduvertex_user');
   };
 
+  const updateUserData = (newData: Partial<User>) => {
+    setUser(prev => {
+      if (!prev) return null;
+      const updated = { ...prev, ...newData };
+      localStorage.setItem('eduvertex_user', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUserData, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

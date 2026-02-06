@@ -1,5 +1,17 @@
 
-export type UserRole = 'superadmin' | 'executive' | 'academic' | 'department-admin' | 'faculty' | 'student';
+export type UserRole =
+	| 'superadmin'
+	| 'super-admin'
+	| 'executive'
+	| 'executiveadmin'
+	| 'academic'
+	| 'academicadmin'
+	| 'exam_cell_admin'
+	| 'placement_cell_admin'
+	| 'research_development_admin'
+	| 'department-admin'
+	| 'faculty'
+	| 'student';
 
 export interface User {
 	id: string;
@@ -42,9 +54,11 @@ export interface Admin {
 	id: string;
 	name: string;
 	email: string;
-	role: 'executive' | 'academic' | 'faculty_admin'; // specific admin roles
+	role: 'superadmin' | 'super-admin' | 'executive' | 'executiveadmin' | 'academic' | 'academicadmin' | 'exam_cell_admin' | 'placement_cell_admin' | 'research_development_admin' | 'department-admin';
 	department?: string;
+	departmentCode?: string;
 	status: 'active' | 'inactive';
+	avatar?: string;
 }
 
 export interface Department {

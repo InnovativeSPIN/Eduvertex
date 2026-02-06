@@ -2,6 +2,7 @@ import { ReactNode, useState, useEffect } from "react";
 import { AppSidebar } from "./AppSidebar";
 import { motion } from "framer-motion";
 import { Calendar, Clock } from "lucide-react";
+import { IntegratedNotificationBell } from "@/components/common/IntegratedNotificationBell";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -39,15 +40,18 @@ export function MainLayout({ children }: MainLayoutProps) {
         {/* Header */}
         <header className="sticky top-0 z-40 h-16 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
           <div className="flex h-full items-center justify-end px-6">
-            <div className="hidden md:flex flex-col items-end">
-              <div className="flex items-center gap-2 text-sm font-bold text-foreground">
-                <Calendar className="w-4 h-4 text-primary" />
-                {formatDate(currentTime)}
+            <div className="flex items-center gap-6">
+              <div className="hidden md:flex flex-col items-end border-r pr-6 border-border/50">
+                <div className="flex items-center gap-2 text-sm font-bold text-foreground font-serif">
+                  <Calendar className="w-4 h-4 text-primary" />
+                  {formatDate(currentTime)}
+                </div>
+                <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+                  <Clock className="w-3.5 h-3.5 text-secondary" />
+                  {formatTime(currentTime)}
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-[11px] font-medium text-muted-foreground">
-                <Clock className="w-3.5 h-3.5 text-secondary" />
-                {formatTime(currentTime)}
-              </div>
+              <IntegratedNotificationBell />
             </div>
           </div>
         </header>
