@@ -15,10 +15,7 @@ import {
 import { GraduationCap, Lock, Mail, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
-const roleRoutes: Record<UserRole, string> = {
-  superadmin: '/admin/superadmin',
-  executive: '/admin/executive',
-  academic: '/admin/academic',
+const roleRoutes: Partial<Record<UserRole, string>> = {
   'department-admin': '/admin/department-admin',
   faculty: '/faculty',
   student: '/student',
@@ -27,14 +24,14 @@ const roleRoutes: Record<UserRole, string> = {
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<UserRole>('superadmin');
+  const [role, setRole] = useState<UserRole>('student');
   const [isLoading, setIsLoading] = useState(false);
   const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isAuthenticated && user?.role) {
-      navigate(roleRoutes[user.role]);
+    if (isAuthenticated && user?.role && roleRoutes[user.role]) {
+      navigate(roleRoutes[user.role]!);
     }
   }, [isAuthenticated, user, navigate]);
 
@@ -45,14 +42,14 @@ export default function Login() {
     // Simulate API delay
     await new Promise((resolve) => setTimeout(resolve, 800));
 
-    const success = login(email, password, role);
+    const success = await login(email, password, role);
     setIsLoading(false);
 
     if (success) {
       toast.success(`Welcome! Logged in as ${role}`);
-      navigate(roleRoutes[role]);
+      navigate(roleRoutes[role] || '/');
     } else {
-      toast.error('Invalid credentials. Use password: 123');
+      toast.error('Invalid credentials. Please try again.');
     }
   };
 
@@ -67,25 +64,11 @@ export default function Login() {
             </div>
           </div>
           <h1 className="text-4xl font-bold text-primary-foreground mb-4">
-            EDUVERTEX
+            NSCET PORTAL
           </h1>
-          {/* <p className="text-lg text-primary-foreground/80">
-            Comprehensive education management system for administrators, faculty, and students.
-          </p> */}
-          {/* <div className="mt-12 grid grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary-foreground">500+</div>
-              <div className="text-sm text-primary-foreground/70">Students</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary-foreground">50+</div>
-              <div className="text-sm text-primary-foreground/70">Faculty</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary-foreground">6</div>
-              <div className="text-sm text-primary-foreground/70">Departments</div>
-            </div>
-          </div> */}
+          <p className="text-lg text-primary-foreground/80">
+            Education management system for students and faculty.
+          </p>
         </div>
       </div>
 
@@ -102,7 +85,7 @@ export default function Login() {
           <div>
             <h2 className="text-2xl font-bold text-foreground">Sign in to your account</h2>
             <p className="mt-2 text-muted-foreground">
-              Select your role and enter your credentials
+              Select your role and enter your default credentials
             </p>
           </div>
 
@@ -117,9 +100,6 @@ export default function Login() {
                   <SelectValue placeholder="Select your role" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover">
-                  <SelectItem value="superadmin">Super Admin</SelectItem>
-                  <SelectItem value="executive">Executive Admin</SelectItem>
-                  <SelectItem value="academic">Academic Admin</SelectItem>
                   <SelectItem value="department-admin">Department Admin</SelectItem>
                   <SelectItem value="faculty">Faculty</SelectItem>
                   <SelectItem value="student">Student</SelectItem>
@@ -130,14 +110,14 @@ export default function Login() {
             <div className="space-y-2">
               <Label htmlFor="email" className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                Email Address
+                Email Address / ID
               </Label>
               <Input
                 id="email"
-                type="email"
+                type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="your.email@edu.com"
+                placeholder="Enter your ID or Email"
                 className="h-12"
                 required
               />
@@ -174,13 +154,6 @@ export default function Login() {
               )}
             </Button>
           </form>
-          {/* 
-          <div className="rounded-lg bg-muted p-4">
-            <p className="text-sm font-medium text-muted-foreground mb-2">Demo Credentials:</p>
-            <p className="text-sm text-muted-foreground">
-              Password: <code className="rounded bg-background px-1.5 py-0.5">p123</code>
-            </p>
-          </div> */}
         </div>
       </div>
     </div>
