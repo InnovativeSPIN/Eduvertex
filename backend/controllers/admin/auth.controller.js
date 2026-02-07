@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import path from 'path';
+import fs from 'fs';
 import ErrorResponse from '../../utils/errorResponse.js';
 import asyncHandler from '../../middleware/async.js';
 import sendEmail from '../../utils/sendEmail.js';
@@ -35,11 +36,24 @@ export const uploadAvatar = asyncHandler(async (req, res, next) => {
   file.name = `avatar_${req.user.id}${path.parse(file.name).ext}`;
 
   try {
-    const uploadPath = path.resolve(process.env.FILE_UPLOAD_PATH, 'avatars', file.name);
+    // Determine folder based on role
+    let roleFolder = 'avatars';
+    if (req.user.role === 'student') roleFolder = 'students';
+    else if (req.user.role === 'faculty') roleFolder = 'faculty';
+    else if (req.user.role === 'department-admin') roleFolder = 'department-admins';
+
+    const dirPath = path.resolve(process.env.FILE_UPLOAD_PATH, roleFolder);
+
+    // Create directory if not exists
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+
+    const uploadPath = path.resolve(dirPath, file.name);
 
     await file.mv(uploadPath);
 
-    const avatarUrl = `/uploads/avatars/${file.name}`;
+    const avatarUrl = `/uploads/${roleFolder}/${file.name}`;
 
     await User.findByIdAndUpdate(req.user.id, { avatar: avatarUrl });
 
@@ -82,6 +96,22 @@ export const login = asyncHandler(async (req, res, next) => {
   // Validate email & password
   if (!email || !password) {
     return next(new ErrorResponse('Please provide an email and password', 400));
+  }
+
+  // Dummy login for student (development/testing without DB)
+  if (email === 'student@nscet.com' && (password === 'student123' || password === 'password123')) {
+    const dummyUser = new User({
+      _id: '507f1f77bcf86cd799439011', // Dummy ObjectID
+      name: 'Dummy Student',
+      email: 'student@nscet.com',
+      role: 'student',
+      isActive: true,
+      department: 'Computer Science',
+      year: '3rd',
+      semester: '6th',
+      rollNo: 'NSC21CS001'
+    });
+    return sendTokenResponse(dummyUser, 200, res);
   }
 
   // Check for user
