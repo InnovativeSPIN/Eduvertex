@@ -40,6 +40,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           role: role,
           avatar: result.data?.avatar || result.user?.avatar,
           department: result.data?.department || result.user?.department,
+          year: result.data?.year || result.user?.year,
+          semester: result.data?.semester || result.user?.semester,
+          rollNo: result.data?.rollNo || result.user?.rollNo,
           token: result.token
         };
         setUser(userObj);
