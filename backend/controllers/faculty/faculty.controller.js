@@ -2,6 +2,10 @@ import ErrorResponse from '../../utils/errorResponse.js';
 import asyncHandler from '../../middleware/async.js';
 import Faculty from '../../models/Faculty.model.js';
 import User from '../../models/User.model.js';
+import Department from '../../models/Department.model.js';
+import Subject from '../../models/Subject.model.js';
+import ClassModel from '../../models/Class.model.js';
+import { Op } from 'sequelize';
 
 // @desc      Get all faculty
 // @route     GET /api/v1/faculty
@@ -11,41 +15,45 @@ export const getAllFaculty = asyncHandler(async (req, res, next) => {
   const limit = parseInt(req.query.limit, 10) || 25;
   const startIndex = (page - 1) * limit;
 
-  let query = {};
+  let where = {};
 
   // Filter by department
   if (req.query.department) {
-    query.department = req.query.department;
+    where.departmentId = req.query.department;
   }
 
   // Filter by status
   if (req.query.status) {
-    query.status = req.query.status;
+    where.status = req.query.status;
   }
 
   // Filter by designation
   if (req.query.designation) {
-    query.designation = req.query.designation;
+    where.designation = req.query.designation;
   }
 
   // Search by name or employee ID
   if (req.query.search) {
-    query.$or = [
-      { firstName: { $regex: req.query.search, $options: 'i' } },
-      { lastName: { $regex: req.query.search, $options: 'i' } },
-      { employeeId: { $regex: req.query.search, $options: 'i' } },
-      { email: { $regex: req.query.search, $options: 'i' } }
+    where[Op.or] = [
+      { firstName: { [Op.like]: `%${req.query.search}%` } },
+      { lastName: { [Op.like]: `%${req.query.search}%` } },
+      { employeeId: { [Op.like]: `%${req.query.search}%` } },
+      { email: { [Op.like]: `%${req.query.search}%` } }
     ];
   }
 
-  const total = await Faculty.countDocuments(query);
-  const faculty = await Faculty.find(query)
-    .populate('department', 'name code')
-    .populate('subjects', 'name code')
-    .populate('user', 'name email')
-    .skip(startIndex)
-    .limit(limit)
-    .sort('-createdAt');
+  const total = await Faculty.count({ where });
+  const faculty = await Faculty.findAll({
+    where,
+    include: [
+      { model: Department, as: 'department', attributes: ['name', 'code'] },
+      { model: Subject, as: 'subjects', attributes: ['name', 'code'] },
+      { model: User, as: 'user', attributes: ['name', 'email'] }
+    ],
+    offset: startIndex,
+    limit,
+    order: [['createdAt', 'DESC']]
+  });
 
   res.status(200).json({
     success: true,
@@ -64,11 +72,14 @@ export const getAllFaculty = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/faculty/:id
 // @access    Private
 export const getFaculty = asyncHandler(async (req, res, next) => {
-  const faculty = await Faculty.findById(req.params.id)
-    .populate('department', 'name code')
-    .populate('subjects', 'name code credits')
-    .populate('assignedClasses')
-    .populate('user', 'name email');
+  const faculty = await Faculty.findByPk(req.params.id, {
+    include: [
+      { model: Department, as: 'department', attributes: ['name', 'code'] },
+      { model: Subject, as: 'subjects', attributes: ['name', 'code', 'credits'] },
+      { model: ClassModel, as: 'assignedClasses' },
+      { model: User, as: 'user', attributes: ['name', 'email'] }
+    ]
+  });
 
   if (!faculty) {
     return next(new ErrorResponse(`Faculty not found with id of ${req.params.id}`, 404));
@@ -87,9 +98,12 @@ export const createFaculty = asyncHandler(async (req, res, next) => {
   // Check if adding an HOD
   if (req.body.designation === 'HOD') {
     const existingHOD = await Faculty.findOne({
-      department: req.body.department,
-      designation: 'HOD'
-    }).populate('user', 'name');
+      where: {
+        departmentId: req.body.department,
+        designation: 'HOD'
+      },
+      include: [{ model: User, as: 'user', attributes: ['name'] }]
+    });
 
     if (existingHOD) {
       return next(new ErrorResponse(`Department already has a Head of Department (${existingHOD.user ? existingHOD.user.name : 'Unknown'}) in faculty records`, 400));
@@ -109,7 +123,9 @@ export const createFaculty = asyncHandler(async (req, res, next) => {
   const user = await User.create(userData);
 
   // Create faculty profile
-  req.body.user = user._id;
+  req.body.userId = user.id;
+  req.body.departmentId = req.body.department;
+  delete req.body.department;
   const faculty = await Faculty.create(req.body);
 
   res.status(201).json({
@@ -122,7 +138,7 @@ export const createFaculty = asyncHandler(async (req, res, next) => {
 // @route     PUT /api/v1/faculty/:id
 // @access    Private/Admin
 export const updateFaculty = asyncHandler(async (req, res, next) => {
-  let faculty = await Faculty.findById(req.params.id);
+  let faculty = await Faculty.findByPk(req.params.id);
 
   if (!faculty) {
     return next(new ErrorResponse(`Faculty not found with id of ${req.params.id}`, 404));
@@ -131,20 +147,25 @@ export const updateFaculty = asyncHandler(async (req, res, next) => {
   // Check if updating to an HOD
   if (req.body.designation === 'HOD') {
     const existingHOD = await Faculty.findOne({
-      department: req.body.department || faculty.department,
-      designation: 'HOD',
-      _id: { $ne: req.params.id }
-    }).populate('user', 'name');
+      where: {
+        departmentId: req.body.department || faculty.departmentId,
+        designation: 'HOD',
+        id: { [Op.ne]: req.params.id }
+      },
+      include: [{ model: User, as: 'user', attributes: ['name'] }]
+    });
 
     if (existingHOD) {
       return next(new ErrorResponse(`Department already has a Head of Department (${existingHOD.user ? existingHOD.user.name : 'Unknown'}) in faculty records`, 400));
     }
   }
 
-  faculty = await Faculty.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
+  if (req.body.department) {
+    req.body.departmentId = req.body.department;
+    delete req.body.department;
+  }
+  await Faculty.update(req.body, { where: { id: req.params.id } });
+  faculty = await Faculty.findByPk(req.params.id);
 
   res.status(200).json({
     success: true,
@@ -156,15 +177,15 @@ export const updateFaculty = asyncHandler(async (req, res, next) => {
 // @route     DELETE /api/v1/faculty/:id
 // @access    Private/Admin
 export const deleteFaculty = asyncHandler(async (req, res, next) => {
-  const faculty = await Faculty.findById(req.params.id);
+  const faculty = await Faculty.findByPk(req.params.id);
 
   if (!faculty) {
     return next(new ErrorResponse(`Faculty not found with id of ${req.params.id}`, 404));
   }
 
   // Also delete the associated user
-  await User.findByIdAndDelete(faculty.user);
-  await faculty.deleteOne();
+  await User.destroy({ where: { id: faculty.userId } });
+  await faculty.destroy();
 
   res.status(200).json({
     success: true,
@@ -176,12 +197,16 @@ export const deleteFaculty = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/faculty/department/:departmentId
 // @access    Private
 export const getFacultyByDepartment = asyncHandler(async (req, res, next) => {
-  const faculty = await Faculty.find({
-    department: req.params.departmentId,
-    status: 'active'
-  })
-    .populate('department', 'name code')
-    .populate('subjects', 'name code');
+  const faculty = await Faculty.findAll({
+    where: {
+      departmentId: req.params.departmentId,
+      status: 'active'
+    },
+    include: [
+      { model: Department, as: 'department', attributes: ['name', 'code'] },
+      { model: Subject, as: 'subjects', attributes: ['name', 'code'] }
+    ]
+  });
 
   res.status(200).json({
     success: true,
@@ -194,19 +219,23 @@ export const getFacultyByDepartment = asyncHandler(async (req, res, next) => {
 // @route     PUT /api/v1/faculty/:id/subjects
 // @access    Private/Admin
 export const assignSubjects = asyncHandler(async (req, res, next) => {
-  const faculty = await Faculty.findByIdAndUpdate(
-    req.params.id,
-    { subjects: req.body.subjects },
-    { new: true, runValidators: true }
-  ).populate('subjects', 'name code');
+  const faculty = await Faculty.findByPk(req.params.id);
 
-  if (!faculty) {
+  if (faculty) {
+    await faculty.setSubjects(req.body.subjects || []);
+  }
+
+  const updatedFaculty = await Faculty.findByPk(req.params.id, {
+    include: [{ model: Subject, as: 'subjects', attributes: ['name', 'code'] }]
+  });
+
+  if (!updatedFaculty) {
     return next(new ErrorResponse(`Faculty not found with id of ${req.params.id}`, 404));
   }
 
   res.status(200).json({
     success: true,
-    data: faculty
+    data: updatedFaculty
   });
 });
 
@@ -214,19 +243,23 @@ export const assignSubjects = asyncHandler(async (req, res, next) => {
 // @route     PUT /api/v1/faculty/:id/classes
 // @access    Private/Admin
 export const assignClasses = asyncHandler(async (req, res, next) => {
-  const faculty = await Faculty.findByIdAndUpdate(
-    req.params.id,
-    { assignedClasses: req.body.classes },
-    { new: true, runValidators: true }
-  ).populate('assignedClasses');
+  const faculty = await Faculty.findByPk(req.params.id);
 
-  if (!faculty) {
+  if (faculty) {
+    await faculty.setAssignedClasses(req.body.classes || []);
+  }
+
+  const updatedFaculty = await Faculty.findByPk(req.params.id, {
+    include: [{ model: ClassModel, as: 'assignedClasses' }]
+  });
+
+  if (!updatedFaculty) {
     return next(new ErrorResponse(`Faculty not found with id of ${req.params.id}`, 404));
   }
 
   res.status(200).json({
     success: true,
-    data: faculty
+    data: updatedFaculty
   });
 });
 
@@ -234,20 +267,20 @@ export const assignClasses = asyncHandler(async (req, res, next) => {
 // @route     PUT /api/v1/faculty/:id/status
 // @access    Private/Admin
 export const updateFacultyStatus = asyncHandler(async (req, res, next) => {
-  const faculty = await Faculty.findByIdAndUpdate(
-    req.params.id,
+  await Faculty.update(
     { status: req.body.status },
-    { new: true, runValidators: true }
+    { where: { id: req.params.id } }
   );
+  const faculty = await Faculty.findByPk(req.params.id);
 
   if (!faculty) {
     return next(new ErrorResponse(`Faculty not found with id of ${req.params.id}`, 404));
   }
 
   // Update user active status
-  await User.findByIdAndUpdate(faculty.user, {
+  await User.update({
     isActive: req.body.status === 'active'
-  });
+  }, { where: { id: faculty.userId } });
 
   res.status(200).json({
     success: true,
@@ -259,10 +292,14 @@ export const updateFacultyStatus = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/faculty/me/profile
 // @access    Private/Faculty
 export const getMyProfile = asyncHandler(async (req, res, next) => {
-  const faculty = await Faculty.findOne({ user: req.user.id })
-    .populate('department', 'name code')
-    .populate('subjects', 'name code credits')
-    .populate('assignedClasses');
+  const faculty = await Faculty.findOne({
+    where: { userId: req.user.id },
+    include: [
+      { model: Department, as: 'department', attributes: ['name', 'code'] },
+      { model: Subject, as: 'subjects', attributes: ['name', 'code', 'credits'] },
+      { model: ClassModel, as: 'assignedClasses' }
+    ]
+  });
 
   if (!faculty) {
     return next(new ErrorResponse('Faculty profile not found', 404));

@@ -2,6 +2,8 @@ import path from 'path';
 import ErrorResponse from '../../utils/errorResponse.js';
 import asyncHandler from '../../middleware/async.js';
 import Announcement from '../../models/Announcement.model.js';
+import User from '../../models/User.model.js';
+import { Op, Sequelize } from 'sequelize';
 
 // @desc      Get all announcements for user
 // @route     GET /api/v1/announcements
@@ -9,22 +11,28 @@ import Announcement from '../../models/Announcement.model.js';
 export const getAnnouncements = asyncHandler(async (req, res, next) => {
     const { role, departmentCode } = req.user;
 
-    let query = { isActive: true };
+    let where = { isActive: true };
 
     // If not superadmin, filter by role and department
     const superRoles = ['superadmin', 'super-admin', 'executiveadmin', 'academicadmin'];
 
     if (!superRoles.includes(role)) {
-        query.$or = [
-            { targetRole: 'all' },
-            { targetRole: role }
+        where[Op.or] = [
+            Sequelize.where(
+                Sequelize.fn('JSON_CONTAINS', Sequelize.col('targetRole'), JSON.stringify('all')),
+                1
+            ),
+            Sequelize.where(
+                Sequelize.fn('JSON_CONTAINS', Sequelize.col('targetRole'), JSON.stringify(role)),
+                1
+            )
         ];
 
         // If department admin, faculty or student, filter by department if announcement is department specific
         if (departmentCode) {
-            query.$and = [
+            where[Op.and] = [
                 {
-                    $or: [
+                    [Op.or]: [
                         { department: null },
                         { department: departmentCode }
                     ]
@@ -33,9 +41,15 @@ export const getAnnouncements = asyncHandler(async (req, res, next) => {
         }
     }
 
-    const announcements = await Announcement.find(query)
-        .populate('createdBy', 'name avatar')
-        .sort('-createdAt');
+    const announcements = await Announcement.findAll({
+        where,
+        include: [{
+            model: User,
+            as: 'createdBy',
+            attributes: ['name', 'avatar']
+        }],
+        order: [['createdAt', 'DESC']]
+    });
 
     res.status(200).json({
         success: true,
@@ -48,9 +62,14 @@ export const getAnnouncements = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/announcements/admin
 // @access    Private/Admin
 export const getAdminAnnouncements = asyncHandler(async (req, res, next) => {
-    const announcements = await Announcement.find()
-        .populate('createdBy', 'name avatar')
-        .sort('-createdAt');
+    const announcements = await Announcement.findAll({
+        include: [{
+            model: User,
+            as: 'createdBy',
+            attributes: ['name', 'avatar']
+        }],
+        order: [['createdAt', 'DESC']]
+    });
 
     res.status(200).json({
         success: true,
@@ -63,7 +82,7 @@ export const getAdminAnnouncements = asyncHandler(async (req, res, next) => {
 // @route     POST /api/v1/announcements
 // @access    Private/Admin
 export const createAnnouncement = asyncHandler(async (req, res, next) => {
-    req.body.createdBy = req.user.id;
+    req.body.createdById = req.user.id;
     req.body.creatorRole = req.user.role;
 
     // Set department if created by HOD
@@ -113,7 +132,7 @@ export const createAnnouncement = asyncHandler(async (req, res, next) => {
 // @route     DELETE /api/v1/announcements/:id
 // @access    Private/Admin
 export const deleteAnnouncement = asyncHandler(async (req, res, next) => {
-    const announcement = await Announcement.findById(req.params.id);
+    const announcement = await Announcement.findByPk(req.params.id);
 
     if (!announcement) {
         return next(new ErrorResponse(`Announcement not found with id of ${req.params.id}`, 404));
@@ -121,11 +140,11 @@ export const deleteAnnouncement = asyncHandler(async (req, res, next) => {
 
     // Check ownership if not superadmin
     const superRoles = ['superadmin', 'super-admin'];
-    if (!superRoles.includes(req.user.role) && announcement.createdBy.toString() !== req.user.id) {
+    if (!superRoles.includes(req.user.role) && announcement.createdById !== Number(req.user.id)) {
         return next(new ErrorResponse(`User not authorized to delete this announcement`, 401));
     }
 
-    await announcement.deleteOne();
+    await announcement.destroy();
 
     res.status(200).json({
         success: true,

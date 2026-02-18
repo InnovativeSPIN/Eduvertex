@@ -1,9 +1,10 @@
 import fs from 'fs';
-import mongoose from 'mongoose';
 import colors from 'colors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { sequelize } from './config/db.js';
+import initModels from './models/index.js';
 
 // Load env vars
 dotenv.config();
@@ -17,8 +18,10 @@ import PeriodConfig from './models/PeriodConfig.model.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Connect to DB
-mongoose.connect(process.env.MONGODB_URI);
+// Initialize models and connect to DB
+initModels();
+await sequelize.authenticate();
+await sequelize.sync();
 
 // Sample data
 const users = [
@@ -73,8 +76,9 @@ const periodConfig = {
 // Import into DB
 const importData = async () => {
   try {
-    await User.create(users);
-    await Department.create(departments);
+    // Ensure model hooks (password hashing) run for each user
+    await User.bulkCreate(users, { individualHooks: true });
+    await Department.bulkCreate(departments);
     await PeriodConfig.create(periodConfig);
 
     console.log('Data Imported...'.green.inverse);
@@ -88,10 +92,10 @@ const importData = async () => {
 // Delete data
 const deleteData = async () => {
   try {
-    await User.deleteMany();
-    await Department.deleteMany();
-    await Subject.deleteMany();
-    await PeriodConfig.deleteMany();
+    await User.destroy({ where: {} });
+    await Department.destroy({ where: {} });
+    await Subject.destroy({ where: {} });
+    await PeriodConfig.destroy({ where: {} });
 
     console.log('Data Destroyed...'.red.inverse);
     process.exit();

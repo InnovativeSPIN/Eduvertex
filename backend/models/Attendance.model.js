@@ -1,86 +1,55 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../config/db.js';
 
-const AttendanceSchema = new mongoose.Schema({
-  class: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Class',
-    required: true
+const Attendance = sequelize.define('Attendance', {
+  classId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
-  subject: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Subject',
-    required: true
+  subjectId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
-  faculty: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Faculty',
-    required: true
+  facultyId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   date: {
-    type: Date,
-    required: [true, 'Please add attendance date'],
-    default: Date.now
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW
   },
   period: {
-    type: Number,
-    required: true
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
-  students: [{
-    student: {
-      type: mongoose.Schema.ObjectId,
-      ref: 'Student',
-      required: true
-    },
-    status: {
-      type: String,
-      enum: ['present', 'absent', 'late', 'excused'],
-      default: 'absent'
-    },
-    remarks: String
-  }],
   totalPresent: {
-    type: Number,
-    default: 0
+    type: DataTypes.INTEGER,
+    defaultValue: 0
   },
   totalAbsent: {
-    type: Number,
-    default: 0
+    type: DataTypes.INTEGER,
+    defaultValue: 0
   },
   totalLate: {
-    type: Number,
-    default: 0
+    type: DataTypes.INTEGER,
+    defaultValue: 0
   },
   totalExcused: {
-    type: Number,
-    default: 0
+    type: DataTypes.INTEGER,
+    defaultValue: 0
   },
-  markedBy: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'User'
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
+  markedById: {
+    type: DataTypes.INTEGER,
+    allowNull: true
   }
+}, {
+  tableName: 'attendance',
+  timestamps: true,
+  indexes: [
+    { fields: ['classId', 'date'] },
+    { fields: ['facultyId', 'date'] }
+  ]
 });
 
-// Calculate totals before saving
-AttendanceSchema.pre('save', function (next) {
-  this.totalPresent = this.students.filter(s => s.status === 'present').length;
-  this.totalAbsent = this.students.filter(s => s.status === 'absent').length;
-  this.totalLate = this.students.filter(s => s.status === 'late').length;
-  this.totalExcused = this.students.filter(s => s.status === 'excused').length;
-  this.updatedAt = Date.now();
-  next();
-});
-
-// Index for efficient queries
-AttendanceSchema.index({ class: 1, date: 1 });
-AttendanceSchema.index({ faculty: 1, date: 1 });
-AttendanceSchema.index({ 'students.student': 1, date: 1 });
-
-export default mongoose.model('Attendance', AttendanceSchema);
+export default Attendance;

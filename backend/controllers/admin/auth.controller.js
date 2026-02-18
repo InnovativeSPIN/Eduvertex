@@ -6,6 +6,7 @@ import asyncHandler from '../../middleware/async.js';
 import sendEmail from '../../utils/sendEmail.js';
 import sendTokenResponse from '../../utils/sendTokenResponse.js';
 import User from '../../models/User.model.js';
+import { Op } from 'sequelize';
 
 // @desc      Upload avatar
 // @route     POST /api/v1/auth/avatar
@@ -55,7 +56,7 @@ export const uploadAvatar = asyncHandler(async (req, res, next) => {
 
     const avatarUrl = `/uploads/${roleFolder}/${file.name}`;
 
-    await User.findByIdAndUpdate(req.user.id, { avatar: avatarUrl });
+    await User.update({ avatar: avatarUrl }, { where: { id: req.user.id } });
 
     res.status(200).json({
       success: true,
@@ -100,8 +101,8 @@ export const login = asyncHandler(async (req, res, next) => {
 
   // Dummy login for student (development/testing without DB)
   if (email === 'student@nscet.com' && (password === 'student123' || password === 'password123')) {
-    const dummyUser = new User({
-      _id: '507f1f77bcf86cd799439011', // Dummy ObjectID
+    const dummyUser = User.build({
+      id: 0,
       name: 'Dummy Student',
       email: 'student@nscet.com',
       role: 'student',
@@ -110,12 +111,15 @@ export const login = asyncHandler(async (req, res, next) => {
       year: '3rd',
       semester: '6th',
       rollNo: 'NSC21CS001'
-    });
+    }, { isNewRecord: false });
     return sendTokenResponse(dummyUser, 200, res);
   }
 
   // Check for user
-  const user = await User.findOne({ email }).select('+password +pwd');
+  const user = await User.findOne({
+    where: { email },
+    attributes: { include: ['password', 'pwd'] }
+  });
 
   if (!user) {
     return next(new ErrorResponse('Invalid credentials', 401));
@@ -134,8 +138,8 @@ export const login = asyncHandler(async (req, res, next) => {
   }
 
   // Update last login
-  user.lastLogin = Date.now();
-  await user.save({ validateBeforeSave: false });
+  user.lastLogin = new Date();
+  await user.save();
 
   sendTokenResponse(user, 200, res);
 });
@@ -159,7 +163,9 @@ export const logout = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/auth/me
 // @access    Private
 export const getMe = asyncHandler(async (req, res, next) => {
-  const user = await User.findById(req.user.id);
+  const user = await User.findByPk(req.user.id, {
+    attributes: { exclude: ['password', 'pwd'] }
+  });
 
   res.status(200).json({
     success: true,
@@ -177,9 +183,9 @@ export const updateDetails = asyncHandler(async (req, res, next) => {
     phone: req.body.phone
   };
 
-  const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
-    new: true,
-    runValidators: true
+  await User.update(fieldsToUpdate, { where: { id: req.user.id } });
+  const user = await User.findByPk(req.user.id, {
+    attributes: { exclude: ['password', 'pwd'] }
   });
 
   res.status(200).json({
@@ -192,7 +198,9 @@ export const updateDetails = asyncHandler(async (req, res, next) => {
 // @route     PUT /api/v1/auth/updatepassword
 // @access    Private
 export const updatePassword = asyncHandler(async (req, res, next) => {
-  const user = await User.findById(req.user.id).select('+password +pwd');
+  const user = await User.findByPk(req.user.id, {
+    attributes: { include: ['password', 'pwd'] }
+  });
 
   // Check current password
   if (!(await user.matchPassword(req.body.currentPassword))) {
@@ -210,7 +218,7 @@ export const updatePassword = asyncHandler(async (req, res, next) => {
 // @route     POST /api/v1/auth/forgotpassword
 // @access    Public
 export const forgotPassword = asyncHandler(async (req, res, next) => {
-  const user = await User.findOne({ email: req.body.email });
+  const user = await User.findOne({ where: { email: req.body.email } });
 
   if (!user) {
     return next(new ErrorResponse('There is no user with that email', 404));
@@ -219,7 +227,7 @@ export const forgotPassword = asyncHandler(async (req, res, next) => {
   // Get reset token
   const resetToken = user.getResetPasswordToken();
 
-  await user.save({ validateBeforeSave: false });
+  await user.save();
 
   // Create reset url
   const resetUrl = `${process.env.FRONTEND_URL}/resetpassword/${resetToken}`;
@@ -256,8 +264,11 @@ export const resetPassword = asyncHandler(async (req, res, next) => {
     .digest('hex');
 
   const user = await User.findOne({
-    resetPasswordToken,
-    resetPasswordExpire: { $gt: Date.now() }
+    where: {
+      resetPasswordToken,
+      resetPasswordExpire: { [Op.gt]: new Date() }
+    },
+    attributes: { include: ['password', 'pwd'] }
   });
 
   if (!user) {
@@ -266,8 +277,8 @@ export const resetPassword = asyncHandler(async (req, res, next) => {
 
   // Set new password
   user.password = req.body.password;
-  user.resetPasswordToken = undefined;
-  user.resetPasswordExpire = undefined;
+  user.resetPasswordToken = null;
+  user.resetPasswordExpire = null;
   await user.save();
 
   sendTokenResponse(user, 200, res);
@@ -279,19 +290,20 @@ export const getAdminsByRole = asyncHandler(async (req, res, next) => {
   let { role } = req.params;
 
   // Handle superadmin variations
-  let query = {
-    $or: [
-      { role: role },
-      { admintype: role }
-    ]
-  };
-
+  let roles = [role];
   if (role === 'superadmin') {
-    query.$or.push({ role: 'super-admin' });
-    query.$or.push({ admintype: 'super-admin' });
+    roles = ['superadmin', 'super-admin'];
   }
 
-  const admins = await User.find(query).select('name admin_name email');
+  const admins = await User.findAll({
+    where: {
+      [Op.or]: [
+        { role: { [Op.in]: roles } },
+        { admintype: { [Op.in]: roles } }
+      ]
+    },
+    attributes: ['name', 'admin_name', 'email']
+  });
 
   // Map results to ensure each has a 'name' field for the frontend
   const formattedAdmins = admins.map(admin => ({

@@ -1,52 +1,51 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../config/db.js';
 
-const ClassSchema = new mongoose.Schema({
+const ClassModel = sequelize.define('Class', {
   name: {
-    type: String,
-    required: [true, 'Please add class name'],
-    trim: true
+    type: DataTypes.STRING,
+    allowNull: false
   },
   code: {
-    type: String,
-    required: [true, 'Please add class code'],
+    type: DataTypes.STRING,
+    allowNull: false,
     unique: true
   },
-  department: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Department',
-    required: true
+  departmentId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   semester: {
-    type: Number,
-    required: [true, 'Please add semester']
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   section: {
-    type: String,
-    default: 'A'
+    type: DataTypes.STRING,
+    defaultValue: 'A'
   },
   academicYear: {
-    type: String,
-    required: [true, 'Please add academic year']
+    type: DataTypes.STRING,
+    allowNull: false
   },
-  classTeacher: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Faculty'
+  classTeacherId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
   },
   maxStudents: {
-    type: Number,
-    default: 60
+    type: DataTypes.INTEGER,
+    defaultValue: 60
   },
   room: {
-    type: String
+    type: DataTypes.STRING,
+    allowNull: true
   },
   isActive: {
-    type: Boolean,
-    default: true
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
   }
+}, {
+  tableName: 'classes',
+  timestamps: true
 });
 
-export default mongoose.model('Class', ClassSchema);
+export default ClassModel;

@@ -4,6 +4,12 @@ import Timetable from '../../models/Timetable.model.js';
 import PeriodConfig from '../../models/PeriodConfig.model.js';
 import Faculty from '../../models/Faculty.model.js';
 import Student from '../../models/Student.model.js';
+import TimetableSlot from '../../models/TimetableSlot.model.js';
+import Department from '../../models/Department.model.js';
+import ClassModel from '../../models/Class.model.js';
+import Subject from '../../models/Subject.model.js';
+import User from '../../models/User.model.js';
+import { Op } from 'sequelize';
 
 // @desc      Get all timetables
 // @route     GET /api/v1/timetable
@@ -13,38 +19,48 @@ export const getAllTimetables = asyncHandler(async (req, res, next) => {
   const limit = parseInt(req.query.limit, 10) || 25;
   const startIndex = (page - 1) * limit;
 
-  let query = {};
+  let where = {};
 
   if (req.query.department) {
-    query.department = req.query.department;
+    where.departmentId = req.query.department;
   }
 
   if (req.query.class) {
-    query.class = req.query.class;
+    where.classId = req.query.class;
   }
 
   if (req.query.semester) {
-    query.semester = parseInt(req.query.semester);
+    where.semester = parseInt(req.query.semester);
   }
 
   if (req.query.academicYear) {
-    query.academicYear = req.query.academicYear;
+    where.academicYear = req.query.academicYear;
   }
 
   if (req.query.isActive !== undefined) {
-    query.isActive = req.query.isActive === 'true';
+    where.isActive = req.query.isActive === 'true';
   }
 
-  const total = await Timetable.countDocuments(query);
-  const timetables = await Timetable.find(query)
-    .populate('class', 'name section')
-    .populate('department', 'name code')
-    .populate('slots.subject', 'name code')
-    .populate('slots.faculty', 'firstName lastName employeeId')
-    .populate('createdBy', 'name')
-    .skip(startIndex)
-    .limit(limit)
-    .sort('-createdAt');
+  const total = await Timetable.count({ where });
+  const timetables = await Timetable.findAll({
+    where,
+    include: [
+      { model: ClassModel, as: 'class', attributes: ['name', 'section'] },
+      { model: Department, as: 'department', attributes: ['name', 'code'] },
+      { model: User, as: 'createdBy', attributes: ['name'] },
+      {
+        model: TimetableSlot,
+        as: 'slots',
+        include: [
+          { model: Subject, as: 'subject', attributes: ['name', 'code'] },
+          { model: Faculty, as: 'faculty', attributes: ['firstName', 'lastName', 'employeeId'] }
+        ]
+      }
+    ],
+    offset: startIndex,
+    limit,
+    order: [['createdAt', 'DESC']]
+  });
 
   res.status(200).json({
     success: true,
@@ -63,12 +79,21 @@ export const getAllTimetables = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/timetable/:id
 // @access    Private
 export const getTimetable = asyncHandler(async (req, res, next) => {
-  const timetable = await Timetable.findById(req.params.id)
-    .populate('class', 'name section room')
-    .populate('department', 'name code')
-    .populate('slots.subject', 'name code credits type')
-    .populate('slots.faculty', 'firstName lastName employeeId email')
-    .populate('createdBy', 'name');
+  const timetable = await Timetable.findByPk(req.params.id, {
+    include: [
+      { model: ClassModel, as: 'class', attributes: ['name', 'section', 'room'] },
+      { model: Department, as: 'department', attributes: ['name', 'code'] },
+      { model: User, as: 'createdBy', attributes: ['name'] },
+      {
+        model: TimetableSlot,
+        as: 'slots',
+        include: [
+          { model: Subject, as: 'subject', attributes: ['name', 'code', 'credits', 'type'] },
+          { model: Faculty, as: 'faculty', attributes: ['firstName', 'lastName', 'employeeId', 'email'] }
+        ]
+      }
+    ]
+  });
 
   if (!timetable) {
     return next(new ErrorResponse(`Timetable not found with id of ${req.params.id}`, 404));
@@ -85,13 +110,23 @@ export const getTimetable = asyncHandler(async (req, res, next) => {
 // @access    Private
 export const getTimetableByClass = asyncHandler(async (req, res, next) => {
   const timetable = await Timetable.findOne({
-    class: req.params.classId,
-    isActive: true
-  })
-    .populate('class', 'name section room')
-    .populate('department', 'name code')
-    .populate('slots.subject', 'name code')
-    .populate('slots.faculty', 'firstName lastName');
+    where: {
+      classId: req.params.classId,
+      isActive: true
+    },
+    include: [
+      { model: ClassModel, as: 'class', attributes: ['name', 'section', 'room'] },
+      { model: Department, as: 'department', attributes: ['name', 'code'] },
+      {
+        model: TimetableSlot,
+        as: 'slots',
+        include: [
+          { model: Subject, as: 'subject', attributes: ['name', 'code'] },
+          { model: Faculty, as: 'faculty', attributes: ['firstName', 'lastName'] }
+        ]
+      }
+    ]
+  });
 
   if (!timetable) {
     return next(new ErrorResponse('No active timetable found for this class', 404));
@@ -107,29 +142,27 @@ export const getTimetableByClass = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/timetable/faculty/:facultyId
 // @access    Private
 export const getTimetableByFaculty = asyncHandler(async (req, res, next) => {
-  const timetables = await Timetable.find({
-    'slots.faculty': req.params.facultyId,
-    isActive: true
-  })
-    .populate('class', 'name section')
-    .populate('department', 'name code')
-    .populate('slots.subject', 'name code')
-    .populate('slots.faculty', 'firstName lastName');
-
-  // Extract only the slots for this faculty
-  const facultySchedule = [];
-  timetables.forEach(tt => {
-    const relevantSlots = tt.slots.filter(
-      slot => slot.faculty && slot.faculty._id.toString() === req.params.facultyId
-    );
-    relevantSlots.forEach(slot => {
-      facultySchedule.push({
-        ...slot.toObject(),
-        class: tt.class,
-        department: tt.department
-      });
-    });
+  const slots = await TimetableSlot.findAll({
+    where: { facultyId: req.params.facultyId },
+    include: [
+      {
+        model: Timetable,
+        where: { isActive: true },
+        include: [
+          { model: ClassModel, as: 'class', attributes: ['name', 'section'] },
+          { model: Department, as: 'department', attributes: ['name', 'code'] }
+        ]
+      },
+      { model: Subject, as: 'subject', attributes: ['name', 'code'] },
+      { model: Faculty, as: 'faculty', attributes: ['firstName', 'lastName'] }
+    ]
   });
+
+  const facultySchedule = slots.map((slot) => ({
+    ...slot.toJSON(),
+    class: slot.Timetable?.class,
+    department: slot.Timetable?.department
+  }));
 
   res.status(200).json({
     success: true,
@@ -142,15 +175,39 @@ export const getTimetableByFaculty = asyncHandler(async (req, res, next) => {
 // @route     POST /api/v1/timetable
 // @access    Private/Admin
 export const createTimetable = asyncHandler(async (req, res, next) => {
-  req.body.createdBy = req.user.id;
+  req.body.createdById = req.user.id;
 
   // Deactivate existing timetable for the same class
-  await Timetable.updateMany(
-    { class: req.body.class, isActive: true },
-    { isActive: false }
+  await Timetable.update(
+    { isActive: false },
+    { where: { classId: req.body.class, isActive: true } }
   );
 
-  const timetable = await Timetable.create(req.body);
+  const timetable = await Timetable.create({
+    classId: req.body.class,
+    departmentId: req.body.department,
+    semester: req.body.semester,
+    academicYear: req.body.academicYear,
+    effectiveFrom: req.body.effectiveFrom,
+    effectiveTo: req.body.effectiveTo,
+    isActive: req.body.isActive ?? true,
+    createdById: req.body.createdById
+  });
+
+  if (Array.isArray(req.body.slots) && req.body.slots.length > 0) {
+    const rows = req.body.slots.map((slot) => ({
+      timetableId: timetable.id,
+      day: slot.day,
+      period: slot.period,
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+      subjectId: slot.subject,
+      facultyId: slot.faculty,
+      room: slot.room,
+      type: slot.type
+    }));
+    await TimetableSlot.bulkCreate(rows);
+  }
 
   res.status(201).json({
     success: true,
@@ -162,16 +219,23 @@ export const createTimetable = asyncHandler(async (req, res, next) => {
 // @route     PUT /api/v1/timetable/:id
 // @access    Private/Admin
 export const updateTimetable = asyncHandler(async (req, res, next) => {
-  let timetable = await Timetable.findById(req.params.id);
+  let timetable = await Timetable.findByPk(req.params.id);
 
   if (!timetable) {
     return next(new ErrorResponse(`Timetable not found with id of ${req.params.id}`, 404));
   }
 
-  timetable = await Timetable.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
+  const updatePayload = { ...req.body };
+  if (updatePayload.class) {
+    updatePayload.classId = updatePayload.class;
+    delete updatePayload.class;
+  }
+  if (updatePayload.department) {
+    updatePayload.departmentId = updatePayload.department;
+    delete updatePayload.department;
+  }
+  await Timetable.update(updatePayload, { where: { id: req.params.id } });
+  timetable = await Timetable.findByPk(req.params.id);
 
   res.status(200).json({
     success: true,
@@ -183,13 +247,14 @@ export const updateTimetable = asyncHandler(async (req, res, next) => {
 // @route     DELETE /api/v1/timetable/:id
 // @access    Private/Admin
 export const deleteTimetable = asyncHandler(async (req, res, next) => {
-  const timetable = await Timetable.findById(req.params.id);
+  const timetable = await Timetable.findByPk(req.params.id);
 
   if (!timetable) {
     return next(new ErrorResponse(`Timetable not found with id of ${req.params.id}`, 404));
   }
 
-  await timetable.deleteOne();
+  await TimetableSlot.destroy({ where: { timetableId: timetable.id } });
+  await timetable.destroy();
 
   res.status(200).json({
     success: true,
@@ -201,23 +266,36 @@ export const deleteTimetable = asyncHandler(async (req, res, next) => {
 // @route     POST /api/v1/timetable/:id/slots
 // @access    Private/Admin
 export const addSlot = asyncHandler(async (req, res, next) => {
-  const timetable = await Timetable.findById(req.params.id);
+  const timetable = await Timetable.findByPk(req.params.id);
 
   if (!timetable) {
     return next(new ErrorResponse(`Timetable not found with id of ${req.params.id}`, 404));
   }
 
   // Check for conflicts
-  const existingSlot = timetable.slots.find(
-    slot => slot.day === req.body.day && slot.period === req.body.period
-  );
+  const existingSlot = await TimetableSlot.findOne({
+    where: {
+      timetableId: req.params.id,
+      day: req.body.day,
+      period: req.body.period
+    }
+  });
 
   if (existingSlot) {
     return next(new ErrorResponse('A slot already exists for this day and period', 400));
   }
 
-  timetable.slots.push(req.body);
-  await timetable.save();
+  await TimetableSlot.create({
+    timetableId: req.params.id,
+    day: req.body.day,
+    period: req.body.period,
+    startTime: req.body.startTime,
+    endTime: req.body.endTime,
+    subjectId: req.body.subject,
+    facultyId: req.body.faculty,
+    room: req.body.room,
+    type: req.body.type
+  });
 
   res.status(200).json({
     success: true,
@@ -229,22 +307,34 @@ export const addSlot = asyncHandler(async (req, res, next) => {
 // @route     PUT /api/v1/timetable/:id/slots/:slotId
 // @access    Private/Admin
 export const updateSlot = asyncHandler(async (req, res, next) => {
-  const timetable = await Timetable.findById(req.params.id);
+  const timetable = await Timetable.findByPk(req.params.id);
 
   if (!timetable) {
     return next(new ErrorResponse(`Timetable not found with id of ${req.params.id}`, 404));
   }
 
-  const slotIndex = timetable.slots.findIndex(
-    slot => slot._id.toString() === req.params.slotId
-  );
+  const slot = await TimetableSlot.findOne({
+    where: {
+      id: req.params.slotId,
+      timetableId: req.params.id
+    }
+  });
 
-  if (slotIndex === -1) {
+  if (!slot) {
     return next(new ErrorResponse('Slot not found', 404));
   }
 
-  timetable.slots[slotIndex] = { ...timetable.slots[slotIndex].toObject(), ...req.body };
-  await timetable.save();
+  const updatePayload = { ...req.body };
+  if (updatePayload.subject) {
+    updatePayload.subjectId = updatePayload.subject;
+    delete updatePayload.subject;
+  }
+  if (updatePayload.faculty) {
+    updatePayload.facultyId = updatePayload.faculty;
+    delete updatePayload.faculty;
+  }
+
+  await TimetableSlot.update(updatePayload, { where: { id: slot.id } });
 
   res.status(200).json({
     success: true,
@@ -256,17 +346,22 @@ export const updateSlot = asyncHandler(async (req, res, next) => {
 // @route     DELETE /api/v1/timetable/:id/slots/:slotId
 // @access    Private/Admin
 export const removeSlot = asyncHandler(async (req, res, next) => {
-  const timetable = await Timetable.findById(req.params.id);
+  const timetable = await Timetable.findByPk(req.params.id);
 
   if (!timetable) {
     return next(new ErrorResponse(`Timetable not found with id of ${req.params.id}`, 404));
   }
 
-  timetable.slots = timetable.slots.filter(
-    slot => slot._id.toString() !== req.params.slotId
-  );
+  const deleted = await TimetableSlot.destroy({
+    where: {
+      id: req.params.slotId,
+      timetableId: req.params.id
+    }
+  });
 
-  await timetable.save();
+  if (!deleted) {
+    return next(new ErrorResponse('Slot not found', 404));
+  }
 
   res.status(200).json({
     success: true,
@@ -278,7 +373,7 @@ export const removeSlot = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/timetable/config/periods
 // @access    Private
 export const getPeriodConfigs = asyncHandler(async (req, res, next) => {
-  const configs = await PeriodConfig.find({ isActive: true });
+  const configs = await PeriodConfig.findAll({ where: { isActive: true } });
 
   res.status(200).json({
     success: true,
@@ -293,7 +388,7 @@ export const getPeriodConfigs = asyncHandler(async (req, res, next) => {
 export const createPeriodConfig = asyncHandler(async (req, res, next) => {
   // If this is set as default, remove default from others
   if (req.body.isDefault) {
-    await PeriodConfig.updateMany({}, { isDefault: false });
+    await PeriodConfig.update({ isDefault: false }, { where: {} });
   }
 
   const config = await PeriodConfig.create(req.body);
@@ -315,42 +410,49 @@ export const getTodaySchedule = asyncHandler(async (req, res, next) => {
 
   if (req.user.role === 'faculty') {
     // Get faculty's schedule for today
-    const faculty = await Faculty.findOne({ user: req.user.id });
+    const faculty = await Faculty.findOne({ where: { userId: req.user.id } });
 
     if (faculty) {
-      const timetables = await Timetable.find({
-        'slots.faculty': faculty._id,
-        isActive: true
-      })
-        .populate('class', 'name section')
-        .populate('slots.subject', 'name code');
+      const slots = await TimetableSlot.findAll({
+        where: { day: today, facultyId: faculty.id },
+        include: [
+          {
+            model: Timetable,
+            where: { isActive: true },
+            include: [{ model: ClassModel, as: 'class', attributes: ['name', 'section'] }]
+          },
+          { model: Subject, as: 'subject', attributes: ['name', 'code'] }
+        ]
+      });
 
-      timetables.forEach(tt => {
-        const todaySlots = tt.slots.filter(
-          slot => slot.day === today && slot.faculty?.toString() === faculty._id.toString()
-        );
-        todaySlots.forEach(slot => {
-          schedule.push({
-            ...slot.toObject(),
-            class: tt.class
-          });
+      slots.forEach(slot => {
+        schedule.push({
+          ...slot.toJSON(),
+          class: slot.Timetable?.class
         });
       });
     }
   } else if (req.user.role === 'student') {
     // Get student's class schedule for today
-    const student = await Student.findOne({ user: req.user.id });
+    const student = await Student.findOne({ where: { userId: req.user.id } });
 
-    if (student && student.class) {
+    if (student && student.classId) {
       const timetable = await Timetable.findOne({
-        class: student.class,
-        isActive: true
-      })
-        .populate('slots.subject', 'name code')
-        .populate('slots.faculty', 'firstName lastName');
+        where: {
+          classId: student.classId,
+          isActive: true
+        }
+      });
 
       if (timetable) {
-        schedule = timetable.slots.filter(slot => slot.day === today);
+        const slots = await TimetableSlot.findAll({
+          where: { timetableId: timetable.id, day: today },
+          include: [
+            { model: Subject, as: 'subject', attributes: ['name', 'code'] },
+            { model: Faculty, as: 'faculty', attributes: ['firstName', 'lastName'] }
+          ]
+        });
+        schedule = slots.map(slot => slot.toJSON());
       }
     }
   }

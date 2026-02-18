@@ -2,6 +2,9 @@ import ErrorResponse from '../../utils/errorResponse.js';
 import asyncHandler from '../../middleware/async.js';
 import Leave from '../../models/Leave.model.js';
 import LeaveBalance from '../../models/LeaveBalance.model.js';
+import User from '../../models/User.model.js';
+import Department from '../../models/Department.model.js';
+import { Op } from 'sequelize';
 
 // @desc      Get all leave applications
 // @route     GET /api/v1/leave
@@ -11,47 +14,51 @@ export const getAllLeaves = asyncHandler(async (req, res, next) => {
   const limit = parseInt(req.query.limit, 10) || 25;
   const startIndex = (page - 1) * limit;
 
-  let query = {};
+  let where = {};
 
   // For non-admin users, show only their leaves
   if (!['superadmin', 'executiveadmin', 'academicadmin'].includes(req.user.role)) {
-    query.applicant = req.user.id;
+    where.applicantId = req.user.id;
   }
 
   // Filter by status
   if (req.query.status) {
-    query.status = req.query.status;
+    where.status = req.query.status;
   }
 
   // Filter by leave type
   if (req.query.leaveType) {
-    query.leaveType = req.query.leaveType;
+    where.leaveType = req.query.leaveType;
   }
 
   // Filter by department
   if (req.query.department) {
-    query.department = req.query.department;
+    where.departmentId = req.query.department;
   }
 
   // Filter by applicant type
   if (req.query.applicantType) {
-    query.applicantType = req.query.applicantType;
+    where.applicantType = req.query.applicantType;
   }
 
   // Filter by date range
   if (req.query.startDate && req.query.endDate) {
-    query.startDate = { $gte: new Date(req.query.startDate) };
-    query.endDate = { $lte: new Date(req.query.endDate) };
+    where.startDate = { [Op.gte]: new Date(req.query.startDate) };
+    where.endDate = { [Op.lte]: new Date(req.query.endDate) };
   }
 
-  const total = await Leave.countDocuments(query);
-  const leaves = await Leave.find(query)
-    .populate('applicant', 'name email role')
-    .populate('approvedBy', 'name')
-    .populate('department', 'name')
-    .skip(startIndex)
-    .limit(limit)
-    .sort('-createdAt');
+  const total = await Leave.count({ where });
+  const leaves = await Leave.findAll({
+    where,
+    include: [
+      { model: User, as: 'applicant', attributes: ['name', 'email', 'role'] },
+      { model: User, as: 'approvedBy', attributes: ['name'] },
+      { model: Department, as: 'department', attributes: ['name'] }
+    ],
+    offset: startIndex,
+    limit,
+    order: [['createdAt', 'DESC']]
+  });
 
   res.status(200).json({
     success: true,
@@ -70,10 +77,13 @@ export const getAllLeaves = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/leave/:id
 // @access    Private
 export const getLeave = asyncHandler(async (req, res, next) => {
-  const leave = await Leave.findById(req.params.id)
-    .populate('applicant', 'name email role')
-    .populate('approvedBy', 'name')
-    .populate('department', 'name');
+  const leave = await Leave.findByPk(req.params.id, {
+    include: [
+      { model: User, as: 'applicant', attributes: ['name', 'email', 'role'] },
+      { model: User, as: 'approvedBy', attributes: ['name'] },
+      { model: Department, as: 'department', attributes: ['name'] }
+    ]
+  });
 
   if (!leave) {
     return next(new ErrorResponse(`Leave application not found with id of ${req.params.id}`, 404));
@@ -82,7 +92,7 @@ export const getLeave = asyncHandler(async (req, res, next) => {
   // Check if user is authorized to view this leave
   if (
     !['superadmin', 'executiveadmin', 'academicadmin'].includes(req.user.role) &&
-    leave.applicant._id.toString() !== req.user.id
+    leave.applicantId !== Number(req.user.id)
   ) {
     return next(new ErrorResponse('Not authorized to view this leave application', 403));
   }
@@ -97,7 +107,7 @@ export const getLeave = asyncHandler(async (req, res, next) => {
 // @route     POST /api/v1/leave
 // @access    Private
 export const createLeave = asyncHandler(async (req, res, next) => {
-  req.body.applicant = req.user.id;
+  req.body.applicantId = req.user.id;
   req.body.applicantType = req.user.role === 'faculty' ? 'faculty' : 'student';
 
   // Calculate total days
@@ -109,8 +119,10 @@ export const createLeave = asyncHandler(async (req, res, next) => {
   // Check leave balance
   const currentYear = new Date().getFullYear().toString();
   const leaveBalance = await LeaveBalance.findOne({
-    user: req.user.id,
-    academicYear: currentYear
+    where: {
+      userId: req.user.id,
+      academicYear: currentYear
+    }
   });
 
   if (leaveBalance) {
@@ -132,7 +144,7 @@ export const createLeave = asyncHandler(async (req, res, next) => {
 // @route     PUT /api/v1/leave/:id
 // @access    Private
 export const updateLeave = asyncHandler(async (req, res, next) => {
-  let leave = await Leave.findById(req.params.id);
+  let leave = await Leave.findByPk(req.params.id);
 
   if (!leave) {
     return next(new ErrorResponse(`Leave application not found with id of ${req.params.id}`, 404));
@@ -143,14 +155,12 @@ export const updateLeave = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse('Cannot update leave application after it has been processed', 400));
   }
 
-  if (leave.applicant.toString() !== req.user.id) {
+  if (leave.applicantId !== Number(req.user.id)) {
     return next(new ErrorResponse('Not authorized to update this leave application', 403));
   }
 
-  leave = await Leave.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
+  await Leave.update(req.body, { where: { id: req.params.id } });
+  leave = await Leave.findByPk(req.params.id);
 
   res.status(200).json({
     success: true,
@@ -162,7 +172,7 @@ export const updateLeave = asyncHandler(async (req, res, next) => {
 // @route     PUT /api/v1/leave/:id/status
 // @access    Private/Admin
 export const updateLeaveStatus = asyncHandler(async (req, res, next) => {
-  const leave = await Leave.findById(req.params.id);
+  const leave = await Leave.findByPk(req.params.id);
 
   if (!leave) {
     return next(new ErrorResponse(`Leave application not found with id of ${req.params.id}`, 404));
@@ -173,7 +183,7 @@ export const updateLeaveStatus = asyncHandler(async (req, res, next) => {
   }
 
   leave.status = req.body.status;
-  leave.approvedBy = req.user.id;
+  leave.approvedById = req.user.id;
   leave.approvalDate = Date.now();
   leave.approvalRemarks = req.body.remarks;
 
@@ -183,13 +193,19 @@ export const updateLeaveStatus = asyncHandler(async (req, res, next) => {
   if (req.body.status === 'approved') {
     const currentYear = new Date().getFullYear().toString();
     const leaveBalance = await LeaveBalance.findOne({
-      user: leave.applicant,
-      academicYear: currentYear
+      where: {
+        userId: leave.applicantId,
+        academicYear: currentYear
+      }
     });
 
     if (leaveBalance && leaveBalance[leave.leaveType]) {
-      leaveBalance[leave.leaveType].used += leave.totalDays;
-      leaveBalance[leave.leaveType].balance -= leave.totalDays;
+      const updatedBalance = {
+        ...leaveBalance[leave.leaveType],
+        used: leaveBalance[leave.leaveType].used + leave.totalDays,
+        balance: leaveBalance[leave.leaveType].balance - leave.totalDays
+      };
+      leaveBalance.set(leave.leaveType, updatedBalance);
       await leaveBalance.save();
     }
   }
@@ -204,13 +220,13 @@ export const updateLeaveStatus = asyncHandler(async (req, res, next) => {
 // @route     PUT /api/v1/leave/:id/cancel
 // @access    Private
 export const cancelLeave = asyncHandler(async (req, res, next) => {
-  const leave = await Leave.findById(req.params.id);
+  const leave = await Leave.findByPk(req.params.id);
 
   if (!leave) {
     return next(new ErrorResponse(`Leave application not found with id of ${req.params.id}`, 404));
   }
 
-  if (leave.applicant.toString() !== req.user.id) {
+  if (leave.applicantId !== Number(req.user.id)) {
     return next(new ErrorResponse('Not authorized to cancel this leave application', 403));
   }
 
@@ -218,13 +234,19 @@ export const cancelLeave = asyncHandler(async (req, res, next) => {
   if (leave.status === 'approved') {
     const currentYear = new Date().getFullYear().toString();
     const leaveBalance = await LeaveBalance.findOne({
-      user: leave.applicant,
-      academicYear: currentYear
+      where: {
+        userId: leave.applicantId,
+        academicYear: currentYear
+      }
     });
 
     if (leaveBalance && leaveBalance[leave.leaveType]) {
-      leaveBalance[leave.leaveType].used -= leave.totalDays;
-      leaveBalance[leave.leaveType].balance += leave.totalDays;
+      const updatedBalance = {
+        ...leaveBalance[leave.leaveType],
+        used: leaveBalance[leave.leaveType].used - leave.totalDays,
+        balance: leaveBalance[leave.leaveType].balance + leave.totalDays
+      };
+      leaveBalance.set(leave.leaveType, updatedBalance);
       await leaveBalance.save();
     }
   }
@@ -242,13 +264,13 @@ export const cancelLeave = asyncHandler(async (req, res, next) => {
 // @route     DELETE /api/v1/leave/:id
 // @access    Private/Admin
 export const deleteLeave = asyncHandler(async (req, res, next) => {
-  const leave = await Leave.findById(req.params.id);
+  const leave = await Leave.findByPk(req.params.id);
 
   if (!leave) {
     return next(new ErrorResponse(`Leave application not found with id of ${req.params.id}`, 404));
   }
 
-  await leave.deleteOne();
+  await leave.destroy();
 
   res.status(200).json({
     success: true,
@@ -260,9 +282,11 @@ export const deleteLeave = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/leave/my-leaves
 // @access    Private
 export const getMyLeaves = asyncHandler(async (req, res, next) => {
-  const leaves = await Leave.find({ applicant: req.user.id })
-    .populate('approvedBy', 'name')
-    .sort('-createdAt');
+  const leaves = await Leave.findAll({
+    where: { applicantId: req.user.id },
+    include: [{ model: User, as: 'approvedBy', attributes: ['name'] }],
+    order: [['createdAt', 'DESC']]
+  });
 
   res.status(200).json({
     success: true,
@@ -278,14 +302,16 @@ export const getLeaveBalance = asyncHandler(async (req, res, next) => {
   const currentYear = new Date().getFullYear().toString();
 
   let leaveBalance = await LeaveBalance.findOne({
-    user: req.user.id,
-    academicYear: currentYear
+    where: {
+      userId: req.user.id,
+      academicYear: currentYear
+    }
   });
 
   // Create default balance if not exists
   if (!leaveBalance) {
     leaveBalance = await LeaveBalance.create({
-      user: req.user.id,
+      userId: req.user.id,
       userType: req.user.role === 'faculty' ? 'faculty' : 'student',
       academicYear: currentYear
     });
@@ -301,7 +327,7 @@ export const getLeaveBalance = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/leave/pending-count
 // @access    Private/Admin
 export const getPendingCount = asyncHandler(async (req, res, next) => {
-  const count = await Leave.countDocuments({ status: 'pending' });
+  const count = await Leave.count({ where: { status: 'pending' } });
 
   res.status(200).json({
     success: true,

@@ -1,49 +1,47 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../config/db.js';
 
-const SubjectSchema = new mongoose.Schema({
+const Subject = sequelize.define('Subject', {
   name: {
-    type: String,
-    required: [true, 'Please add subject name'],
-    trim: true
+    type: DataTypes.STRING,
+    allowNull: false
   },
   code: {
-    type: String,
-    required: [true, 'Please add subject code'],
-    unique: true,
-    uppercase: true
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true
   },
-  department: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Department',
-    required: true
+  departmentId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   credits: {
-    type: Number,
-    required: [true, 'Please add credits']
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   type: {
-    type: String,
-    enum: ['theory', 'practical', 'both'],
-    default: 'theory'
+    type: DataTypes.ENUM('theory', 'practical', 'both'),
+    defaultValue: 'theory'
   },
   semester: {
-    type: Number,
-    required: [true, 'Please add semester']
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   description: {
-    type: String
+    type: DataTypes.STRING,
+    allowNull: true
   },
   syllabus: {
-    type: String
+    type: DataTypes.STRING,
+    allowNull: true
   },
   isActive: {
-    type: Boolean,
-    default: true
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
   }
+}, {
+  tableName: 'subjects',
+  timestamps: true
 });
 
-export default mongoose.model('Subject', SubjectSchema);
+export default Subject;

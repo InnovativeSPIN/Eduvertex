@@ -1,28 +1,28 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import { sequelize } from '../config/db.js';
 
-const UserSchema = new mongoose.Schema({
+const User = sequelize.define('User', {
   name: {
-    type: String,
-    required: false
+    type: DataTypes.STRING,
+    allowNull: true
   },
   admin_name: {
-    type: String
+    type: DataTypes.STRING,
+    allowNull: true
   },
   email: {
-    type: String,
-    required: [true, 'Please add an email'],
+    type: DataTypes.STRING,
+    allowNull: false,
     unique: true,
-    match: [
-      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-      'Please add a valid email'
-    ]
+    validate: {
+      isEmail: true
+    }
   },
   role: {
-    type: String,
-    enum: [
+    type: DataTypes.ENUM(
       'superadmin',
       'super-admin',
       'executiveadmin',
@@ -33,102 +33,96 @@ const UserSchema = new mongoose.Schema({
       'department-admin',
       'faculty',
       'student'
-    ],
-    default: 'student'
+    ),
+    defaultValue: 'student'
   },
   admintype: {
-    type: String
+    type: DataTypes.STRING,
+    allowNull: true
   },
   admin_id: {
-    type: String
+    type: DataTypes.STRING,
+    allowNull: true
   },
   password: {
-    type: String,
-    required: false,
-    minlength: 3,
-    select: false
+    type: DataTypes.STRING,
+    allowNull: true
   },
   pwd: {
-    type: String,
-    select: false
+    type: DataTypes.STRING,
+    allowNull: true
   },
   phone: {
-    type: String,
-    maxlength: [20, 'Phone number can not be longer than 20 characters']
+    type: DataTypes.STRING,
+    allowNull: true
   },
   avatar: {
-    type: String,
-    default: 'default-avatar.png'
+    type: DataTypes.STRING,
+    defaultValue: 'default-avatar.png'
   },
   department: {
-    type: String
+    type: DataTypes.STRING,
+    allowNull: true
   },
   departmentCode: {
-    type: String
+    type: DataTypes.STRING,
+    allowNull: true
   },
   isActive: {
-    type: Boolean,
-    default: true
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
   },
-  resetPasswordToken: String,
-  resetPasswordExpire: Date,
+  resetPasswordToken: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  resetPasswordExpire: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
   lastLogin: {
-    type: Date
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
+    type: DataTypes.DATE,
+    allowNull: true
   }
 }, {
-  strict: false, // Allow fields not defined in schema
-  collection: 'users' // Explicitly set collection name
+  tableName: 'users',
+  timestamps: true
 });
 
-// Encrypt password using bcrypt
-UserSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
-    next();
+User.beforeSave(async (user) => {
+  if (user.changed('password') && user.password) {
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(user.password, salt);
   }
-
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
 });
 
-// Sign JWT and return
-UserSchema.methods.getSignedJwtToken = function () {
-  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
+User.prototype.getSignedJwtToken = function () {
+  return jwt.sign({ id: this.id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE
   });
 };
 
-// Match user entered password to hashed password in database
-UserSchema.methods.matchPassword = async function (enteredPassword) {
-  // Check if we have a hashed password
+User.prototype.matchPassword = async function (enteredPassword) {
   if (this.password) {
     return await bcrypt.compare(enteredPassword, this.password);
   }
-  // Check legacy plaintext pwd field
   if (this.pwd) {
     return enteredPassword === this.pwd;
   }
   return false;
 };
 
-// Generate and hash password token
-UserSchema.methods.getResetPasswordToken = function () {
-  // Generate token
+User.prototype.getResetPasswordToken = function () {
   const resetToken = crypto.randomBytes(20).toString('hex');
 
-  // Hash token and set to resetPasswordToken field
   this.resetPasswordToken = crypto
     .createHash('sha256')
     .update(resetToken)
     .digest('hex');
 
-  // Set expire
   this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
 
   return resetToken;
 };
 
-export default mongoose.model('User', UserSchema);
+export default User;

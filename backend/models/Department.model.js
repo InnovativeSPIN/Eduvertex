@@ -1,36 +1,36 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../config/db.js';
 
-const DepartmentSchema = new mongoose.Schema({
+const Department = sequelize.define('Department', {
   name: {
-    type: String,
-    required: [true, 'Please add department name'],
-    unique: true,
-    trim: true
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true
   },
   code: {
-    type: String,
-    required: [true, 'Please add department code'],
-    unique: true,
-    uppercase: true
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true
   },
   description: {
-    type: String
+    type: DataTypes.STRING,
+    allowNull: true
   },
-  head: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Faculty'
+  headId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
   },
   establishedYear: {
-    type: Number
+    type: DataTypes.INTEGER,
+    allowNull: true
   },
   isActive: {
-    type: Boolean,
-    default: true
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
   }
+}, {
+  tableName: 'departments',
+  timestamps: true
 });
 
-export default mongoose.model('Department', DepartmentSchema);
+export default Department;

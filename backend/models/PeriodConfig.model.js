@@ -1,49 +1,30 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../config/db.js';
 
-const PeriodConfigSchema = new mongoose.Schema({
+const PeriodConfig = sequelize.define('PeriodConfig', {
   name: {
-    type: String,
-    required: true
+    type: DataTypes.STRING,
+    allowNull: false
   },
-  periods: [{
-    periodNumber: {
-      type: Number,
-      required: true
-    },
-    startTime: {
-      type: String,
-      required: true
-    },
-    endTime: {
-      type: String,
-      required: true
-    },
-    duration: {
-      type: Number, // in minutes
-      required: true
-    },
-    type: {
-      type: String,
-      enum: ['class', 'break', 'lunch'],
-      default: 'class'
-    }
-  }],
-  workingDays: [{
-    type: String,
-    enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-  }],
+  periods: {
+    type: DataTypes.JSON,
+    allowNull: false
+  },
+  workingDays: {
+    type: DataTypes.JSON,
+    allowNull: true
+  },
   isDefault: {
-    type: Boolean,
-    default: false
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   },
   isActive: {
-    type: Boolean,
-    default: true
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
   }
+}, {
+  tableName: 'period_configs',
+  timestamps: true
 });
 
-export default mongoose.model('PeriodConfig', PeriodConfigSchema);
+export default PeriodConfig;

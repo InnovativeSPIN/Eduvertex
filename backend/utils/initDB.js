@@ -4,7 +4,7 @@ import colors from 'colors';
 const seedSuperAdmin = async () => {
     try {
         const superAdminEmail = 'vasanthi@gmail.com';
-        const exists = await User.findOne({ email: superAdminEmail });
+        const exists = await User.findOne({ where: { email: superAdminEmail } });
 
         if (!exists) {
             console.log('Creating initial Super Admin...'.yellow);

@@ -17,14 +17,6 @@ import errorHandler from './middleware/error.js';
 import connectDB from './config/db.js';
 import seedSuperAdmin from './utils/initDB.js';
 
-// Load env vars
-dotenv.config();
-
-// Connect to database
-connectDB().then(() => {
-  seedSuperAdmin();
-});
-
 // Route files
 import authRoutes from './routes/admin/auth.routes.js';
 import userRoutes from './routes/admin/user.routes.js';
@@ -36,83 +28,109 @@ import leaveRoutes from './routes/leave-attendance/leave.routes.js';
 import attendanceRoutes from './routes/leave-attendance/attendance.routes.js';
 import announcementRoutes from './routes/admin/announcement.routes.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Load env vars
+dotenv.config();
 
-const app = express();
+// Initialize Sequelize models (associations)
+import initModels from './models/index.js';
+initModels();
 
-// Body parser
-app.use(express.json());
-
-// Cookie parser
-app.use(cookieParser());
-
-// Dev logging middleware
-if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
-}
-
-// File uploading
-app.use(fileupload());
-
-// Sanitize data
-app.use(mongoSanitize());
-
-// Set security headers
-app.use(helmet());
-
-// Prevent XSS attacks
-app.use(xss());
-
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 10 * 60 * 1000, // 10 mins
-  max: 100
-});
-app.use(limiter);
-
-// Prevent http param pollution
-app.use(hpp());
-
-// Enable CORS
-app.use(cors({
-  origin: process.env.FRONTEND_URL,
-  credentials: true
-}));
-
-// Set static folder
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Mount routers
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/users', userRoutes);
-app.use('/api/v1/departments', departmentRoutes);
-app.use('/api/v1/faculty', facultyRoutes);
-app.use('/api/v1/students', studentRoutes);
-app.use('/api/v1/timetable', timetableRoutes);
-app.use('/api/v1/leave', leaveRoutes);
-app.use('/api/v1/attendance', attendanceRoutes);
-app.use('/api/v1/announcements', announcementRoutes);
-
-// Health check
-app.get('/api/v1/health', (req, res) => {
-  res.status(200).json({ success: true, message: 'Eduvertex ERP API is running' });
+// Connect to database
+connectDB().then(() => {
+  console.log('Database connected successfully');
+  seedSuperAdmin().then(() => {
+    console.log('Seeding completed');
+    startServer();
+  }).catch(err => {
+    console.error('Seeding failed:', err);
+    process.exit(1);
+  });
+}).catch(err => {
+  console.error('Database connection failed:', err);
+  process.exit(1);
 });
 
-app.use(errorHandler);
+const startServer = () => {
+  console.log('Starting server setup...');
 
-const PORT = process.env.PORT || 5000;
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
 
-const server = app.listen(
-  PORT,
-  console.log(
-    `Server running in ${process.env.NODE_ENV} mode on port ${PORT}`.yellow.bold
-  )
-);
+  const app = express();
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err, promise) => {
-  console.log(`Error: ${err.message}`.red);
-  // Close server & exit process
-  server.close(() => process.exit(1));
-});
+  // Body parser
+  app.use(express.json());
+
+  // Cookie parser
+  app.use(cookieParser());
+
+  // Dev logging middleware
+  if (process.env.NODE_ENV === 'development') {
+    app.use(morgan('dev'));
+  }
+
+  // File uploading
+  app.use(fileupload());
+
+  // Sanitize data
+  app.use(mongoSanitize());
+
+  // Set security headers
+  app.use(helmet());
+
+  // Prevent XSS attacks
+  app.use(xss());
+
+  // Rate limiting
+  const limiter = rateLimit({
+    windowMs: 10 * 60 * 1000, // 10 mins
+    max: 100
+  });
+  app.use(limiter);
+
+  // Prevent http param pollution
+  app.use(hpp());
+
+  // Enable CORS
+  app.use(cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true
+  }));
+
+  // Set static folder
+  app.use(express.static(path.join(__dirname, 'public')));
+
+  // Mount routers
+  app.use('/api/v1/auth', authRoutes);
+  app.use('/api/v1/users', userRoutes);
+  app.use('/api/v1/departments', departmentRoutes);
+  app.use('/api/v1/faculty', facultyRoutes);
+  app.use('/api/v1/students', studentRoutes);
+  app.use('/api/v1/timetable', timetableRoutes);
+  app.use('/api/v1/leave', leaveRoutes);
+  app.use('/api/v1/attendance', attendanceRoutes);
+  app.use('/api/v1/announcements', announcementRoutes);
+
+  // Health check
+  app.get('/api/v1/health', (req, res) => {
+    res.status(200).json({ success: true, message: 'Eduvertex ERP API is running' });
+  });
+
+  app.use(errorHandler);
+
+  const PORT = process.env.PORT || 5000;
+
+  const server = app.listen(
+    PORT,
+    console.log(
+      `Server running in ${process.env.NODE_ENV} mode on port ${PORT}`.yellow.bold
+    )
+  );
+
+  // Handle unhandled promise rejections
+  process.on('unhandledRejection', (err, promise) => {
+    console.log(`Error: ${err.message}`.red);
+    // Close server & exit process
+    server.close(() => process.exit(1));
+  });
+};

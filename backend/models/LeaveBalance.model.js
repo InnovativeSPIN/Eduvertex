@@ -1,61 +1,49 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../config/db.js';
 
-const LeaveBalanceSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'User',
-    required: true
+const LeaveBalance = sequelize.define('LeaveBalance', {
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   userType: {
-    type: String,
-    enum: ['faculty', 'student'],
-    required: true
+    type: DataTypes.ENUM('faculty', 'student'),
+    allowNull: false
   },
   academicYear: {
-    type: String,
-    required: true
+    type: DataTypes.STRING,
+    allowNull: false
   },
   casual: {
-    total: { type: Number, default: 12 },
-    used: { type: Number, default: 0 },
-    balance: { type: Number, default: 12 }
+    type: DataTypes.JSON,
+    defaultValue: { total: 12, used: 0, balance: 12 }
   },
   sick: {
-    total: { type: Number, default: 10 },
-    used: { type: Number, default: 0 },
-    balance: { type: Number, default: 10 }
+    type: DataTypes.JSON,
+    defaultValue: { total: 10, used: 0, balance: 10 }
   },
   earned: {
-    total: { type: Number, default: 15 },
-    used: { type: Number, default: 0 },
-    balance: { type: Number, default: 15 }
+    type: DataTypes.JSON,
+    defaultValue: { total: 15, used: 0, balance: 15 }
   },
   maternity: {
-    total: { type: Number, default: 180 },
-    used: { type: Number, default: 0 },
-    balance: { type: Number, default: 180 }
+    type: DataTypes.JSON,
+    defaultValue: { total: 180, used: 0, balance: 180 }
   },
   paternity: {
-    total: { type: Number, default: 15 },
-    used: { type: Number, default: 0 },
-    balance: { type: Number, default: 15 }
+    type: DataTypes.JSON,
+    defaultValue: { total: 15, used: 0, balance: 15 }
   },
   study: {
-    total: { type: Number, default: 30 },
-    used: { type: Number, default: 0 },
-    balance: { type: Number, default: 30 }
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
+    type: DataTypes.JSON,
+    defaultValue: { total: 30, used: 0, balance: 30 }
   }
+}, {
+  tableName: 'leave_balances',
+  timestamps: true,
+  indexes: [
+    { unique: true, fields: ['userId', 'academicYear'] }
+  ]
 });
 
-// Index for efficient queries
-LeaveBalanceSchema.index({ user: 1, academicYear: 1 }, { unique: true });
-
-export default mongoose.model('LeaveBalance', LeaveBalanceSchema);
+export default LeaveBalance;

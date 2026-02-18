@@ -3,6 +3,11 @@ import asyncHandler from '../../middleware/async.js';
 import Attendance from '../../models/Attendance.model.js';
 import FacultyAttendance from '../../models/FacultyAttendance.model.js';
 import Student from '../../models/Student.model.js';
+import AttendanceStudent from '../../models/AttendanceStudent.model.js';
+import ClassModel from '../../models/Class.model.js';
+import Subject from '../../models/Subject.model.js';
+import Faculty from '../../models/Faculty.model.js';
+import { Op } from 'sequelize';
 
 // @desc      Get all attendance records
 // @route     GET /api/v1/attendance
@@ -12,43 +17,51 @@ export const getAllAttendance = asyncHandler(async (req, res, next) => {
   const limit = parseInt(req.query.limit, 10) || 25;
   const startIndex = (page - 1) * limit;
 
-  let query = {};
+  let where = {};
 
   if (req.query.class) {
-    query.class = req.query.class;
+    where.classId = req.query.class;
   }
 
   if (req.query.subject) {
-    query.subject = req.query.subject;
+    where.subjectId = req.query.subject;
   }
 
   if (req.query.faculty) {
-    query.faculty = req.query.faculty;
+    where.facultyId = req.query.faculty;
   }
 
   if (req.query.date) {
     const date = new Date(req.query.date);
     const nextDate = new Date(date);
     nextDate.setDate(nextDate.getDate() + 1);
-    query.date = { $gte: date, $lt: nextDate };
+    where.date = { [Op.gte]: date, [Op.lt]: nextDate };
   }
 
   if (req.query.startDate && req.query.endDate) {
-    query.date = {
-      $gte: new Date(req.query.startDate),
-      $lte: new Date(req.query.endDate)
+    where.date = {
+      [Op.gte]: new Date(req.query.startDate),
+      [Op.lte]: new Date(req.query.endDate)
     };
   }
 
-  const total = await Attendance.countDocuments(query);
-  const attendance = await Attendance.find(query)
-    .populate('class', 'name section')
-    .populate('subject', 'name code')
-    .populate('faculty', 'firstName lastName')
-    .populate('students.student', 'firstName lastName rollNumber')
-    .skip(startIndex)
-    .limit(limit)
-    .sort('-date');
+  const total = await Attendance.count({ where });
+  const attendance = await Attendance.findAll({
+    where,
+    include: [
+      { model: ClassModel, as: 'class', attributes: ['name', 'section'] },
+      { model: Subject, as: 'subject', attributes: ['name', 'code'] },
+      { model: Faculty, as: 'faculty', attributes: ['firstName', 'lastName'] },
+      {
+        model: AttendanceStudent,
+        as: 'students',
+        include: [{ model: Student, as: 'student', attributes: ['firstName', 'lastName', 'rollNumber'] }]
+      }
+    ],
+    offset: startIndex,
+    limit,
+    order: [['date', 'DESC']]
+  });
 
   res.status(200).json({
     success: true,
@@ -67,11 +80,18 @@ export const getAllAttendance = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/attendance/:id
 // @access    Private
 export const getAttendance = asyncHandler(async (req, res, next) => {
-  const attendance = await Attendance.findById(req.params.id)
-    .populate('class', 'name section')
-    .populate('subject', 'name code')
-    .populate('faculty', 'firstName lastName')
-    .populate('students.student', 'firstName lastName rollNumber studentId');
+  const attendance = await Attendance.findByPk(req.params.id, {
+    include: [
+      { model: ClassModel, as: 'class', attributes: ['name', 'section'] },
+      { model: Subject, as: 'subject', attributes: ['name', 'code'] },
+      { model: Faculty, as: 'faculty', attributes: ['firstName', 'lastName'] },
+      {
+        model: AttendanceStudent,
+        as: 'students',
+        include: [{ model: Student, as: 'student', attributes: ['firstName', 'lastName', 'rollNumber', 'studentId'] }]
+      }
+    ]
+  });
 
   if (!attendance) {
     return next(new ErrorResponse(`Attendance record not found with id of ${req.params.id}`, 404));
@@ -87,24 +107,59 @@ export const getAttendance = asyncHandler(async (req, res, next) => {
 // @route     POST /api/v1/attendance
 // @access    Private/Faculty
 export const markAttendance = asyncHandler(async (req, res, next) => {
-  req.body.markedBy = req.user.id;
+  req.body.markedById = req.user.id;
 
   // Check if attendance already marked for this class, subject, date, and period
+  const startOfDay = new Date(new Date(req.body.date).setHours(0, 0, 0, 0));
+  const endOfDay = new Date(new Date(req.body.date).setHours(23, 59, 59, 999));
+
   const existingAttendance = await Attendance.findOne({
-    class: req.body.class,
-    subject: req.body.subject,
-    date: {
-      $gte: new Date(new Date(req.body.date).setHours(0, 0, 0, 0)),
-      $lt: new Date(new Date(req.body.date).setHours(23, 59, 59, 999))
-    },
-    period: req.body.period
+    where: {
+      classId: req.body.class,
+      subjectId: req.body.subject,
+      date: {
+        [Op.gte]: startOfDay,
+        [Op.lt]: endOfDay
+      },
+      period: req.body.period
+    }
   });
 
   if (existingAttendance) {
     return next(new ErrorResponse('Attendance already marked for this class, subject, date, and period', 400));
   }
 
-  const attendance = await Attendance.create(req.body);
+  const students = Array.isArray(req.body.students) ? req.body.students : [];
+  const totals = students.reduce(
+    (acc, s) => {
+      if (s.status === 'present') acc.totalPresent += 1;
+      else if (s.status === 'absent') acc.totalAbsent += 1;
+      else if (s.status === 'late') acc.totalLate += 1;
+      else if (s.status === 'excused') acc.totalExcused += 1;
+      return acc;
+    },
+    { totalPresent: 0, totalAbsent: 0, totalLate: 0, totalExcused: 0 }
+  );
+
+  const attendance = await Attendance.create({
+    classId: req.body.class,
+    subjectId: req.body.subject,
+    facultyId: req.body.faculty,
+    date: req.body.date,
+    period: req.body.period,
+    markedById: req.body.markedById,
+    ...totals
+  });
+
+  if (students.length > 0) {
+    const rows = students.map((student) => ({
+      attendanceId: attendance.id,
+      studentId: student.student,
+      status: student.status || 'absent',
+      remarks: student.remarks
+    }));
+    await AttendanceStudent.bulkCreate(rows);
+  }
 
   res.status(201).json({
     success: true,
@@ -116,16 +171,58 @@ export const markAttendance = asyncHandler(async (req, res, next) => {
 // @route     PUT /api/v1/attendance/:id
 // @access    Private/Faculty
 export const updateAttendance = asyncHandler(async (req, res, next) => {
-  let attendance = await Attendance.findById(req.params.id);
+  let attendance = await Attendance.findByPk(req.params.id);
 
   if (!attendance) {
     return next(new ErrorResponse(`Attendance record not found with id of ${req.params.id}`, 404));
   }
 
-  attendance = await Attendance.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
+  const students = Array.isArray(req.body.students) ? req.body.students : null;
+  if (students) {
+    const totals = students.reduce(
+      (acc, s) => {
+        if (s.status === 'present') acc.totalPresent += 1;
+        else if (s.status === 'absent') acc.totalAbsent += 1;
+        else if (s.status === 'late') acc.totalLate += 1;
+        else if (s.status === 'excused') acc.totalExcused += 1;
+        return acc;
+      },
+      { totalPresent: 0, totalAbsent: 0, totalLate: 0, totalExcused: 0 }
+    );
+    await Attendance.update({
+      totalPresent: totals.totalPresent,
+      totalAbsent: totals.totalAbsent,
+      totalLate: totals.totalLate,
+      totalExcused: totals.totalExcused
+    }, { where: { id: req.params.id } });
+
+    await AttendanceStudent.destroy({ where: { attendanceId: req.params.id } });
+    const rows = students.map((student) => ({
+      attendanceId: Number(req.params.id),
+      studentId: student.student,
+      status: student.status || 'absent',
+      remarks: student.remarks
+    }));
+    await AttendanceStudent.bulkCreate(rows);
+  }
+
+  const updatePayload = { ...req.body };
+  if (updatePayload.class) {
+    updatePayload.classId = updatePayload.class;
+    delete updatePayload.class;
+  }
+  if (updatePayload.subject) {
+    updatePayload.subjectId = updatePayload.subject;
+    delete updatePayload.subject;
+  }
+  if (updatePayload.faculty) {
+    updatePayload.facultyId = updatePayload.faculty;
+    delete updatePayload.faculty;
+  }
+  delete updatePayload.students;
+
+  await Attendance.update(updatePayload, { where: { id: req.params.id } });
+  attendance = await Attendance.findByPk(req.params.id);
 
   res.status(200).json({
     success: true,
@@ -137,13 +234,14 @@ export const updateAttendance = asyncHandler(async (req, res, next) => {
 // @route     DELETE /api/v1/attendance/:id
 // @access    Private/Admin
 export const deleteAttendance = asyncHandler(async (req, res, next) => {
-  const attendance = await Attendance.findById(req.params.id);
+  const attendance = await Attendance.findByPk(req.params.id);
 
   if (!attendance) {
     return next(new ErrorResponse(`Attendance record not found with id of ${req.params.id}`, 404));
   }
 
-  await attendance.deleteOne();
+  await AttendanceStudent.destroy({ where: { attendanceId: attendance.id } });
+  await attendance.destroy();
 
   res.status(200).json({
     success: true,
@@ -155,20 +253,28 @@ export const deleteAttendance = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/attendance/class/:classId
 // @access    Private
 export const getAttendanceByClass = asyncHandler(async (req, res, next) => {
-  let query = { class: req.params.classId };
+  let where = { classId: req.params.classId };
 
   if (req.query.startDate && req.query.endDate) {
-    query.date = {
-      $gte: new Date(req.query.startDate),
-      $lte: new Date(req.query.endDate)
+    where.date = {
+      [Op.gte]: new Date(req.query.startDate),
+      [Op.lte]: new Date(req.query.endDate)
     };
   }
 
-  const attendance = await Attendance.find(query)
-    .populate('subject', 'name code')
-    .populate('faculty', 'firstName lastName')
-    .populate('students.student', 'firstName lastName rollNumber')
-    .sort('-date');
+  const attendance = await Attendance.findAll({
+    where,
+    include: [
+      { model: Subject, as: 'subject', attributes: ['name', 'code'] },
+      { model: Faculty, as: 'faculty', attributes: ['firstName', 'lastName'] },
+      {
+        model: AttendanceStudent,
+        as: 'students',
+        include: [{ model: Student, as: 'student', attributes: ['firstName', 'lastName', 'rollNumber'] }]
+      }
+    ],
+    order: [['date', 'DESC']]
+  });
 
   res.status(200).json({
     success: true,
@@ -181,23 +287,33 @@ export const getAttendanceByClass = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/attendance/student/:studentId
 // @access    Private
 export const getStudentAttendance = asyncHandler(async (req, res, next) => {
-  let query = { 'students.student': req.params.studentId };
+  let attendanceWhere = {};
 
   if (req.query.startDate && req.query.endDate) {
-    query.date = {
-      $gte: new Date(req.query.startDate),
-      $lte: new Date(req.query.endDate)
+    attendanceWhere.date = {
+      [Op.gte]: new Date(req.query.startDate),
+      [Op.lte]: new Date(req.query.endDate)
     };
   }
 
   if (req.query.subject) {
-    query.subject = req.query.subject;
+    attendanceWhere.subjectId = req.query.subject;
   }
 
-  const attendance = await Attendance.find(query)
-    .populate('subject', 'name code')
-    .populate('faculty', 'firstName lastName')
-    .sort('-date');
+  const attendance = await Attendance.findAll({
+    where: attendanceWhere,
+    include: [
+      { model: Subject, as: 'subject', attributes: ['name', 'code'] },
+      { model: Faculty, as: 'faculty', attributes: ['firstName', 'lastName'] },
+      {
+        model: AttendanceStudent,
+        as: 'students',
+        where: { studentId: req.params.studentId },
+        required: true
+      }
+    ],
+    order: [['date', 'DESC']]
+  });
 
   // Calculate attendance percentage
   let totalClasses = attendance.length;
@@ -206,8 +322,8 @@ export const getStudentAttendance = asyncHandler(async (req, res, next) => {
   let lateCount = 0;
 
   attendance.forEach(record => {
-    const studentRecord = record.students.find(
-      s => s.student.toString() === req.params.studentId
+    const studentRecord = record.students?.find(
+      s => s.studentId === Number(req.params.studentId)
     );
     if (studentRecord) {
       if (studentRecord.status === 'present') presentCount++;
@@ -239,25 +355,35 @@ export const getStudentAttendance = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/attendance/my-attendance
 // @access    Private/Student
 export const getMyAttendance = asyncHandler(async (req, res, next) => {
-  const student = await Student.findOne({ user: req.user.id });
+  const student = await Student.findOne({ where: { userId: req.user.id } });
 
   if (!student) {
     return next(new ErrorResponse('Student profile not found', 404));
   }
 
-  let query = { 'students.student': student._id };
+  let attendanceWhere = {};
 
   if (req.query.startDate && req.query.endDate) {
-    query.date = {
-      $gte: new Date(req.query.startDate),
-      $lte: new Date(req.query.endDate)
+    attendanceWhere.date = {
+      [Op.gte]: new Date(req.query.startDate),
+      [Op.lte]: new Date(req.query.endDate)
     };
   }
 
-  const attendance = await Attendance.find(query)
-    .populate('subject', 'name code')
-    .populate('faculty', 'firstName lastName')
-    .sort('-date');
+  const attendance = await Attendance.findAll({
+    where: attendanceWhere,
+    include: [
+      { model: Subject, as: 'subject', attributes: ['name', 'code'] },
+      { model: Faculty, as: 'faculty', attributes: ['firstName', 'lastName'] },
+      {
+        model: AttendanceStudent,
+        as: 'students',
+        where: { studentId: student.id },
+        required: true
+      }
+    ],
+    order: [['date', 'DESC']]
+  });
 
   // Calculate summary
   let totalClasses = attendance.length;
@@ -265,8 +391,8 @@ export const getMyAttendance = asyncHandler(async (req, res, next) => {
   let absentCount = 0;
 
   attendance.forEach(record => {
-    const studentRecord = record.students.find(
-      s => s.student.toString() === student._id.toString()
+    const studentRecord = record.students?.find(
+      s => s.studentId === student.id
     );
     if (studentRecord) {
       if (studentRecord.status === 'present' || studentRecord.status === 'late') {
@@ -295,31 +421,37 @@ export const getMyAttendance = asyncHandler(async (req, res, next) => {
 // @route     POST /api/v1/attendance/faculty
 // @access    Private/Admin
 export const markFacultyAttendance = asyncHandler(async (req, res, next) => {
-  req.body.markedBy = req.user.id;
+  const payload = {
+    ...req.body,
+    facultyId: req.body.faculty,
+    markedById: req.user.id
+  };
+  delete payload.faculty;
 
   // Check if attendance already marked for this date
+  const facultyDayStart = new Date(new Date(payload.date).setHours(0, 0, 0, 0));
+  const facultyDayEnd = new Date(new Date(payload.date).setHours(23, 59, 59, 999));
   const existingAttendance = await FacultyAttendance.findOne({
-    faculty: req.body.faculty,
-    date: {
-      $gte: new Date(new Date(req.body.date).setHours(0, 0, 0, 0)),
-      $lt: new Date(new Date(req.body.date).setHours(23, 59, 59, 999))
+    where: {
+      facultyId: payload.facultyId,
+      date: {
+        [Op.gte]: facultyDayStart,
+        [Op.lt]: facultyDayEnd
+      }
     }
   });
 
   if (existingAttendance) {
     // Update existing
-    const updated = await FacultyAttendance.findByIdAndUpdate(
-      existingAttendance._id,
-      req.body,
-      { new: true, runValidators: true }
-    );
+    await FacultyAttendance.update(payload, { where: { id: existingAttendance.id } });
+    const updated = await FacultyAttendance.findByPk(existingAttendance.id);
     return res.status(200).json({
       success: true,
       data: updated
     });
   }
 
-  const attendance = await FacultyAttendance.create(req.body);
+  const attendance = await FacultyAttendance.create(payload);
 
   res.status(201).json({
     success: true,
@@ -331,18 +463,20 @@ export const markFacultyAttendance = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/attendance/faculty/:facultyId
 // @access    Private
 export const getFacultyAttendance = asyncHandler(async (req, res, next) => {
-  let query = { faculty: req.params.facultyId };
+  let where = { facultyId: req.params.facultyId };
 
   if (req.query.startDate && req.query.endDate) {
-    query.date = {
-      $gte: new Date(req.query.startDate),
-      $lte: new Date(req.query.endDate)
+    where.date = {
+      [Op.gte]: new Date(req.query.startDate),
+      [Op.lte]: new Date(req.query.endDate)
     };
   }
 
-  const attendance = await FacultyAttendance.find(query)
-    .populate('faculty', 'firstName lastName employeeId')
-    .sort('-date');
+  const attendance = await FacultyAttendance.findAll({
+    where,
+    include: [{ model: Faculty, as: 'faculty', attributes: ['firstName', 'lastName', 'employeeId'] }],
+    order: [['date', 'DESC']]
+  });
 
   // Calculate summary
   const totalDays = attendance.length;
@@ -374,8 +508,9 @@ export const getAttendanceStats = asyncHandler(async (req, res, next) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const todayAttendance = await Attendance.find({
-    date: { $gte: today }
+  const todayAttendance = await Attendance.findAll({
+    where: { date: { [Op.gte]: today } },
+    include: [{ model: AttendanceStudent, as: 'students' }]
   });
 
   let totalStudentsMarked = 0;
@@ -383,15 +518,15 @@ export const getAttendanceStats = asyncHandler(async (req, res, next) => {
   let totalAbsent = 0;
 
   todayAttendance.forEach(record => {
-    totalStudentsMarked += record.students.length;
+    totalStudentsMarked += record.students?.length || 0;
     totalPresent += record.totalPresent;
     totalAbsent += record.totalAbsent;
   });
 
   // Monthly statistics
   const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const monthlyAttendance = await Attendance.find({
-    date: { $gte: startOfMonth }
+  const monthlyAttendance = await Attendance.findAll({
+    where: { date: { [Op.gte]: startOfMonth } }
   });
 
   res.status(200).json({

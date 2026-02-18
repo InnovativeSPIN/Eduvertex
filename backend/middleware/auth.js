@@ -28,9 +28,9 @@ export const protect = asyncHandler(async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // Handle dummy student access without DB
-    if (decoded.id === '507f1f77bcf86cd799439011') {
+    if (decoded.id === 0) {
       req.user = {
-        _id: '507f1f77bcf86cd799439011',
+        id: 0,
         name: 'Dummy Student',
         email: 'student@nscet.com',
         role: 'student',
@@ -43,7 +43,7 @@ export const protect = asyncHandler(async (req, res, next) => {
       return next();
     }
 
-    req.user = await User.findById(decoded.id);
+    req.user = await User.findByPk(decoded.id);
 
     if (!req.user) {
       return next(new ErrorResponse('Not authorized to access this route', 401));

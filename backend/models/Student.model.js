@@ -1,171 +1,129 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../config/db.js';
 
-const StudentSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'User',
-    required: true
+const Student = sequelize.define('Student', {
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   studentId: {
-    type: String,
-    required: [true, 'Please add student ID'],
+    type: DataTypes.STRING,
+    allowNull: false,
     unique: true
   },
   rollNumber: {
-    type: String,
-    required: [true, 'Please add roll number']
+    type: DataTypes.STRING,
+    allowNull: false
   },
   firstName: {
-    type: String,
-    required: [true, 'Please add first name']
+    type: DataTypes.STRING,
+    allowNull: false
   },
   lastName: {
-    type: String,
-    required: [true, 'Please add last name']
+    type: DataTypes.STRING,
+    allowNull: false
   },
   email: {
-    type: String,
-    required: [true, 'Please add an email'],
+    type: DataTypes.STRING,
+    allowNull: false,
     unique: true,
-    match: [
-      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-      'Please add a valid email'
-    ]
+    validate: {
+      isEmail: true
+    }
   },
   phone: {
-    type: String,
-    required: [true, 'Please add phone number']
+    type: DataTypes.STRING,
+    allowNull: false
   },
   dateOfBirth: {
-    type: Date,
-    required: [true, 'Please add date of birth']
+    type: DataTypes.DATE,
+    allowNull: false
   },
   gender: {
-    type: String,
-    enum: ['male', 'female', 'other'],
-    required: [true, 'Please specify gender']
+    type: DataTypes.ENUM('male', 'female', 'other'),
+    allowNull: false
   },
   bloodGroup: {
-    type: String,
-    enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
+    type: DataTypes.ENUM('A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'),
+    allowNull: true
   },
   address: {
-    street: String,
-    city: String,
-    state: String,
-    zipCode: String,
-    country: { type: String, default: 'India' }
+    type: DataTypes.JSON,
+    allowNull: true
   },
   permanentAddress: {
-    street: String,
-    city: String,
-    state: String,
-    zipCode: String,
-    country: { type: String, default: 'India' }
+    type: DataTypes.JSON,
+    allowNull: true
   },
-  department: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Department',
-    required: true
+  departmentId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
-  class: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Class'
+  classId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
   },
   batch: {
-    type: String,
-    required: [true, 'Please add batch year']
+    type: DataTypes.STRING,
+    allowNull: false
   },
   semester: {
-    type: Number,
-    required: [true, 'Please add current semester'],
-    min: 1,
-    max: 8
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   section: {
-    type: String
+    type: DataTypes.STRING,
+    allowNull: true
   },
   admissionDate: {
-    type: Date,
-    default: Date.now
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW
   },
   admissionType: {
-    type: String,
-    enum: ['regular', 'lateral', 'management'],
-    default: 'regular'
+    type: DataTypes.ENUM('regular', 'lateral', 'management'),
+    defaultValue: 'regular'
   },
   parentInfo: {
-    fatherName: { type: String, required: true },
-    fatherOccupation: String,
-    fatherPhone: String,
-    motherName: { type: String, required: true },
-    motherOccupation: String,
-    motherPhone: String,
-    guardianName: String,
-    guardianPhone: String,
-    guardianRelation: String
+    type: DataTypes.JSON,
+    allowNull: true
   },
   previousEducation: {
-    schoolName: String,
-    board: String,
-    percentage: Number,
-    yearOfPassing: Number
+    type: DataTypes.JSON,
+    allowNull: true
   },
   feeStatus: {
-    type: String,
-    enum: ['paid', 'pending', 'partial'],
-    default: 'pending'
+    type: DataTypes.ENUM('paid', 'pending', 'partial'),
+    defaultValue: 'pending'
   },
   scholarshipDetails: {
-    hasScholarship: { type: Boolean, default: false },
-    scholarshipName: String,
-    amount: Number
+    type: DataTypes.JSON,
+    allowNull: true
   },
   status: {
-    type: String,
-    enum: ['active', 'inactive', 'graduated', 'dropped', 'suspended'],
-    default: 'active'
+    type: DataTypes.ENUM('active', 'inactive', 'graduated', 'dropped', 'suspended'),
+    defaultValue: 'active'
   },
-  documents: [{
-    name: String,
-    url: String,
-    verified: { type: Boolean, default: false },
-    uploadedAt: { type: Date, default: Date.now }
-  }],
+  documents: {
+    type: DataTypes.JSON,
+    allowNull: true
+  },
   photo: {
-    type: String,
-    default: 'default-student.png'
-  },
-  subjects: [{
-    type: mongoose.Schema.ObjectId,
-    ref: 'Subject'
-  }],
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
+    type: DataTypes.STRING,
+    defaultValue: 'default-student.png'
   }
+}, {
+  tableName: 'students',
+  timestamps: true
 });
 
-// Update the updatedAt field before saving
-StudentSchema.pre('save', function (next) {
-  this.updatedAt = Date.now();
-  next();
-});
-
-// Virtual for full name
-StudentSchema.virtual('fullName').get(function () {
+Student.prototype.getFullName = function () {
   return `${this.firstName} ${this.lastName}`;
-});
+};
 
-// Generate student ID
-StudentSchema.statics.generateStudentId = async function (batch, department) {
-  const count = await this.countDocuments({ batch });
-  const deptCode = department.slice(0, 3).toUpperCase();
+Student.generateStudentId = async function (batch, departmentCode) {
+  const count = await Student.count({ where: { batch } });
+  const deptCode = departmentCode.slice(0, 3).toUpperCase();
   return `${batch}${deptCode}${String(count + 1).padStart(4, '0')}`;
 };
 
-export default mongoose.model('Student', StudentSchema);
+export default Student;

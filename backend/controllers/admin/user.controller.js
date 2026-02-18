@@ -2,12 +2,13 @@ import path from 'path';
 import ErrorResponse from '../../utils/errorResponse.js';
 import asyncHandler from '../../middleware/async.js';
 import User from '../../models/User.model.js';
+import { Op } from 'sequelize';
 
 // @desc      Upload photo for user
 // @route     PUT /api/v1/users/:id/photo
 // @access    Private/Admin
 export const uploadUserPhoto = asyncHandler(async (req, res, next) => {
-  const user = await User.findById(req.params.id);
+  const user = await User.findByPk(req.params.id);
 
   if (!user) {
     return next(
@@ -37,7 +38,7 @@ export const uploadUserPhoto = asyncHandler(async (req, res, next) => {
   }
 
   // Create custom filename
-  file.name = `photo_${user._id}${path.parse(file.name).ext}`;
+  file.name = `photo_${user.id}${path.parse(file.name).ext}`;
 
   try {
     const uploadPath = path.resolve(process.env.FILE_UPLOAD_PATH, 'avatars', file.name);
@@ -46,7 +47,7 @@ export const uploadUserPhoto = asyncHandler(async (req, res, next) => {
 
     const photoUrl = `/uploads/avatars/${file.name}`;
 
-    await User.findByIdAndUpdate(req.params.id, { avatar: photoUrl });
+    await User.update({ avatar: photoUrl }, { where: { id: req.params.id } });
 
     res.status(200).json({
       success: true,
@@ -66,31 +67,34 @@ export const getUsers = asyncHandler(async (req, res, next) => {
   const limit = parseInt(req.query.limit, 10) || 25;
   const startIndex = (page - 1) * limit;
 
-  let query = {};
+  let where = {};
 
   // Filter by role
   if (req.query.role) {
-    query.role = req.query.role;
+    where.role = req.query.role;
   }
 
   // Filter by active status
   if (req.query.isActive) {
-    query.isActive = req.query.isActive === 'true';
+    where.isActive = req.query.isActive === 'true';
   }
 
   // Search by name or email
   if (req.query.search) {
-    query.$or = [
-      { name: { $regex: req.query.search, $options: 'i' } },
-      { email: { $regex: req.query.search, $options: 'i' } }
+    where[Op.or] = [
+      { name: { [Op.like]: `%${req.query.search}%` } },
+      { email: { [Op.like]: `%${req.query.search}%` } }
     ];
   }
 
-  const total = await User.countDocuments(query);
-  const users = await User.find(query)
-    .skip(startIndex)
-    .limit(limit)
-    .sort('-createdAt');
+  const total = await User.count({ where });
+  const users = await User.findAll({
+    where,
+    offset: startIndex,
+    limit,
+    order: [['createdAt', 'DESC']],
+    attributes: { exclude: ['password', 'pwd', 'resetPasswordToken', 'resetPasswordExpire'] }
+  });
 
   res.status(200).json({
     success: true,
@@ -109,7 +113,9 @@ export const getUsers = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/users/:id
 // @access    Private/Admin
 export const getUser = asyncHandler(async (req, res, next) => {
-  const user = await User.findById(req.params.id);
+  const user = await User.findByPk(req.params.id, {
+    attributes: { exclude: ['password', 'pwd', 'resetPasswordToken', 'resetPasswordExpire'] }
+  });
 
   if (!user) {
     return next(new ErrorResponse(`User not found with id of ${req.params.id}`, 404));
@@ -128,8 +134,10 @@ export const createUser = asyncHandler(async (req, res, next) => {
   // Check if adding a department admin (HOD)
   if (req.body.role === 'department-admin' && req.body.departmentCode) {
     const existingHOD = await User.findOne({
-      role: 'department-admin',
-      departmentCode: req.body.departmentCode
+      where: {
+        role: 'department-admin',
+        departmentCode: req.body.departmentCode
+      }
     });
 
     if (existingHOD) {
@@ -157,9 +165,11 @@ export const updateUser = asyncHandler(async (req, res, next) => {
   // Check if updating to a department admin (HOD)
   if (req.body.role === 'department-admin' && req.body.departmentCode) {
     const existingHOD = await User.findOne({
-      role: 'department-admin',
-      departmentCode: req.body.departmentCode,
-      _id: { $ne: req.params.id }
+      where: {
+        role: 'department-admin',
+        departmentCode: req.body.departmentCode,
+        id: { [Op.ne]: req.params.id }
+      }
     });
 
     if (existingHOD) {
@@ -167,9 +177,9 @@ export const updateUser = asyncHandler(async (req, res, next) => {
     }
   }
 
-  const user = await User.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
+  await User.update(req.body, { where: { id: req.params.id } });
+  const user = await User.findByPk(req.params.id, {
+    attributes: { exclude: ['password', 'pwd', 'resetPasswordToken', 'resetPasswordExpire'] }
   });
 
   if (!user) {
@@ -186,13 +196,13 @@ export const updateUser = asyncHandler(async (req, res, next) => {
 // @route     DELETE /api/v1/users/:id
 // @access    Private/Admin
 export const deleteUser = asyncHandler(async (req, res, next) => {
-  const user = await User.findById(req.params.id);
+  const user = await User.findByPk(req.params.id);
 
   if (!user) {
     return next(new ErrorResponse(`User not found with id of ${req.params.id}`, 404));
   }
 
-  await user.deleteOne();
+  await user.destroy();
 
   res.status(200).json({
     success: true,
@@ -204,11 +214,10 @@ export const deleteUser = asyncHandler(async (req, res, next) => {
 // @route     PUT /api/v1/users/:id/deactivate
 // @access    Private/Admin
 export const deactivateUser = asyncHandler(async (req, res, next) => {
-  const user = await User.findByIdAndUpdate(
-    req.params.id,
-    { isActive: false },
-    { new: true }
-  );
+  await User.update({ isActive: false }, { where: { id: req.params.id } });
+  const user = await User.findByPk(req.params.id, {
+    attributes: { exclude: ['password', 'pwd', 'resetPasswordToken', 'resetPasswordExpire'] }
+  });
 
   if (!user) {
     return next(new ErrorResponse(`User not found with id of ${req.params.id}`, 404));
@@ -224,11 +233,10 @@ export const deactivateUser = asyncHandler(async (req, res, next) => {
 // @route     PUT /api/v1/users/:id/activate
 // @access    Private/Admin
 export const activateUser = asyncHandler(async (req, res, next) => {
-  const user = await User.findByIdAndUpdate(
-    req.params.id,
-    { isActive: true },
-    { new: true }
-  );
+  await User.update({ isActive: true }, { where: { id: req.params.id } });
+  const user = await User.findByPk(req.params.id, {
+    attributes: { exclude: ['password', 'pwd', 'resetPasswordToken', 'resetPasswordExpire'] }
+  });
 
   if (!user) {
     return next(new ErrorResponse(`User not found with id of ${req.params.id}`, 404));
@@ -244,7 +252,10 @@ export const activateUser = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/users/role/:role
 // @access    Private/Admin
 export const getUsersByRole = asyncHandler(async (req, res, next) => {
-  const users = await User.find({ role: req.params.role, isActive: true });
+  const users = await User.findAll({
+    where: { role: req.params.role, isActive: true },
+    attributes: { exclude: ['password', 'pwd', 'resetPasswordToken', 'resetPasswordExpire'] }
+  });
 
   res.status(200).json({
     success: true,
@@ -257,16 +268,17 @@ export const getUsersByRole = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/users/stats/dashboard
 // @access    Private/Admin
 export const getDashboardStats = asyncHandler(async (req, res, next) => {
-  const totalUsers = await User.countDocuments();
-  const totalFaculty = await User.countDocuments({ role: 'faculty' });
-  const totalStudents = await User.countDocuments({ role: 'student' });
-  const activeUsers = await User.countDocuments({ isActive: true });
-  const inactiveUsers = await User.countDocuments({ isActive: false });
+  const totalUsers = await User.count();
+  const totalFaculty = await User.count({ where: { role: 'faculty' } });
+  const totalStudents = await User.count({ where: { role: 'student' } });
+  const activeUsers = await User.count({ where: { isActive: true } });
+  const inactiveUsers = await User.count({ where: { isActive: false } });
 
-  const recentUsers = await User.find()
-    .sort('-createdAt')
-    .limit(5)
-    .select('name email role createdAt');
+  const recentUsers = await User.findAll({
+    order: [['createdAt', 'DESC']],
+    limit: 5,
+    attributes: ['name', 'email', 'role', 'createdAt']
+  });
 
   res.status(200).json({
     success: true,

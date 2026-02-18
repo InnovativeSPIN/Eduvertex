@@ -1,54 +1,53 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../config/db.js';
 
-const FacultyAttendanceSchema = new mongoose.Schema({
-  faculty: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Faculty',
-    required: true
+const FacultyAttendance = sequelize.define('FacultyAttendance', {
+  facultyId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   date: {
-    type: Date,
-    required: true,
-    default: Date.now
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW
   },
   checkIn: {
-    type: Date
+    type: DataTypes.DATE,
+    allowNull: true
   },
   checkOut: {
-    type: Date
+    type: DataTypes.DATE,
+    allowNull: true
   },
   status: {
-    type: String,
-    enum: ['present', 'absent', 'half-day', 'on-leave', 'holiday'],
-    default: 'absent'
+    type: DataTypes.ENUM('present', 'absent', 'half-day', 'on-leave', 'holiday'),
+    defaultValue: 'absent'
   },
   workingHours: {
-    type: Number,
-    default: 0
+    type: DataTypes.FLOAT,
+    defaultValue: 0
   },
   remarks: {
-    type: String
+    type: DataTypes.STRING,
+    allowNull: true
   },
-  markedBy: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'User'
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
+  markedById: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  }
+}, {
+  tableName: 'faculty_attendance',
+  timestamps: true,
+  indexes: [
+    { unique: true, fields: ['facultyId', 'date'] }
+  ]
+});
+
+FacultyAttendance.beforeSave((record) => {
+  if (record.checkIn && record.checkOut) {
+    const diffTime = Math.abs(record.checkOut - record.checkIn);
+    record.workingHours = diffTime / (1000 * 60 * 60);
   }
 });
 
-// Calculate working hours before saving
-FacultyAttendanceSchema.pre('save', function (next) {
-  if (this.checkIn && this.checkOut) {
-    const diffTime = Math.abs(this.checkOut - this.checkIn);
-    this.workingHours = diffTime / (1000 * 60 * 60); // hours
-  }
-  next();
-});
-
-// Index for efficient queries
-FacultyAttendanceSchema.index({ faculty: 1, date: 1 }, { unique: true });
-
-export default mongoose.model('FacultyAttendance', FacultyAttendanceSchema);
+export default FacultyAttendance;

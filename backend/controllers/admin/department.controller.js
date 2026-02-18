@@ -10,20 +10,25 @@ import Student from '../../models/Student.model.js';
 // @route     GET /api/v1/departments
 // @access    Private/Admin
 export const getDepartments = asyncHandler(async (req, res, next) => {
-    const departments = await Department.find().sort('name').lean();
+    const departments = await Department.findAll({
+        order: [['name', 'ASC']]
+    });
 
     // Fetch counts and HOD for each department
     const departmentsWithInfo = await Promise.all(departments.map(async (dept) => {
         const hod = await User.findOne({
-            role: 'department-admin',
-            departmentCode: dept.code
-        }).select('name email');
+            where: {
+                role: 'department-admin',
+                departmentCode: dept.code
+            },
+            attributes: ['name', 'email']
+        });
 
-        const facultyCount = await Faculty.countDocuments({ department: dept._id });
-        const studentCount = await Student.countDocuments({ department: dept._id });
+        const facultyCount = await Faculty.count({ where: { departmentId: dept.id } });
+        const studentCount = await Student.count({ where: { departmentId: dept.id } });
 
         return {
-            ...dept,
+            ...dept.toJSON(),
             headOfDepartment: hod ? hod.name : 'Not Assigned',
             hodCount: hod ? 1 : 0,
             facultyCount: facultyCount,
@@ -42,24 +47,27 @@ export const getDepartments = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/departments/:id
 // @access    Private/Admin
 export const getDepartment = asyncHandler(async (req, res, next) => {
-    const department = await Department.findById(req.params.id).lean();
+    const department = await Department.findByPk(req.params.id);
 
     if (!department) {
         return next(new ErrorResponse(`Department not found with id of ${req.params.id}`, 404));
     }
 
     const hod = await User.findOne({
-        role: 'department-admin',
-        departmentCode: department.code
-    }).select('name email');
+        where: {
+            role: 'department-admin',
+            departmentCode: department.code
+        },
+        attributes: ['name', 'email']
+    });
 
-    const facultyCount = await Faculty.countDocuments({ department: department._id });
-    const studentCount = await Student.countDocuments({ department: department._id });
+    const facultyCount = await Faculty.count({ where: { departmentId: department.id } });
+    const studentCount = await Student.count({ where: { departmentId: department.id } });
 
     res.status(200).json({
         success: true,
         data: {
-            ...department,
+            ...department.toJSON(),
             headOfDepartment: hod ? hod.name : 'Not Assigned',
             hodCount: hod ? 1 : 0,
             facultyCount: facultyCount,
@@ -84,10 +92,8 @@ export const createDepartment = asyncHandler(async (req, res, next) => {
 // @route     PUT /api/v1/departments/:id
 // @access    Private/Admin
 export const updateDepartment = asyncHandler(async (req, res, next) => {
-    const department = await Department.findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-        runValidators: true
-    });
+    await Department.update(req.body, { where: { id: req.params.id } });
+    const department = await Department.findByPk(req.params.id);
 
     if (!department) {
         return next(new ErrorResponse(`Department not found with id of ${req.params.id}`, 404));
@@ -103,13 +109,13 @@ export const updateDepartment = asyncHandler(async (req, res, next) => {
 // @route     DELETE /api/v1/departments/:id
 // @access    Private/Admin
 export const deleteDepartment = asyncHandler(async (req, res, next) => {
-    const department = await Department.findById(req.params.id);
+    const department = await Department.findByPk(req.params.id);
 
     if (!department) {
         return next(new ErrorResponse(`Department not found with id of ${req.params.id}`, 404));
     }
 
-    await department.deleteOne();
+    await department.destroy();
 
     res.status(200).json({
         success: true,

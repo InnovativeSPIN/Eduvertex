@@ -1,90 +1,75 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../config/db.js';
 
-const LeaveSchema = new mongoose.Schema({
-  applicant: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'User',
-    required: true
+const Leave = sequelize.define('Leave', {
+  applicantId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   applicantType: {
-    type: String,
-    enum: ['faculty', 'student'],
-    required: true
-  },
-  applicantProfile: {
-    type: mongoose.Schema.ObjectId,
-    refPath: 'applicantType === "faculty" ? "Faculty" : "Student"'
+    type: DataTypes.ENUM('faculty', 'student'),
+    allowNull: false
   },
   leaveType: {
-    type: String,
-    enum: ['casual', 'sick', 'earned', 'maternity', 'paternity', 'study', 'emergency', 'other'],
-    required: [true, 'Please specify leave type']
+    type: DataTypes.ENUM('casual', 'sick', 'earned', 'maternity', 'paternity', 'study', 'emergency', 'other'),
+    allowNull: false
   },
   startDate: {
-    type: Date,
-    required: [true, 'Please add start date']
+    type: DataTypes.DATE,
+    allowNull: false
   },
   endDate: {
-    type: Date,
-    required: [true, 'Please add end date']
+    type: DataTypes.DATE,
+    allowNull: false
   },
   totalDays: {
-    type: Number,
-    required: true
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   reason: {
-    type: String,
-    required: [true, 'Please add reason for leave'],
-    maxlength: [500, 'Reason cannot exceed 500 characters']
+    type: DataTypes.STRING(500),
+    allowNull: false
   },
   status: {
-    type: String,
-    enum: ['pending', 'approved', 'rejected', 'cancelled'],
-    default: 'pending'
+    type: DataTypes.ENUM('pending', 'approved', 'rejected', 'cancelled'),
+    defaultValue: 'pending'
   },
-  approvedBy: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'User'
+  approvedById: {
+    type: DataTypes.INTEGER,
+    allowNull: true
   },
   approvalDate: {
-    type: Date
+    type: DataTypes.DATE,
+    allowNull: true
   },
   approvalRemarks: {
-    type: String
+    type: DataTypes.STRING,
+    allowNull: true
   },
-  documents: [{
-    name: String,
-    url: String,
-    uploadedAt: { type: Date, default: Date.now }
-  }],
-  department: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Department'
+  documents: {
+    type: DataTypes.JSON,
+    allowNull: true
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
+  departmentId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
   }
+}, {
+  tableName: 'leaves',
+  timestamps: true,
+  indexes: [
+    { fields: ['applicantId', 'startDate'] },
+    { fields: ['status', 'departmentId'] }
+  ]
 });
 
-// Calculate total days before saving
-LeaveSchema.pre('save', function (next) {
-  if (this.isModified('startDate') || this.isModified('endDate')) {
-    const start = new Date(this.startDate);
-    const end = new Date(this.endDate);
+Leave.beforeSave((record) => {
+  if (record.startDate && record.endDate) {
+    const start = new Date(record.startDate);
+    const end = new Date(record.endDate);
     const diffTime = Math.abs(end - start);
-    this.totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    record.totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
   }
-  this.updatedAt = Date.now();
-  next();
 });
 
-// Index for efficient queries
-LeaveSchema.index({ applicant: 1, startDate: 1 });
-LeaveSchema.index({ status: 1, department: 1 });
-
-export default mongoose.model('Leave', LeaveSchema);
+export default Leave;

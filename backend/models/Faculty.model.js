@@ -1,132 +1,103 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../config/db.js';
 
-const FacultySchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'User',
-    required: true
+const Faculty = sequelize.define('Faculty', {
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   employeeId: {
-    type: String,
-    required: [true, 'Please add employee ID'],
+    type: DataTypes.STRING,
+    allowNull: false,
     unique: true
   },
   firstName: {
-    type: String,
-    required: [true, 'Please add first name']
+    type: DataTypes.STRING,
+    allowNull: false
   },
   lastName: {
-    type: String,
-    required: [true, 'Please add last name']
+    type: DataTypes.STRING,
+    allowNull: false
   },
   email: {
-    type: String,
-    required: [true, 'Please add an email'],
+    type: DataTypes.STRING,
+    allowNull: false,
     unique: true,
-    match: [
-      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-      'Please add a valid email'
-    ]
+    validate: {
+      isEmail: true
+    }
   },
   phone: {
-    type: String,
-    required: [true, 'Please add phone number']
+    type: DataTypes.STRING,
+    allowNull: false
   },
   alternatePhone: {
-    type: String
+    type: DataTypes.STRING,
+    allowNull: true
   },
   dateOfBirth: {
-    type: Date
+    type: DataTypes.DATE,
+    allowNull: true
   },
   gender: {
-    type: String,
-    enum: ['male', 'female', 'other']
+    type: DataTypes.ENUM('male', 'female', 'other'),
+    allowNull: true
   },
   address: {
-    street: String,
-    city: String,
-    state: String,
-    zipCode: String,
-    country: { type: String, default: 'India' }
+    type: DataTypes.JSON,
+    allowNull: true
   },
-  department: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Department',
-    required: true
+  departmentId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   designation: {
-    type: String,
-    required: [true, 'Please add designation'],
-    enum: ['Professor', 'Associate Professor', 'Assistant Professor', 'Lecturer', 'Lab Assistant', 'HOD']
+    type: DataTypes.ENUM('Professor', 'Associate Professor', 'Assistant Professor', 'Lecturer', 'Lab Assistant', 'HOD'),
+    allowNull: false
   },
   qualification: {
-    type: String,
-    required: [true, 'Please add qualification']
+    type: DataTypes.STRING,
+    allowNull: false
   },
   specialization: {
-    type: String
+    type: DataTypes.STRING,
+    allowNull: true
   },
   experience: {
-    type: Number,
-    default: 0
+    type: DataTypes.INTEGER,
+    defaultValue: 0
   },
   joiningDate: {
-    type: Date,
-    default: Date.now
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW
   },
   salary: {
-    basic: { type: Number },
-    allowances: { type: Number },
-    deductions: { type: Number }
+    type: DataTypes.JSON,
+    allowNull: true
   },
-  subjects: [{
-    type: mongoose.Schema.ObjectId,
-    ref: 'Subject'
-  }],
-  assignedClasses: [{
-    type: mongoose.Schema.ObjectId,
-    ref: 'Class'
-  }],
   status: {
-    type: String,
-    enum: ['active', 'inactive', 'on-leave', 'resigned'],
-    default: 'active'
+    type: DataTypes.ENUM('active', 'inactive', 'on-leave', 'resigned'),
+    defaultValue: 'active'
   },
-  documents: [{
-    name: String,
-    url: String,
-    uploadedAt: { type: Date, default: Date.now }
-  }],
+  documents: {
+    type: DataTypes.JSON,
+    allowNull: true
+  },
   emergencyContact: {
-    name: String,
-    relation: String,
-    phone: String
+    type: DataTypes.JSON,
+    allowNull: true
   },
   bankDetails: {
-    accountNumber: String,
-    bankName: String,
-    ifscCode: String,
-    accountHolderName: String
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
+    type: DataTypes.JSON,
+    allowNull: true
   }
+}, {
+  tableName: 'faculty',
+  timestamps: true
 });
 
-// Update the updatedAt field before saving
-FacultySchema.pre('save', function (next) {
-  this.updatedAt = Date.now();
-  next();
-});
-
-// Virtual for full name
-FacultySchema.virtual('fullName').get(function () {
+Faculty.prototype.getFullName = function () {
   return `${this.firstName} ${this.lastName}`;
-});
+};
 
-export default mongoose.model('Faculty', FacultySchema);
+export default Faculty;

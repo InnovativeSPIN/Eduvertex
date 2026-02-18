@@ -2,6 +2,10 @@ import ErrorResponse from '../../utils/errorResponse.js';
 import asyncHandler from '../../middleware/async.js';
 import Student from '../../models/Student.model.js';
 import User from '../../models/User.model.js';
+import Department from '../../models/Department.model.js';
+import ClassModel from '../../models/Class.model.js';
+import Subject from '../../models/Subject.model.js';
+import { Op, Sequelize } from 'sequelize';
 
 // @desc      Get all students
 // @route     GET /api/v1/students
@@ -11,52 +15,56 @@ export const getAllStudents = asyncHandler(async (req, res, next) => {
   const limit = parseInt(req.query.limit, 10) || 25;
   const startIndex = (page - 1) * limit;
 
-  let query = {};
+  let where = {};
 
   // Filter by department
   if (req.query.department) {
-    query.department = req.query.department;
+    where.departmentId = req.query.department;
   }
 
   // Filter by class
   if (req.query.class) {
-    query.class = req.query.class;
+    where.classId = req.query.class;
   }
 
   // Filter by semester
   if (req.query.semester) {
-    query.semester = parseInt(req.query.semester);
+    where.semester = parseInt(req.query.semester);
   }
 
   // Filter by batch
   if (req.query.batch) {
-    query.batch = req.query.batch;
+    where.batch = req.query.batch;
   }
 
   // Filter by status
   if (req.query.status) {
-    query.status = req.query.status;
+    where.status = req.query.status;
   }
 
   // Search by name, student ID, or email
   if (req.query.search) {
-    query.$or = [
-      { firstName: { $regex: req.query.search, $options: 'i' } },
-      { lastName: { $regex: req.query.search, $options: 'i' } },
-      { studentId: { $regex: req.query.search, $options: 'i' } },
-      { email: { $regex: req.query.search, $options: 'i' } },
-      { rollNumber: { $regex: req.query.search, $options: 'i' } }
+    where[Op.or] = [
+      { firstName: { [Op.like]: `%${req.query.search}%` } },
+      { lastName: { [Op.like]: `%${req.query.search}%` } },
+      { studentId: { [Op.like]: `%${req.query.search}%` } },
+      { email: { [Op.like]: `%${req.query.search}%` } },
+      { rollNumber: { [Op.like]: `%${req.query.search}%` } }
     ];
   }
 
-  const total = await Student.countDocuments(query);
-  const students = await Student.find(query)
-    .populate('department', 'name code')
-    .populate('class', 'name section')
-    .populate('user', 'name email')
-    .skip(startIndex)
-    .limit(limit)
-    .sort('-createdAt');
+  const total = await Student.count({ where });
+  const students = await Student.findAll({
+    where,
+    include: [
+      { model: Department, as: 'department', attributes: ['name', 'code'] },
+      { model: ClassModel, as: 'class', attributes: ['name', 'section'] },
+      { model: User, as: 'user', attributes: ['name', 'email'] }
+    ],
+    offset: startIndex,
+    limit,
+    order: [['createdAt', 'DESC']]
+  });
 
   res.status(200).json({
     success: true,
@@ -75,11 +83,14 @@ export const getAllStudents = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/students/:id
 // @access    Private
 export const getStudent = asyncHandler(async (req, res, next) => {
-  const student = await Student.findById(req.params.id)
-    .populate('department', 'name code')
-    .populate('class', 'name section room')
-    .populate('subjects', 'name code credits')
-    .populate('user', 'name email');
+  const student = await Student.findByPk(req.params.id, {
+    include: [
+      { model: Department, as: 'department', attributes: ['name', 'code'] },
+      { model: ClassModel, as: 'class', attributes: ['name', 'section', 'room'] },
+      { model: Subject, as: 'subjects', attributes: ['name', 'code', 'credits'] },
+      { model: User, as: 'user', attributes: ['name', 'email'] }
+    ]
+  });
 
   if (!student) {
     return next(new ErrorResponse(`Student not found with id of ${req.params.id}`, 404));
@@ -108,11 +119,17 @@ export const createStudent = asyncHandler(async (req, res, next) => {
 
   // Generate student ID if not provided
   if (!req.body.studentId) {
-    req.body.studentId = await Student.generateStudentId(req.body.batch, req.body.department);
+    const department = await Department.findByPk(req.body.department);
+    const departmentCode = department ? department.code : 'GEN';
+    req.body.studentId = await Student.generateStudentId(req.body.batch, departmentCode);
   }
 
   // Create student profile
-  req.body.user = user._id;
+  req.body.userId = user.id;
+  req.body.departmentId = req.body.department;
+  req.body.classId = req.body.class;
+  delete req.body.department;
+  delete req.body.class;
   const student = await Student.create(req.body);
 
   res.status(201).json({
@@ -125,16 +142,22 @@ export const createStudent = asyncHandler(async (req, res, next) => {
 // @route     PUT /api/v1/students/:id
 // @access    Private/Admin
 export const updateStudent = asyncHandler(async (req, res, next) => {
-  let student = await Student.findById(req.params.id);
+  let student = await Student.findByPk(req.params.id);
 
   if (!student) {
     return next(new ErrorResponse(`Student not found with id of ${req.params.id}`, 404));
   }
 
-  student = await Student.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
+  if (req.body.department) {
+    req.body.departmentId = req.body.department;
+    delete req.body.department;
+  }
+  if (req.body.class) {
+    req.body.classId = req.body.class;
+    delete req.body.class;
+  }
+  await Student.update(req.body, { where: { id: req.params.id } });
+  student = await Student.findByPk(req.params.id);
 
   res.status(200).json({
     success: true,
@@ -146,15 +169,15 @@ export const updateStudent = asyncHandler(async (req, res, next) => {
 // @route     DELETE /api/v1/students/:id
 // @access    Private/Admin
 export const deleteStudent = asyncHandler(async (req, res, next) => {
-  const student = await Student.findById(req.params.id);
+  const student = await Student.findByPk(req.params.id);
 
   if (!student) {
     return next(new ErrorResponse(`Student not found with id of ${req.params.id}`, 404));
   }
 
   // Also delete the associated user
-  await User.findByIdAndDelete(student.user);
-  await student.deleteOne();
+  await User.destroy({ where: { id: student.userId } });
+  await student.destroy();
 
   res.status(200).json({
     success: true,
@@ -166,12 +189,14 @@ export const deleteStudent = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/students/class/:classId
 // @access    Private
 export const getStudentsByClass = asyncHandler(async (req, res, next) => {
-  const students = await Student.find({
-    class: req.params.classId,
-    status: 'active'
-  })
-    .populate('department', 'name code')
-    .sort('rollNumber');
+  const students = await Student.findAll({
+    where: {
+      classId: req.params.classId,
+      status: 'active'
+    },
+    include: [{ model: Department, as: 'department', attributes: ['name', 'code'] }],
+    order: [['rollNumber', 'ASC']]
+  });
 
   res.status(200).json({
     success: true,
@@ -184,12 +209,14 @@ export const getStudentsByClass = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/students/department/:departmentId
 // @access    Private
 export const getStudentsByDepartment = asyncHandler(async (req, res, next) => {
-  const students = await Student.find({
-    department: req.params.departmentId,
-    status: 'active'
-  })
-    .populate('class', 'name section')
-    .sort('semester rollNumber');
+  const students = await Student.findAll({
+    where: {
+      departmentId: req.params.departmentId,
+      status: 'active'
+    },
+    include: [{ model: ClassModel, as: 'class', attributes: ['name', 'section'] }],
+    order: [['semester', 'ASC'], ['rollNumber', 'ASC']]
+  });
 
   res.status(200).json({
     success: true,
@@ -202,20 +229,20 @@ export const getStudentsByDepartment = asyncHandler(async (req, res, next) => {
 // @route     PUT /api/v1/students/:id/status
 // @access    Private/Admin
 export const updateStudentStatus = asyncHandler(async (req, res, next) => {
-  const student = await Student.findByIdAndUpdate(
-    req.params.id,
+  await Student.update(
     { status: req.body.status },
-    { new: true, runValidators: true }
+    { where: { id: req.params.id } }
   );
+  const student = await Student.findByPk(req.params.id);
 
   if (!student) {
     return next(new ErrorResponse(`Student not found with id of ${req.params.id}`, 404));
   }
 
   // Update user active status
-  await User.findByIdAndUpdate(student.user, {
+  await User.update({
     isActive: req.body.status === 'active'
-  });
+  }, { where: { id: student.userId } });
 
   res.status(200).json({
     success: true,
@@ -229,17 +256,17 @@ export const updateStudentStatus = asyncHandler(async (req, res, next) => {
 export const promoteStudents = asyncHandler(async (req, res, next) => {
   const { studentIds, newSemester, newClass } = req.body;
 
-  const result = await Student.updateMany(
-    { _id: { $in: studentIds } },
+  const result = await Student.update(
     {
       semester: newSemester,
-      class: newClass
-    }
+      classId: newClass
+    },
+    { where: { id: { [Op.in]: studentIds } } }
   );
 
   res.status(200).json({
     success: true,
-    message: `${result.modifiedCount} students promoted successfully`
+    message: `${result[0]} students promoted successfully`
   });
 });
 
@@ -247,10 +274,14 @@ export const promoteStudents = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/students/me/profile
 // @access    Private/Student
 export const getMyProfile = asyncHandler(async (req, res, next) => {
-  const student = await Student.findOne({ user: req.user.id })
-    .populate('department', 'name code')
-    .populate('class', 'name section room')
-    .populate('subjects', 'name code credits');
+  const student = await Student.findOne({
+    where: { userId: req.user.id },
+    include: [
+      { model: Department, as: 'department', attributes: ['name', 'code'] },
+      { model: ClassModel, as: 'class', attributes: ['name', 'section', 'room'] },
+      { model: Subject, as: 'subjects', attributes: ['name', 'code', 'credits'] }
+    ]
+  });
 
   if (!student) {
     return next(new ErrorResponse('Student profile not found', 404));
@@ -266,29 +297,29 @@ export const getMyProfile = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/students/stats
 // @access    Private/Admin
 export const getStudentStats = asyncHandler(async (req, res, next) => {
-  const totalStudents = await Student.countDocuments();
-  const activeStudents = await Student.countDocuments({ status: 'active' });
-  const graduatedStudents = await Student.countDocuments({ status: 'graduated' });
+  const totalStudents = await Student.count();
+  const activeStudents = await Student.count({ where: { status: 'active' } });
+  const graduatedStudents = await Student.count({ where: { status: 'graduated' } });
 
-  // Students by department
-  const byDepartment = await Student.aggregate([
-    { $match: { status: 'active' } },
-    { $group: { _id: '$department', count: { $sum: 1 } } }
-  ]);
+  const byDepartment = await Student.findAll({
+    where: { status: 'active' },
+    attributes: ['departmentId', [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']],
+    group: ['departmentId']
+  });
 
-  // Students by semester
-  const bySemester = await Student.aggregate([
-    { $match: { status: 'active' } },
-    { $group: { _id: '$semester', count: { $sum: 1 } } },
-    { $sort: { _id: 1 } }
-  ]);
+  const bySemester = await Student.findAll({
+    where: { status: 'active' },
+    attributes: ['semester', [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']],
+    group: ['semester'],
+    order: [['semester', 'ASC']]
+  });
 
-  // Students by batch
-  const byBatch = await Student.aggregate([
-    { $match: { status: 'active' } },
-    { $group: { _id: '$batch', count: { $sum: 1 } } },
-    { $sort: { _id: -1 } }
-  ]);
+  const byBatch = await Student.findAll({
+    where: { status: 'active' },
+    attributes: ['batch', [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']],
+    group: ['batch'],
+    order: [['batch', 'DESC']]
+  });
 
   res.status(200).json({
     success: true,
