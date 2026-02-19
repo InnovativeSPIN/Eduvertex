@@ -17,6 +17,16 @@ import FacultySubject from './FacultySubject.model.js';
 import FacultyClass from './FacultyClass.model.js';
 import StudentSubject from './StudentSubject.model.js';
 
+// ── Student-specific models ──────────────────────────────────────────────────
+import StudentMarks from './StudentMarks.model.js';
+import StudentInternalMark from './StudentInternalMark.model.js';
+import StudentCertification from './StudentCertification.model.js';
+import StudentProject from './StudentProject.model.js';
+import StudentSport from './StudentSport.model.js';
+import StudentEvent from './StudentEvent.model.js';
+import DisciplinaryRecord from './DisciplinaryRecord.model.js';
+import StudentNotification from './StudentNotification.model.js';
+
 let initialized = false;
 
 const initModels = () => {
@@ -113,7 +123,57 @@ const initModels = () => {
   TimetableSlot.belongsTo(Subject, { as: 'subject', foreignKey: 'subjectId' });
   TimetableSlot.belongsTo(Faculty, { as: 'faculty', foreignKey: 'facultyId' });
 
+  // ── Student Marks ──────────────────────────────────────────────────────────
+  Student.hasMany(StudentMarks, { as: 'marks', foreignKey: 'studentId' });
+  StudentMarks.belongsTo(Student, { as: 'student', foreignKey: 'studentId' });
+  Subject.hasMany(StudentMarks, { as: 'studentMarks', foreignKey: 'subjectId' });
+  StudentMarks.belongsTo(Subject, { as: 'subject', foreignKey: 'subjectId' });
+
+  // ── Student Internal Marks ─────────────────────────────────────────────────
+  Student.hasMany(StudentInternalMark, { as: 'internalMarks', foreignKey: 'studentId' });
+  StudentInternalMark.belongsTo(Student, { as: 'student', foreignKey: 'studentId' });
+  Subject.hasMany(StudentInternalMark, { as: 'internalMarkRecords', foreignKey: 'subjectId' });
+  StudentInternalMark.belongsTo(Subject, { as: 'subject', foreignKey: 'subjectId' });
+
+  // ── Student Certifications ─────────────────────────────────────────────────
+  Student.hasMany(StudentCertification, { as: 'certifications', foreignKey: 'studentId' });
+  StudentCertification.belongsTo(Student, { as: 'student', foreignKey: 'studentId' });
+  StudentCertification.belongsTo(User, { as: 'approvedBy', foreignKey: 'approvedById' });
+
+  // ── Student Projects ───────────────────────────────────────────────────────
+  Student.hasMany(StudentProject, { as: 'projects', foreignKey: 'studentId' });
+  StudentProject.belongsTo(Student, { as: 'student', foreignKey: 'studentId' });
+  StudentProject.belongsTo(User, { as: 'approvedBy', foreignKey: 'approvedById' });
+
+  // ── Student Sports ─────────────────────────────────────────────────────────
+  Student.hasMany(StudentSport, { as: 'sports', foreignKey: 'studentId' });
+  StudentSport.belongsTo(Student, { as: 'student', foreignKey: 'studentId' });
+  StudentSport.belongsTo(User, { as: 'approvedBy', foreignKey: 'approvedById' });
+
+  // ── Student Events ─────────────────────────────────────────────────────────
+  Student.hasMany(StudentEvent, { as: 'events', foreignKey: 'studentId' });
+  StudentEvent.belongsTo(Student, { as: 'student', foreignKey: 'studentId' });
+  StudentEvent.belongsTo(User, { as: 'approvedBy', foreignKey: 'approvedById' });
+
+  // ── Disciplinary Records ───────────────────────────────────────────────────
+  Student.hasMany(DisciplinaryRecord, { as: 'disciplinaryRecords', foreignKey: 'studentId' });
+  DisciplinaryRecord.belongsTo(Student, { as: 'student', foreignKey: 'studentId' });
+  DisciplinaryRecord.belongsTo(Faculty, { as: 'issuedBy', foreignKey: 'issuedByFacultyId' });
+
+  // ── Student Notifications ──────────────────────────────────────────────────
+  Student.hasMany(StudentNotification, { as: 'notifications', foreignKey: 'studentId' });
+  StudentNotification.belongsTo(Student, { as: 'student', foreignKey: 'studentId' });
+
   initialized = true;
+};
+
+export {
+  User, Department, Faculty, Student, ClassModel, Subject,
+  Announcement, Attendance, AttendanceStudent, FacultyAttendance,
+  Leave, LeaveBalance, PeriodConfig, Timetable, TimetableSlot,
+  FacultySubject, FacultyClass, StudentSubject,
+  StudentMarks, StudentInternalMark, StudentCertification, StudentProject,
+  StudentSport, StudentEvent, DisciplinaryRecord, StudentNotification
 };
 
 export default initModels;

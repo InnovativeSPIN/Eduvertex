@@ -35,6 +35,14 @@ const Student = sequelize.define('Student', {
     type: DataTypes.STRING,
     allowNull: false
   },
+  alternatePhone: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  linkedinUrl: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   dateOfBirth: {
     type: DataTypes.DATE,
     allowNull: false
@@ -83,9 +91,42 @@ const Student = sequelize.define('Student', {
     type: DataTypes.ENUM('regular', 'lateral', 'management'),
     defaultValue: 'regular'
   },
+  residenceType: {
+    type: DataTypes.ENUM('hosteller', 'day_scholar', 'other'),
+    allowNull: true,
+    comment: 'Hostel or Day Scholar'
+  },
+  nationality: {
+    type: DataTypes.STRING(60),
+    allowNull: true
+  },
+  religion: {
+    type: DataTypes.STRING(60),
+    allowNull: true
+  },
+  category: {
+    type: DataTypes.STRING(30),
+    allowNull: true,
+    comment: 'General / OBC / SC / ST / etc.'
+  },
+  aadharNo: {
+    type: DataTypes.STRING(20),
+    allowNull: true
+  },
+  motherTongue: {
+    type: DataTypes.STRING(60),
+    allowNull: true
+  },
   parentInfo: {
     type: DataTypes.JSON,
-    allowNull: true
+    allowNull: true,
+    comment: 'father, mother, guardian, siblings – structured JSON'
+  },
+  references: {
+    type: DataTypes.JSON,
+    allowNull: true,
+    defaultValue: [],
+    comment: 'Array of reference/relative contacts from ReferenceInfo page'
   },
   previousEducation: {
     type: DataTypes.JSON,
