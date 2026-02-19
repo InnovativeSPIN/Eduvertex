@@ -28,14 +28,6 @@ import leaveRoutes from './routes/leave-attendance/leave.routes.js';
 import attendanceRoutes from './routes/leave-attendance/attendance.routes.js';
 import announcementRoutes from './routes/admin/announcement.routes.js';
 
-// Student-feature routes
-import studentMarksRoutes from './routes/student/studentMarks.routes.js';
-import studentCertificationRoutes from './routes/student/studentCertification.routes.js';
-import studentProjectRoutes from './routes/student/studentProject.routes.js';
-import studentExtracurricularRoutes from './routes/student/studentExtracurricular.routes.js';
-import disciplinaryRoutes from './routes/student/disciplinary.routes.js';
-import studentNotificationRoutes from './routes/student/studentNotification.routes.js';
-
 // Load env vars
 dotenv.config();
 
@@ -118,14 +110,6 @@ const startServer = () => {
   app.use('/api/v1/leave', leaveRoutes);
   app.use('/api/v1/attendance', attendanceRoutes);
   app.use('/api/v1/announcements', announcementRoutes);
-
-  // Student-feature routes
-  app.use('/api/v1/student/marks', studentMarksRoutes);
-  app.use('/api/v1/student/certifications', studentCertificationRoutes);
-  app.use('/api/v1/student/projects', studentProjectRoutes);
-  app.use('/api/v1/student/extracurricular', studentExtracurricularRoutes);
-  app.use('/api/v1/student/disciplinary', disciplinaryRoutes);
-  app.use('/api/v1/student/notifications', studentNotificationRoutes);
 
   // Health check
   app.get('/api/v1/health', (req, res) => {
