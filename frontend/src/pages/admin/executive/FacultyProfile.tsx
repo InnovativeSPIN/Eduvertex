@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/pages/admin/executiv
 export default function ExecutiveFacultyProfile() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const faculty = mockFaculty.find(f => f.id === id);
+    const faculty = mockFaculty.find(f => f.faculty_id === parseInt(id || '0'));
 
     if (!faculty) {
         return (
@@ -43,13 +43,13 @@ export default function ExecutiveFacultyProfile() {
                             <div className="flex items-end gap-6">
                                 <div className="h-24 w-24 rounded-2xl bg-background border-4 border-card shadow-md flex items-center justify-center overflow-hidden">
                                     <img
-                                        src={faculty.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(faculty.name)}&background=random&size=128`}
-                                        alt={faculty.name}
+                                        src={faculty.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(faculty.Name)}&background=random&size=128`}
+                                        alt={faculty.Name}
                                         className="w-full h-full object-cover"
                                     />
                                 </div>
                                 <div className="pb-2">
-                                    <h1 className="text-2xl font-bold text-foreground">{faculty.name}</h1>
+                                    <h1 className="text-2xl font-bold text-foreground">{faculty.Name}</h1>
                                     <p className="text-muted-foreground">{faculty.designation}</p>
                                 </div>
                             </div>
@@ -80,7 +80,7 @@ export default function ExecutiveFacultyProfile() {
                                             </div>
                                             <div className="flex items-center gap-3 text-sm">
                                                 <Phone className="h-4 w-4 text-primary" />
-                                                <span>{faculty.phone}</span>
+                                                <span>{faculty.phone_number}</span>
                                             </div>
                                             <div className="flex items-center gap-3 text-sm">
                                                 <MapPin className="h-4 w-4 text-primary" />
@@ -94,7 +94,7 @@ export default function ExecutiveFacultyProfile() {
                                         <div className="space-y-3">
                                             <div className="flex items-center gap-3 text-sm">
                                                 <Building2 className="h-4 w-4 text-primary" />
-                                                <span>{faculty.department}</span>
+                                                <span>{faculty.department_id}</span>
                                             </div>
                                             <div className="flex items-center gap-3 text-sm">
                                                 <Award className="h-4 w-4 text-primary" />
@@ -102,7 +102,7 @@ export default function ExecutiveFacultyProfile() {
                                             </div>
                                             <div className="flex items-center gap-3 text-sm">
                                                 <User className="h-4 w-4 text-primary" />
-                                                <span>Employee ID: {faculty.employeeId}</span>
+                                                <span>Employee ID: {faculty.faculty_college_code}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -112,7 +112,7 @@ export default function ExecutiveFacultyProfile() {
                                         <div className="space-y-3">
                                             <div className="flex items-center gap-3 text-sm">
                                                 <Calendar className="h-4 w-4 text-primary" />
-                                                <span>Joined: {faculty.joinDate}</span>
+                                                <span>Joined: {faculty.date_of_joining}</span>
                                             </div>
                                             <div className="flex items-center gap-3 text-sm">
                                                 <Briefcase className="h-4 w-4 text-primary" />

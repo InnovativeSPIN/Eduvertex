@@ -250,7 +250,7 @@ export default function PersonalInfo() {
             <div>
               <h2 className="text-xl font-bold">{user?.name || basicInfoData.name}</h2>
               <p className="text-muted-foreground">{user?.rollNo || basicInfoData.rollNo}</p>
-              <span className="badge badge-info mt-2">{user?.department || basicInfoData.department}</span>
+              <span className="badge badge-info mt-2">{user?.department?.short_name || user?.department?.full_name || basicInfoData.department}</span>
             </div>
           </div>
 

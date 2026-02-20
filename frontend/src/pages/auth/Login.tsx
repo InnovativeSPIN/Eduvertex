@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/pages/admin/superadmin/components/ui/select';
-import { GraduationCap, Lock, Mail, Users } from 'lucide-react';
+import { GraduationCap, Lock, Mail, Users, User as UserIcon, Calendar, Building } from 'lucide-react';
 import { toast } from 'sonner';
 
 const roleRoutes: Partial<Record<UserRole, string>> = {
@@ -26,6 +26,14 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('student');
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingDetails, setIsFetchingDetails] = useState(false);
+  const [userDetails, setUserDetails] = useState<{
+    name?: string;
+    year?: number;
+    department?: string;
+    semester?: number;
+    rollNo?: string;
+  } | null>(null);
   const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
@@ -34,6 +42,42 @@ export default function Login() {
       navigate(roleRoutes[user.role]!);
     }
   }, [isAuthenticated, user, navigate]);
+
+  // Clear user details when role changes
+  useEffect(() => {
+    setUserDetails(null);
+    setEmail('');
+  }, [role]);
+
+  // Fetch student details when student ID is entered
+  useEffect(() => {
+    const fetchStudentDetails = async () => {
+      if (role === 'student' && email.trim().length > 0) {
+        setIsFetchingDetails(true);
+        try {
+          const response = await fetch(`/api/v1/auth/student-details/${email.trim()}`);
+          const result = await response.json();
+          
+          if (result.success && result.data) {
+            setUserDetails(result.data);
+          } else {
+            setUserDetails(null);
+          }
+        } catch (error) {
+          console.error('Error fetching student details:', error);
+          setUserDetails(null);
+        } finally {
+          setIsFetchingDetails(false);
+        }
+      } else {
+        setUserDetails(null);
+      }
+    };
+
+    // Debounce the API call
+    const timeoutId = setTimeout(fetchStudentDetails, 500);
+    return () => clearTimeout(timeoutId);
+  }, [email, role]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,23 +129,8 @@ export default function Login() {
           <div>
             <h2 className="text-2xl font-bold text-foreground">Sign in to your account</h2>
             <p className="mt-2 text-muted-foreground text-sm">
-              Select your role and enter your default credentials.
+              Select your role and enter your credentials.
             </p>
-            <div className="mt-2 p-3 bg-primary/5 border border-primary/10 rounded-lg text-[10px] space-y-1 text-muted-foreground">
-              <p><span className="font-semibold text-primary italic">Note: Select the corresponding role below</span></p>
-              <div className="grid grid-cols-2 gap-2 mt-1">
-                <div>
-                  <p className="font-semibold text-primary">Student:</p>
-                  <p>User: student@nscet.org</p>
-                  <p>Pass: student123</p>
-                </div>
-                <div>
-                  <p className="font-semibold text-primary">Faculty:</p>
-                  <p>User: faculty@nscet.org</p>
-                  <p>Pass: password123</p>
-                </div>
-              </div>
-            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -122,20 +151,63 @@ export default function Login() {
               </Select>
             </div>
 
+            {/* User Details Display */}
+            {userDetails && role !== 'department-admin' && (
+              <div className="p-4 bg-primary/5 border border-primary/10 rounded-lg space-y-3">
+                <h3 className="text-sm font-semibold text-primary flex items-center gap-2">
+                  <UserIcon className="h-4 w-4" />
+                  User Details
+                </h3>
+                <div className="grid grid-cols-1 gap-2 text-sm">
+                  {userDetails.name && (
+                    <div className="flex items-center gap-2">
+                      <UserIcon className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-muted-foreground">Name:</span>
+                      <span className="font-medium">{userDetails.name}</span>
+                    </div>
+                  )}
+                  {userDetails.rollNo && (
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-muted-foreground">Roll No:</span>
+                      <span className="font-medium">{userDetails.rollNo}</span>
+                    </div>
+                  )}
+                  {userDetails.year && (
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-muted-foreground">Year:</span>
+                      <span className="font-medium">{userDetails.year}{userDetails.semester ? ` (Semester ${userDetails.semester})` : ''}</span>
+                    </div>
+                  )}
+                  {userDetails.department && (
+                    <div className="flex items-center gap-2">
+                      <Building className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-muted-foreground">Department:</span>
+                      <span className="font-medium">{userDetails.department}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="email" className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                Email Address / ID
+                Email Address
               </Label>
               <Input
                 id="email"
-                type="text"
+                type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your ID or Email"
+                placeholder="Enter your email address"
                 className="h-12"
                 required
               />
+              {isFetchingDetails && (
+                <p className="text-xs text-muted-foreground mt-1">Fetching user details...</p>
+              )}
             </div>
 
             <div className="space-y-2">

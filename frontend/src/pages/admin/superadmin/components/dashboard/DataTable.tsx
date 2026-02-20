@@ -10,7 +10,6 @@ import {
 import { Input } from '@/pages/admin/superadmin/components/ui/input';
 import { Button } from '@/pages/admin/superadmin/components/ui/button';
 import { Search, Plus, Eye, Edit, Trash2 } from 'lucide-react';
-import { cn } from '@/pages/admin/superadmin/lib/utils';
 
 interface Column<T> {
   key: keyof T | string;

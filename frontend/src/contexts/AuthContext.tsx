@@ -23,7 +23,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const login = async (email: string, password: string, role: UserRole): Promise<boolean> => {
-    // Dummy credentials for development
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedPassword = password.trim();
 
@@ -31,72 +30,52 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       email: trimmedEmail,
       password: trimmedPassword,
       passwordLength: trimmedPassword.length,
-      role,
-      emailMatch: trimmedEmail === 'faculty@nscet.org',
-      passwordMatch: trimmedPassword === 'password123',
-      roleMatch: role === 'faculty'
+      role
     });
 
-    if (role === 'faculty' && trimmedEmail === 'faculty@nscet.org' && trimmedPassword === 'password123') {
-      console.log('Faculty dummy login success');
-      const dummyFaculty = {
-        id: 'mock-faculty-id',
-        email: 'faculty@nscet.org',
-        name: 'C. Prathap',
-        role: 'faculty' as UserRole,
-        avatar: '',
-        department: 'Artificial Intelligence and Data Science'
-      };
-      setUser(dummyFaculty);
-      localStorage.setItem('eduvertex_user', JSON.stringify(dummyFaculty));
-      return true;
-    }
-
-    if (role === 'student' && trimmedEmail === 'student@nscet.org' && trimmedPassword === 'student123') {
-      console.log('Student dummy login success');
-      const dummyStudent = {
-        id: 'mock-student-id',
-        email: 'student@nscet.org',
-        name: 'Test Student',
-        role: 'student' as UserRole,
-        avatar: '',
-        department: 'Computer Science Engineering',
-        year: 3,
-        semester: 6,
-        rollNo: '21CS001'
-      };
-      setUser(dummyStudent);
-      localStorage.setItem('eduvertex_user', JSON.stringify(dummyStudent));
-      return true;
-    }
-
     try {
-      const response = await fetch('/api/v1/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+      let response;
+      
+      if (role === 'student') {
+        // Use regular login endpoint for students
+        response = await fetch('/api/v1/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: trimmedEmail, password: trimmedPassword }),
+        });
+      } else {
+        // Use regular login endpoint for faculty and admin
+        response = await fetch('/api/v1/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: trimmedEmail, password: trimmedPassword }),
+        });
+      }
 
       const result = await response.json();
 
-      if (result.success) {
+      if (result.success && result.user) {
         const userObj = {
-          id: result.data?._id || result.user?.id || result.data?.id,
-          email: result.data?.email || result.user?.email,
-          name: result.data?.name || result.data?.admin_name || result.user?.name || 'Admin',
-          role: role,
-          avatar: result.data?.avatar || result.user?.avatar,
-          department: result.data?.department || result.user?.department,
-          year: result.data?.year || result.user?.year,
-          semester: result.data?.semester || result.user?.semester,
-          rollNo: result.data?.rollNo || result.user?.rollNo,
+          id: result.user.id,
+          email: result.user.email,
+          name: result.user.name,
+          role: result.user.role as UserRole,
+          avatar: result.user.avatar || '',
+          department: result.user.department || '',
+          year: result.user.year,
+          semester: result.user.semester,
+          rollNo: result.user.rollNo,
           token: result.token
         };
+        
+        console.log('Login successful:', userObj.name, userObj.role);
         setUser(userObj);
         localStorage.setItem('eduvertex_user', JSON.stringify(userObj));
+        localStorage.setItem('authToken', result.token);
         return true;
       }
 
+      console.log('Login failed:', result.error || 'Unknown error');
       return false;
     } catch (error) {
       console.error('Login error:', error);

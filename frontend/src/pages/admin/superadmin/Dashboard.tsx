@@ -95,11 +95,11 @@ export default function SuperAdminDashboard() {
                   <div key={student.id} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-medium">
-                        {student.name.split(' ').map((n) => (n[0])).join('')}
+                        {`${student.firstName} ${student.lastName}`.split(' ').map((n: string) => (n[0])).join('')}
                       </div>
                       <div>
-                        <p className="font-medium text-foreground">{student.name}</p>
-                        <p className="text-sm text-muted-foreground">{student.department}</p>
+                        <p className="font-medium text-foreground">{`${student.firstName} ${student.lastName}`}</p>
+                        <p className="text-sm text-muted-foreground">{student.departmentId}</p>
                       </div>
                     </div>
                     <Badge
@@ -121,17 +121,17 @@ export default function SuperAdminDashboard() {
             <CardContent>
               <div className="space-y-4">
                 {recentFaculty.map((faculty) => (
-                  <div key={faculty.id} className="flex items-center justify-between">
+                  <div key={faculty.faculty_id} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/10 text-secondary font-medium">
-                        {faculty.name.split(' ').map((n) => (n[0])).join('')}
+                        {faculty.Name.split(' ').map((n: string) => (n[0])).join('')}
                       </div>
                       <div>
-                        <p className="font-medium text-foreground">{faculty.name}</p>
+                        <p className="font-medium text-foreground">{faculty.Name}</p>
                         <p className="text-sm text-muted-foreground">{faculty.designation}</p>
                       </div>
                     </div>
-                    <span className="text-sm text-muted-foreground">{faculty.department}</span>
+                    <span className="text-sm text-muted-foreground">{faculty.department_id}</span>
                   </div>
                 ))}
               </div>

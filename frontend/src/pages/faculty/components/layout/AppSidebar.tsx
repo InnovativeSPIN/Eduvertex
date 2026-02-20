@@ -87,7 +87,7 @@ export function AppSidebar() {
                     {user?.role?.replace('-', ' ') || 'Assistant Professor'}
                   </span>
                   <span className="text-[10px] text-white/50 uppercase tracking-wider">
-                    {user?.department || 'Department'}
+                    {user?.department?.short_name || user?.department?.full_name || 'Department'}
                   </span>
                 </div>
               </motion.div>

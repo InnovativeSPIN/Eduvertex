@@ -87,7 +87,7 @@ export default function StudentDashboard() {
         />
         <InfoCard
           label="Department"
-          value={user?.department || 'N/A'}
+          value={user?.department?.short_name || user?.department?.full_name || 'N/A'}
           icon={Building2}
         />
         <InfoCard

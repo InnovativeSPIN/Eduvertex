@@ -13,6 +13,7 @@ import PersonalInfo from './pages/profile/PersonalInfo';
 import ParentInfo from './pages/profile/ParentInfo';
 import ReferenceInfo from './pages/profile/ReferenceInfo';
 import Photos from './pages/profile/Photos';
+import ChangePassword from './pages/profile/ChangePassword';
 
 // Academics
 import Attendance from './pages/academics/Attendance';
@@ -59,6 +60,7 @@ const StudentRoutes = () => {
           <Route path="profile/parent" element={<ParentInfo />} />
           <Route path="profile/reference" element={<ReferenceInfo />} />
           <Route path="profile/photos" element={<Photos />} />
+          <Route path="profile/change-password" element={<ChangePassword />} />
 
           {/* Academics */}
           <Route path="academics/attendance" element={<Attendance />} />

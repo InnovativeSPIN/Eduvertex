@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NotificationProvider, MentorProvider } from "@/pages/faculty/context";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
+import ChangePassword from "./pages/ChangePassword";
 import Timetable from "./pages/Timetable";
 import Attendance from "./pages/Attendance";
 import Academics from "./pages/Academics";
@@ -35,6 +36,7 @@ const FacultyRoutes = () => (
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="profile" element={<Profile />} />
+              <Route path="change-password" element={<ChangePassword />} />
               <Route path="timetable" element={<Timetable />} />
               <Route path="attendance" element={<Attendance />} />
               <Route path="academics" element={<Academics />} />

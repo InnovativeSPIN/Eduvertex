@@ -484,11 +484,11 @@ export default function ExecutiveAdminDashboard() {
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary font-black shadow-sm">
-                        {student.name.split(' ').map((n) => n[0]).join('')}
+                        {`${student.firstName} ${student.lastName}`.split(' ').map((n: string) => n[0]).join('')}
                       </div>
                       <div>
-                        <p className="font-bold text-foreground leading-tight">{student.name}</p>
-                        <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{student.department}</p>
+                        <p className="font-bold text-foreground leading-tight">{`${student.firstName} ${student.lastName}`}</p>
+                        <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{student.departmentId}</p>
                       </div>
                     </div>
                     <Badge
@@ -517,21 +517,21 @@ export default function ExecutiveAdminDashboard() {
               <div className="space-y-4">
                 {recentFaculty.map((faculty) => (
                   <div
-                    key={faculty.id}
+                    key={faculty.faculty_id}
                     className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/30 transition-colors border border-transparent hover:border-border cursor-pointer group"
-                    onClick={() => navigate(`/admin/executive/faculty/${faculty.id}`)}
+                    onClick={() => navigate(`/admin/executive/faculty/${faculty.faculty_id}`)}
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary/10 text-secondary font-black shadow-sm">
-                        {faculty.name.split(' ').map((n) => n[0]).join('')}
+                        {faculty.Name.split(' ').map((n: string) => n[0]).join('')}
                       </div>
                       <div>
-                        <p className="font-bold text-foreground leading-tight">{faculty.name}</p>
+                        <p className="font-bold text-foreground leading-tight">{faculty.Name}</p>
                         <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{faculty.designation}</p>
                       </div>
                     </div>
                     <span className="text-xs font-semibold bg-muted px-2 py-1 rounded text-muted-foreground border border-border/50">
-                      {faculty.department}
+                      {faculty.department_id}
                     </span>
                   </div>
                 ))}
@@ -555,11 +555,11 @@ export default function ExecutiveAdminDashboard() {
                 <div key={student.id} className="flex items-center justify-between p-4 bg-muted/20 rounded-xl border border-border/50 hover:bg-muted/40 transition-all group">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center text-primary font-bold">
-                      {student.name[0]}
+                      {`${student.firstName} ${student.lastName}`[0]}
                     </div>
                     <div>
-                      <p className="font-bold text-foreground group-hover:text-primary transition-colors">{student.name}</p>
-                      <p className="text-xs text-muted-foreground">{student.department} | Batch {student.enrollmentYear}</p>
+                      <p className="font-bold text-foreground group-hover:text-primary transition-colors">{`${student.firstName} ${student.lastName}`}</p>
+                      <p className="text-xs text-muted-foreground">{student.departmentId} | Batch {student.batch}</p>
                     </div>
                   </div>
                   <Button

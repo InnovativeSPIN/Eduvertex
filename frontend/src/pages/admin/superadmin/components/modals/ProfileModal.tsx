@@ -23,6 +23,42 @@ export function ProfileModal({ open, onClose, data, type }: ProfileModalProps) {
   const student = isStudent ? (data as Student) : null;
   const faculty = !isStudent ? (data as Faculty) : null;
 
+  // Helper functions to get correct properties based on type
+  const getName = () => {
+    if (isStudent && student) {
+      return `${student.firstName} ${student.lastName}`;
+    } else if (faculty) {
+      return faculty.Name;
+    }
+    return '';
+  };
+
+  const getPhone = () => {
+    if (isStudent && student) {
+      return student.phone;
+    } else if (faculty) {
+      return faculty.phone_number;
+    }
+    return '';
+  };
+
+  const getDepartment = () => {
+    if (isStudent && student) {
+      return student.departmentId;
+    } else if (faculty) {
+      return faculty.department_id;
+    }
+    return '';
+  };
+
+  const getEnrollmentYear = () => {
+    return student?.batch || '';
+  };
+
+  const getJoinDate = () => {
+    return faculty?.date_of_joining || '';
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[450px] bg-card">
@@ -36,11 +72,11 @@ export function ProfileModal({ open, onClose, data, type }: ProfileModalProps) {
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16">
               <AvatarFallback className="bg-primary text-primary-foreground text-xl">
-                {data.name.split(' ').map((n) => n[0]).join('')}
+                {getName().split(' ').map((n: string) => n[0]).join('')}
               </AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="text-xl font-semibold text-foreground">{data.name}</h3>
+              <h3 className="text-xl font-semibold text-foreground">{getName()}</h3>
               <Badge
                 variant={data.status === 'active' ? 'default' : 'secondary'}
                 className={data.status === 'active' ? 'bg-success' : ''}
@@ -58,16 +94,16 @@ export function ProfileModal({ open, onClose, data, type }: ProfileModalProps) {
             </div>
             <div className="flex items-center gap-3 text-sm">
               <Phone className="h-4 w-4 text-muted-foreground" />
-              <span className="text-foreground">{data.phone}</span>
+              <span className="text-foreground">{getPhone()}</span>
             </div>
             <div className="flex items-center gap-3 text-sm">
               <Building2 className="h-4 w-4 text-muted-foreground" />
-              <span className="text-foreground">{data.department}</span>
+              <span className="text-foreground">{getDepartment()}</span>
             </div>
             {isStudent && student && (
               <div className="flex items-center gap-3 text-sm">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="text-foreground">Enrolled: {student.enrollmentYear}</span>
+                <span className="text-foreground">Enrolled: {getEnrollmentYear()}</span>
               </div>
             )}
             {!isStudent && faculty && (
@@ -78,7 +114,7 @@ export function ProfileModal({ open, onClose, data, type }: ProfileModalProps) {
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-foreground">Joined: {faculty.joinDate}</span>
+                  <span className="text-foreground">Joined: {getJoinDate()}</span>
                 </div>
               </>
             )}

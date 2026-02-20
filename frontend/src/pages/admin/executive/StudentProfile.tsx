@@ -43,14 +43,14 @@ export default function ExecutiveStudentProfile() {
                             <div className="flex items-end gap-6">
                                 <div className="h-24 w-24 rounded-2xl bg-background border-4 border-card shadow-md flex items-center justify-center overflow-hidden">
                                     <img
-                                        src={student.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=random&size=128`}
-                                        alt={student.name}
+                                        src={student.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(`${student.firstName} ${student.lastName}`)}&background=random&size=128`}
+                                        alt={`${student.firstName} ${student.lastName}`}
                                         className="w-full h-full object-cover"
                                     />
                                 </div>
                                 <div className="pb-2">
-                                    <h1 className="text-2xl font-bold text-foreground">{student.name}</h1>
-                                    <p className="text-muted-foreground">{student.department} • Batch {student.enrollmentYear}</p>
+                                    <h1 className="text-2xl font-bold text-foreground">{`${student.firstName} ${student.lastName}`}</h1>
+                                    <p className="text-muted-foreground">{student.departmentId} • Batch {student.batch}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
@@ -95,11 +95,11 @@ export default function ExecutiveStudentProfile() {
                                         <div className="space-y-3">
                                             <div className="flex items-center gap-3 text-sm">
                                                 <Building2 className="h-4 w-4 text-primary" />
-                                                <span>{student.department}</span>
+                                                <span>{student.departmentId}</span>
                                             </div>
                                             <div className="flex items-center gap-3 text-sm">
                                                 <GraduationCap className="h-4 w-4 text-primary" />
-                                                <span>Year: {new Date().getFullYear() - student.enrollmentYear + 1}</span>
+                                                <span>Year: {new Date().getFullYear() - parseInt(student.batch) + 1}</span>
                                             </div>
                                             <div className="flex items-center gap-3 text-sm">
                                                 <Clock className="h-4 w-4 text-primary" />
@@ -113,7 +113,7 @@ export default function ExecutiveStudentProfile() {
                                         <div className="space-y-3">
                                             <div className="flex items-center gap-3 text-sm">
                                                 <Calendar className="h-4 w-4 text-primary" />
-                                                <span>Enrolled: {student.enrollmentYear}</span>
+                                                <span>Enrolled: {student.batch}</span>
                                             </div>
                                             <div className="flex items-center gap-3 text-sm">
                                                 <User className="h-4 w-4 text-primary" />

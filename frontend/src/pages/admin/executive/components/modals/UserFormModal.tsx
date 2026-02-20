@@ -91,8 +91,8 @@ export function UserFormModal({ open, onClose, onSave, type, initialData, mode }
                 <Label htmlFor="phone">Phone</Label>
                 <Input
                   id="phone"
-                  value={(formData as Student | Faculty).phone || ''}
-                  onChange={(e) => updateField('phone', e.target.value)}
+                  value={type === 'student' ? (formData as Student).phone || '' : (formData as Faculty).phone_number || ''}
+                  onChange={(e) => updateField(type === 'student' ? 'phone' : 'phone_number', e.target.value)}
                   required
                 />
               </div>
@@ -103,8 +103,8 @@ export function UserFormModal({ open, onClose, onSave, type, initialData, mode }
                 <Label htmlFor="employeeId">Employee ID</Label>
                 <Input
                   id="employeeId"
-                  value={(formData as Faculty).employeeId || ''}
-                  onChange={(e) => updateField('employeeId', e.target.value)}
+                  value={(formData as Faculty).faculty_college_code || ''}
+                  onChange={(e) => updateField('faculty_college_code', e.target.value)}
                   required
                 />
               </div>
@@ -138,8 +138,8 @@ export function UserFormModal({ open, onClose, onSave, type, initialData, mode }
                   <Input
                     id="enrollmentYear"
                     type="number"
-                    value={(formData as Student).enrollmentYear || ''}
-                    onChange={(e) => updateField('enrollmentYear', parseInt(e.target.value))}
+                    value={(formData as Student).batch || ''}
+                    onChange={(e) => updateField('batch', e.target.value)}
                     required
                   />
                 </div>

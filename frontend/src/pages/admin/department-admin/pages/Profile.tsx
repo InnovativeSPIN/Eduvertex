@@ -242,7 +242,7 @@ export default function Profile() {
     name: user?.name || initialFacultyData.name,
     email: user?.email || initialFacultyData.email,
     profilePhoto: user?.avatar || initialFacultyData.profilePhoto,
-    department: user?.department || initialFacultyData.department
+    department: user?.department?.short_name || user?.department?.full_name || initialFacultyData.department
   });
 
   useEffect(() => {

@@ -49,7 +49,7 @@ export default function Photos() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch('/api/v1/auth/avatar', {
+      const response = await fetch('/api/v1/auth/student-avatar', {
         method: 'POST',
         body: formData,
       });

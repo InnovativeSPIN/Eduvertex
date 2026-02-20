@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '@/pages/admin/superadmin/components/layout/AdminLayout';
 import { DataTable } from '@/pages/admin/superadmin/components/dashboard/DataTable';
@@ -83,8 +83,8 @@ export default function SuperAdminFaculty() {
 
   const filteredFaculty = useMemo(() => {
     return faculty.filter(f => {
-      const matchesDept = departmentFilter === 'all' || f.department === departmentFilter;
-      const matchesEmpId = !employeeIdFilter || (f.employeeId && f.employeeId.toLowerCase().includes(employeeIdFilter.toLowerCase()));
+      const matchesDept = departmentFilter === 'all' || f.department_id === parseInt(departmentFilter);
+      const matchesEmpId = !employeeIdFilter || (f.faculty_college_code && f.faculty_college_code.toLowerCase().includes(employeeIdFilter.toLowerCase()));
       return matchesDept && matchesEmpId;
     });
   }, [faculty, departmentFilter, employeeIdFilter]);
@@ -92,19 +92,19 @@ export default function SuperAdminFaculty() {
   const columns = [
     { key: 'employeeId', label: 'ID' },
     {
-      key: 'avatar',
+      key: 'profile_image_url',
       label: 'Photo',
       render: (item: Faculty) => (
         <img
-          src={item.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=random`}
-          alt={item.name}
+          src={item.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.Name)}&background=random`}
+          alt={item.Name}
           className="w-8 h-8 rounded-full"
         />
       )
     },
-    { key: 'name', label: 'Name' },
+    { key: 'Name', label: 'Name' },
     { key: 'email', label: 'Email' },
-    { key: 'department', label: 'Department' },
+    { key: 'department_id', label: 'Department' },
     { key: 'designation', label: 'Designation' },
     {
       key: 'status',

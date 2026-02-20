@@ -22,8 +22,8 @@ export default function ExecutiveStudents() {
 
   const filteredStudents = useMemo(() => {
     return students.filter(s => {
-      const matchesDept = departmentFilter === 'all' || s.department === departmentFilter;
-      const matchesYear = !yearFilter || (s.enrollmentYear && s.enrollmentYear.toString().includes(yearFilter));
+      const matchesDept = departmentFilter === 'all' || s.departmentId === parseInt(departmentFilter);
+      const matchesYear = !yearFilter || (s.batch && s.batch.toString().includes(yearFilter));
       return matchesDept && matchesYear;
     });
   }, [students, departmentFilter, yearFilter]);
