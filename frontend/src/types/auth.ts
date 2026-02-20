@@ -82,11 +82,19 @@ export interface Faculty {
 	guideName?: string;
 }
 
+export interface Role {
+	role_id: number;
+	role_name: string;
+}
+
 export interface Admin {
 	id: string;
 	name: string;
 	email: string;
-	role: 'superadmin' | 'super-admin' | 'executive' | 'executiveadmin' | 'academic' | 'academicadmin' | 'exam_cell_admin' | 'placement_cell_admin' | 'research_development_admin' | 'department-admin';
+	// backend will return a flattened role_name string
+	role?: string;
+	// when creating/updating we may supply numeric id instead
+	role_id?: number;
 	department?: string;
 	departmentCode?: string;
 	status: 'active' | 'inactive';

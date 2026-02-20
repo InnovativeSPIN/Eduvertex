@@ -33,6 +33,7 @@ export function UserFormModal({ open, onClose, onSave, type, initialData, mode }
   const [file, setFile] = useState<File | null>(null);
   const [formData, setFormData] = useState<FormData>({});
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
 
   useEffect(() => {
     if (initialData) {
@@ -42,6 +43,16 @@ export function UserFormModal({ open, onClose, onSave, type, initialData, mode }
     }
     setFile(null); // Reset file when data changes
   }, [initialData, open]);
+
+  // when roles are loaded we may need to derive role_id from existing role name
+  useEffect(() => {
+    if (initialData && roles.length > 0 && (initialData as Admin).role) {
+      const matching = roles.find(r => r.role_name === (initialData as Admin).role);
+      if (matching) {
+        setFormData(prev => ({ ...prev, role_id: matching.role_id }));
+      }
+    }
+  }, [roles, initialData]);
 
   useEffect(() => {
     const fetchDepartments = async () => {
@@ -56,10 +67,25 @@ export function UserFormModal({ open, onClose, onSave, type, initialData, mode }
       }
     };
 
+    const fetchRoles = async () => {
+      try {
+        const response = await fetch('/api/v1/users/roles');
+        const result = await response.json();
+        if (result.success) {
+          setRoles(result.data);
+        }
+      } catch (error) {
+        console.error('Error fetching roles:', error);
+      }
+    };
+
     if (open) {
       fetchDepartments();
+      if (type === 'admin') {
+        fetchRoles();
+      }
     }
-  }, [open]);
+  }, [open, type]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,7 +103,8 @@ export function UserFormModal({ open, onClose, onSave, type, initialData, mode }
     setFormData((prev) => ({ ...prev, [field]: value }));
 
     // Auto-fetch department code if department is selected
-    if (field === 'department' && type === 'admin' && (formData as Admin).role === 'department-admin') {
+    const currentRole = (formData as Admin).role;
+    if (field === 'department' && type === 'admin' && currentRole === 'department-admin') {
       const selectedDept = departments.find(d => d.name === value);
       if (selectedDept) {
         setFormData(prev => ({ ...prev, departmentCode: selectedDept.code }));
@@ -307,21 +334,31 @@ export function UserFormModal({ open, onClose, onSave, type, initialData, mode }
             )}
             {type === 'admin' && (
               <div className="space-y-2">
-                <Label htmlFor="role">Admin Role</Label>
+                <Label htmlFor="role_id">Admin Role</Label>
                 <Select
-                  value={(formData as Admin).role || ''}
-                  onValueChange={(value) => updateField('role', value)}
+                  value={(formData as Admin).role_id?.toString() || ''}
+                  onValueChange={(value) => {
+                    const id = parseInt(value, 10);
+                    const selected = roles.find(r => r.role_id === id);
+                    if (selected) {
+                      updateField('role_id', selected.role_id);
+                      updateField('role', selected.role_name);
+                    }
+                  }}
+                  required
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                   <SelectContent className="bg-popover">
-                    <SelectItem value="executive">Executive</SelectItem>
-                    <SelectItem value="academic">Academic Admin</SelectItem>
-                    <SelectItem value="exam_cell_admin">Exam Cell Admin</SelectItem>
-                    <SelectItem value="placement_cell_admin">Placement Cell Admin</SelectItem>
-                    <SelectItem value="research_development_admin">Research & Development Admin</SelectItem>
-                    <SelectItem value="department-admin">Department Admin</SelectItem>
+                    {roles.map(r => (
+                      <SelectItem key={r.role_id} value={r.role_id.toString()}>
+                        {r.role_name.replace(/-/g, ' ')}
+                      </SelectItem>
+                    ))}
+                    {roles.length === 0 && (
+                      <div className="p-2 text-sm text-muted-foreground text-center">No roles available</div>
+                    )}
                   </SelectContent>
                 </Select>
               </div>

@@ -34,23 +34,15 @@ export default function SuperAdminAdmins() {
             const response = await fetch('/api/v1/users');
             const result = await response.json();
             if (result.success) {
-                // Filter users to only include admin roles
-                const adminRoles = [
-                    'superadmin',
-                    'super-admin',
-                    'executiveadmin',
-                    'academicadmin',
-                    'exam_cell_admin',
-                    'placement_cell_admin',
-                    'research_development_admin',
-                    'department-admin'
-                ];
-                const adminUsers = result.data.filter((user: any) => adminRoles.includes(user.role))
+                // Filter users to only keep those whose role name includes "admin"
+                const adminUsers = result.data
+                    .filter((user: any) => user.role && user.role.toLowerCase().includes('admin'))
                     .map((user: any) => ({
-                        id: user._id,
+                        id: user._id || user.id,
                         name: user.name || user.admin_name || 'N/A',
                         email: user.email,
                         role: user.role,
+                        role_id: user.role_id,
                         department: user.department,
                         avatar: user.avatar,
                         status: user.isActive ? 'active' : 'inactive',
@@ -144,19 +136,14 @@ export default function SuperAdminAdmins() {
 
     const handleSave = async (data: any) => {
         try {
-            // Map frontend roles to backend roles if necessary
-            let role = data.role;
-            if (role === 'executive') role = 'executiveadmin';
-            if (role === 'academic') role = 'academicadmin';
-
-            const payload = {
+            // send numeric role_id instead of string
+            const payload: any = {
                 name: data.name,
-                admin_name: data.name,
                 email: data.email,
-                role: role,
+                role_id: data.role_id,
                 department: data.department,
                 departmentCode: data.departmentCode,
-                password: '123', // Default password as per Conversation 73ff5a50-d901-4766-a1f3-c74339b4864e
+                password: '123', // Default password
                 isActive: true
             };
 
@@ -171,7 +158,7 @@ export default function SuperAdminAdmins() {
 
             let result = await response.json();
             if (result.success) {
-                const userId = formModal.mode === 'add' ? result.data._id : formModal.data?.id;
+                const userId = formModal.mode === 'add' ? (result.data._id || result.data.id) : formModal.data?.id;
 
                 // Handle file upload if present
                 if (data.avatarFile) {
