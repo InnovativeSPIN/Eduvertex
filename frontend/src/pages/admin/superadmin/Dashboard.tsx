@@ -30,6 +30,7 @@ export default function SuperAdminDashboard() {
         {/* Stats Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatsCard
+            key="total-students"
             title="Total Students"
             value={dashboardStats.totalStudents}
             icon={<GraduationCap className="h-6 w-6" />}
@@ -37,6 +38,7 @@ export default function SuperAdminDashboard() {
             changeType="positive"
           />
           <StatsCard
+            key="total-faculty"
             title="Total Faculty"
             value={dashboardStats.totalFaculty}
             icon={<Users className="h-6 w-6" />}
@@ -44,11 +46,13 @@ export default function SuperAdminDashboard() {
             changeType="positive"
           />
           <StatsCard
+            key="departments"
             title="Departments"
             value={dashboardStats.totalDepartments}
             icon={<Building2 className="h-6 w-6" />}
           />
           <StatsCard
+            key="active-programs"
             title="Active Programs"
             value={dashboardStats.activePrograms}
             icon={<BookOpen className="h-6 w-6" />}
@@ -91,25 +95,28 @@ export default function SuperAdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentStudents.map((student) => (
-                  <div key={student.id} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-medium">
-                        {`${student.firstName} ${student.lastName}`.split(' ').map((n: string) => (n[0])).join('')}
+                {recentStudents.map((student) => {
+                  const fullName = `${student.firstName || 'Unknown'} ${student.lastName || ''}`.trim();
+                  return (
+                    <div key={student.id} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-medium">
+                          {fullName.split(' ').map((n: string) => (n[0])).join('')}
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">{fullName}</p>
+                          <p className="text-sm text-muted-foreground">{student.departmentId || 'N/A'}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-foreground">{`${student.firstName} ${student.lastName}`}</p>
-                        <p className="text-sm text-muted-foreground">{student.departmentId}</p>
-                      </div>
+                      <Badge
+                        variant={student.status === 'active' ? 'default' : 'secondary'}
+                        className={student.status === 'active' ? 'bg-success' : ''}
+                      >
+                        {student.status}
+                      </Badge>
                     </div>
-                    <Badge
-                      variant={student.status === 'active' ? 'default' : 'secondary'}
-                      className={student.status === 'active' ? 'bg-success' : ''}
-                    >
-                      {student.status}
-                    </Badge>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -124,14 +131,14 @@ export default function SuperAdminDashboard() {
                   <div key={faculty.faculty_id} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/10 text-secondary font-medium">
-                        {faculty.Name.split(' ').map((n: string) => (n[0])).join('')}
+                        {(faculty.Name || 'Unknown').split(' ').map((n: string) => (n[0])).join('')}
                       </div>
                       <div>
-                        <p className="font-medium text-foreground">{faculty.Name}</p>
-                        <p className="text-sm text-muted-foreground">{faculty.designation}</p>
+                        <p className="font-medium text-foreground">{faculty.Name || 'Unknown'}</p>
+                        <p className="text-sm text-muted-foreground">{faculty.designation || 'N/A'}</p>
                       </div>
                     </div>
-                    <span className="text-sm text-muted-foreground">{faculty.department_id}</span>
+                    <span className="text-sm text-muted-foreground">{faculty.department_id || 'N/A'}</span>
                   </div>
                 ))}
               </div>

@@ -149,6 +149,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         animate={{ width: sidebarOpen ? 280 : 80 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
         className="fixed left-0 top-0 h-screen bg-sidebar z-50 flex flex-col shadow-xl"
+        style={{ pointerEvents: 'auto' }}
       >
         {/* Header / User Info Section */}
         <div className="p-4 border-b border-sidebar-border bg-sidebar-accent/10">
@@ -211,9 +212,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   transition={{ delay: index * 0.05 }}
                 >
                   <button
-                    onClick={() => navigate(item.path)}
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      navigate(item.path);
+                    }}
+                    style={{ pointerEvents: 'auto' }}
                     className={cn(
-                      'flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200 group relative',
+                      'flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200 group relative cursor-pointer',
                       isActive
                         ? 'bg-sidebar-accent text-white shadow-lg shadow-black/20'
                         : 'text-white/60 hover:bg-sidebar-accent/50 hover:text-white'
@@ -256,11 +262,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <div className="p-4 border-t border-sidebar-border space-y-3">
           {/* Logout Button */}
           <button
-            onClick={handleLogout}
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              handleLogout();
+            }}
             className={cn(
-              "w-full flex items-center justify-center gap-3 px-3 py-3 rounded-xl transition-all font-bold text-sm",
+              "w-full flex items-center justify-center gap-3 px-3 py-3 rounded-xl transition-all font-bold text-sm cursor-pointer",
               "bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive hover:text-white"
             )}
+            style={{ pointerEvents: 'auto' }}
           >
             <LogOut className="w-5 h-5 flex-shrink-0" />
             <AnimatePresence>
@@ -279,8 +290,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
           {/* Collapse Toggle Button */}
           <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="w-full flex items-center justify-center gap-3 px-3 py-3 rounded-xl bg-sidebar-accent/30 text-white/70 hover:bg-sidebar-accent hover:text-white transition-all border border-white/5"
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setSidebarOpen(prev => !prev);
+            }}
+            style={{ pointerEvents: 'auto' }}
+            className="w-full flex items-center justify-center gap-3 px-3 py-3 rounded-xl bg-sidebar-accent/30 text-white/70 hover:bg-sidebar-accent hover:text-white transition-all border border-white/5 cursor-pointer"
           >
             {sidebarOpen ? (
               <>

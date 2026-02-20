@@ -28,8 +28,11 @@ const adminRoles = [
 
 const roleRoutes: Partial<Record<UserRole, string>> = {
     superadmin: '/admin/superadmin',
+    'super-admin': '/admin/superadmin',
     executive: '/admin/executive',
+    executiveadmin: '/admin/executive',
     academic: '/admin/academic',
+    academicadmin: '/admin/academic',
     exam_cell_admin: '/admin/superadmin', // Default to superadmin or specific dashboard if available
     placement_cell_admin: '/admin/superadmin',
     research_development_admin: '/admin/superadmin',

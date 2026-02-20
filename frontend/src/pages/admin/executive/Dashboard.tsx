@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { AdminLayout } from '@/pages/admin/components/layout/AdminLayout';
+import { AdminLayout } from '@/pages/admin/executive/components/layout/AdminLayout';
 import { cn } from '@/pages/admin/executive/lib/utils';
 import { StatsCard } from '@/pages/admin/executive/components/dashboard/StatsCard';
 import { dashboardStats, mockStudents, mockFaculty } from '@/data/mockData';

@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { AdminLayout } from '@/pages/admin/components/layout/AdminLayout';
+import { AdminLayout } from '@/pages/admin/executive/components/layout/AdminLayout';
 import { Button } from '@/pages/admin/executive/components/ui/button';
 import { ChevronLeft, Mail, Phone, Building2, Calendar, User, MapPin, GraduationCap, Clock } from 'lucide-react';
 import { mockStudents } from '@/data/mockData';

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AdminLayout } from '@/pages/admin/components/layout/AdminLayout';
+import { AdminLayout } from '@/pages/admin/executive/components/layout/AdminLayout';
 import { DataTable } from '@/pages/admin/executive/components/dashboard/DataTable';
 import { mockFaculty as initialFaculty, mockDepartments } from '@/data/mockData';
 import { Faculty } from '@/types/auth';
