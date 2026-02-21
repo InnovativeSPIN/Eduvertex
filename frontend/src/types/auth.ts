@@ -50,22 +50,29 @@ export interface Student {
 }
 
 export interface Faculty {
-	faculty_id: number;
+	id: string;
+	faculty_id?: number;
 	faculty_college_code: string;
 	coe_id?: number;
 	AICTE_ID?: number;
 	Anna_University_ID?: number;
-	Name: string;
+	Name?: string;
+	firstName?: string;
+	lastName?: string;
+	name?: string;
 	email: string;
+	phone?: string;
 	phone_number?: string;
-	password: string;
+	password?: string;
 	role_id?: number;
 	department_id?: number;
+	department?: any;
 	designation?: string;
 	educational_qualification?: string;
 	gender?: 'Male' | 'Female' | 'Other';
 	date_of_birth?: string;
 	date_of_joining?: string;
+	joinDate?: string;
 	profile_image_url?: string;
 	status?: 'active' | 'completed' | 'inactive';
 	blood_group?: string;
@@ -73,8 +80,8 @@ export interface Faculty {
 	pan_number?: string;
 	perm_address?: string;
 	curr_address?: string;
-	created_at: string;
-	updated_at: string;
+	created_at?: string;
+	updated_at?: string;
 	orcidId?: string;
 	phdStatus?: 'Completed' | 'Pursuing';
 	thesisTitle?: string;

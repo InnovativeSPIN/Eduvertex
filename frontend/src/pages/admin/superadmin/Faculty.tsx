@@ -41,7 +41,8 @@ export default function SuperAdminFaculty() {
       if (result.success) {
         setFaculty(result.data.map((f: any) => ({
           ...f,
-          name: `${f.firstName} ${f.lastName}`,
+          id: String(f.faculty_id),
+          name: `${f.firstName || ''} ${f.lastName || ''}`.trim(),
           department: f.department?.name || 'N/A'
         })));
       }
@@ -83,28 +84,28 @@ export default function SuperAdminFaculty() {
 
   const filteredFaculty = useMemo(() => {
     return faculty.filter(f => {
-      const matchesDept = departmentFilter === 'all' || f.department_id === parseInt(departmentFilter);
+      const matchesDept = departmentFilter === 'all' || String(f.department_id) === departmentFilter;
       const matchesEmpId = !employeeIdFilter || (f.faculty_college_code && f.faculty_college_code.toLowerCase().includes(employeeIdFilter.toLowerCase()));
       return matchesDept && matchesEmpId;
     });
   }, [faculty, departmentFilter, employeeIdFilter]);
 
   const columns = [
-    { key: 'employeeId', label: 'ID' },
+    { key: 'faculty_college_code', label: 'College Code' },
     {
       key: 'profile_image_url',
       label: 'Photo',
       render: (item: Faculty) => (
         <img
-          src={item.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.Name)}&background=random`}
-          alt={item.Name}
+          src={item.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name || 'Faculty')}&background=random`}
+          alt={item.name || 'Faculty'}
           className="w-8 h-8 rounded-full"
         />
       )
     },
-    { key: 'Name', label: 'Name' },
+    { key: 'name', label: 'Name' },
     { key: 'email', label: 'Email' },
-    { key: 'department_id', label: 'Department' },
+    { key: 'department', label: 'Department' },
     { key: 'designation', label: 'Designation' },
     {
       key: 'status',
@@ -125,7 +126,7 @@ export default function SuperAdminFaculty() {
   };
 
   const handleView = (item: Faculty) => {
-    navigate(`/admin/superadmin/faculty/${item.id}`);
+    navigate(`/admin/superadmin/faculty/${item.faculty_college_code}`);
   };
 
   const handleEdit = (item: Faculty) => {
@@ -148,7 +149,7 @@ export default function SuperAdminFaculty() {
     if (formModal.mode === 'add') {
       const newFaculty: Faculty = {
         id: String(Date.now()),
-        employeeId: data.employeeId || `FAC${Date.now()}`,
+        faculty_college_code: data.faculty_college_code || `FAC${Date.now()}`,
         name: data.name || '',
         email: data.email || '',
         phone: data.phone || '',
@@ -210,7 +211,7 @@ export default function SuperAdminFaculty() {
               <SelectContent>
                 <SelectItem value="all">All Departments</SelectItem>
                 {departments.map(dept => (
-                  <SelectItem key={dept.id} value={dept.name}>{dept.name}</SelectItem>
+                  <SelectItem key={dept.id} value={String(dept.id)}>{dept.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -250,7 +251,7 @@ export default function SuperAdminFaculty() {
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Faculty Member</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete {deleteDialog.data?.name}? This action cannot be undone.
+                Are you sure you want to delete {deleteDialog.data?.faculty_college_code}? This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
