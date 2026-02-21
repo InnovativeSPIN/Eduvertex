@@ -59,8 +59,10 @@ export const protect = asyncHandler(async (req, res, next) => {
         return next(new ErrorResponse('Not authorized to access this route', 401));
       }
 
-      // Add role info for student
+      // Add role info for student and extract department code
       req.user.role = 'student';
+      req.user.departmentCode = req.user.department?.short_name || null;
+      req.user.departmentId = req.user.departmentId;
       return next();
     }
 
@@ -78,9 +80,11 @@ export const protect = asyncHandler(async (req, res, next) => {
         return next(new ErrorResponse('Not authorized to access this route', 401));
       }
 
-      // Add role info for faculty
+      // Add role info for faculty and extract department code
       req.user.role = 'faculty';
       req.user.userType = 'faculty';
+      req.user.departmentCode = req.user.department?.short_name || null;
+      req.user.departmentId = req.user.department_id;
       return next();
     }
 

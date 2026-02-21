@@ -14,12 +14,12 @@ router.use(protect);
 
 router.route('/')
     .get(getAnnouncements)
-    .post(authorize('superadmin', 'super-admin', 'executiveadmin', 'academicadmin', 'department-admin'), createAnnouncement);
+    .post(authorize('superadmin', 'super-admin', 'executiveadmin', 'academicadmin', 'department-admin', 'faculty'), createAnnouncement);
 
 router.route('/admin')
     .get(authorize('superadmin', 'super-admin', 'executiveadmin', 'academicadmin', 'department-admin'), getAdminAnnouncements);
 
 router.route('/:id')
-    .delete(authorize('superadmin', 'super-admin', 'executiveadmin', 'academicadmin', 'department-admin'), deleteAnnouncement);
+    .delete(authorize('superadmin', 'super-admin', 'executiveadmin', 'academicadmin', 'department-admin', 'faculty'), deleteAnnouncement);
 
 export default router;

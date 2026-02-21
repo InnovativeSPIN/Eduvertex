@@ -22,13 +22,14 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface Announcement {
-  _id: string;
+  id: number;
   title: string;
   message: string;
-  category: string;
+  type?: string;
   targetRole: string[];
   department?: string;
-  createdBy: { _id: string; name: string };
+  createdBy: { id?: number; name: string; avatar?: string };
+  creatorRole: string;
   createdAt: string;
   attachments: { name: string; url: string; type: string }[];
 }
@@ -86,10 +87,25 @@ export default function Communication() {
   const fetchAnnouncements = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/v1/announcements/admin');
+      const token = localStorage.getItem('authToken');
+      const res = await fetch('/api/v1/announcements/admin', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
       const data = await res.json();
       if (data.success) {
-        setAnnouncements(data.data);
+        // Normalize targetRole and attachments to ensure they're always arrays
+        const normalizedData = data.data.map((announcement: any) => ({
+          ...announcement,
+          targetRole: Array.isArray(announcement.targetRole) 
+            ? announcement.targetRole 
+            : (typeof announcement.targetRole === 'string' 
+              ? announcement.targetRole.split(',').map((r: string) => r.trim())
+              : ['all']),
+          attachments: Array.isArray(announcement.attachments) 
+            ? announcement.attachments 
+            : []
+        }));
+        setAnnouncements(normalizedData);
       }
     } catch (err) {
       toast.error("Failed to fetch announcements");
@@ -119,8 +135,10 @@ export default function Communication() {
     });
 
     try {
+      const token = localStorage.getItem('authToken');
       const res = await fetch('/api/v1/announcements', {
         method: 'POST',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         body: formData,
       });
       const data = await res.json();
@@ -146,7 +164,11 @@ export default function Communication() {
   const handleDeleteAnnouncement = async (id: string) => {
     if (!window.confirm("Are you sure you want to delete this announcement?")) return;
     try {
-      const res = await fetch(`/api/v1/announcements/${id}`, { method: 'DELETE' });
+      const token = localStorage.getItem('authToken');
+      const res = await fetch(`/api/v1/announcements/${id}`, {
+        method: 'DELETE',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
       const data = await res.json();
       if (data.success) {
         toast.success("Announcement deleted");
@@ -289,7 +311,7 @@ export default function Communication() {
             <div className="space-y-4">
               {announcements.map((ann) => (
                 <motion.div
-                  key={ann._id}
+                  key={ann.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="widget-card group relative"
@@ -307,12 +329,12 @@ export default function Communication() {
                     <div className="flex gap-2">
                       <Badge variant="outline">{ann.category}</Badge>
                       {/* Check if creator's ID matches user's ID */}
-                      {ann.createdBy?._id === user?.id && (
+                      {ann.createdBy?.id === user?.id && (
                         <Button
                           variant="ghost"
                           size="icon"
                           className="text-destructive hover:bg-destructive/10"
-                          onClick={() => handleDeleteAnnouncement(ann._id)}
+                          onClick={() => handleDeleteAnnouncement(String(ann.id))}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -327,9 +349,9 @@ export default function Communication() {
                       <Badge key={role} variant="secondary" className="text-[9px] uppercase">{role}</Badge>
                     ))}
 
-                    {ann.attachments.length > 0 && (
+                    {(ann.attachments || []).length > 0 && (
                       <div className="flex gap-2 ml-4">
-                        {ann.attachments.map((file, i) => (
+                        {(ann.attachments || []).map((file, i) => (
                           <a
                             key={i}
                             href={file.url}

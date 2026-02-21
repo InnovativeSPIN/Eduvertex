@@ -9,15 +9,19 @@ import { Op, Sequelize } from 'sequelize';
 // @route     GET /api/v1/announcements
 // @access    Private
 export const getAnnouncements = asyncHandler(async (req, res, next) => {
-    const { role, departmentCode } = req.user;
+    const { role, departmentCode, departmentId } = req.user;
 
     let where = { isActive: true };
 
     // If not superadmin, filter by role and department
     const superRoles = ['superadmin', 'super-admin', 'executiveadmin', 'academicadmin'];
 
+    // Departments excluded from department-specific announcements (only see global)
+    const excludedDepartments = [8, 9, 11];
+
     if (!superRoles.includes(role)) {
-        where[Op.or] = [
+        // Build role check: targetRole contains 'all' OR targetRole contains user's role
+        const roleConditions = [
             Sequelize.where(
                 Sequelize.fn('JSON_CONTAINS', Sequelize.col('targetRole'), JSON.stringify('all')),
                 1
@@ -28,16 +32,33 @@ export const getAnnouncements = asyncHandler(async (req, res, next) => {
             )
         ];
 
-        // If department admin, faculty or student, filter by department if announcement is department specific
+        // Check if user is in an excluded department
+        const isExcludedDepartment = excludedDepartments.includes(Number(departmentId));
+
+        // Build department check
+        let departmentConditions;
+        if (isExcludedDepartment) {
+            // Excluded departments only see global announcements
+            departmentConditions = { department: null };
+        } else {
+            // Other departments see global + their own department announcements
+            departmentConditions = {
+                [Op.or]: [
+                    { department: null },
+                    { department: departmentCode }
+                ]
+            };
+        }
+
+        // Combine: (role condition) AND (department condition)
         if (departmentCode) {
             where[Op.and] = [
-                {
-                    [Op.or]: [
-                        { department: null },
-                        { department: departmentCode }
-                    ]
-                }
+                { [Op.or]: roleConditions },
+                departmentConditions
             ];
+        } else {
+            // If no department code, just check role conditions
+            where[Op.or] = roleConditions;
         }
     }
 
@@ -46,7 +67,7 @@ export const getAnnouncements = asyncHandler(async (req, res, next) => {
         include: [{
             model: User,
             as: 'createdBy',
-            attributes: ['name']
+            attributes: ['name', 'avatar']
         }],
         order: [['createdAt', 'DESC']]
     });
@@ -85,8 +106,8 @@ export const createAnnouncement = asyncHandler(async (req, res, next) => {
     req.body.createdById = req.user.id;
     req.body.creatorRole = req.user.role;
 
-    // Set department if created by HOD
-    if (req.user.role === 'department-admin') {
+    // Set department if created by department-admin or faculty
+    if ((req.user.role === 'department-admin' || req.user.role === 'faculty') && req.user.departmentCode) {
         req.body.department = req.user.departmentCode;
     }
 

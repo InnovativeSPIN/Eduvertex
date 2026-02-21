@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 20, 2026 at 07:59 AM
+-- Generation Time: Feb 21, 2026 at 08:20 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -48,8 +48,10 @@ CREATE TABLE `announcements` (
 -- Dumping data for table `announcements`
 --
 
--- static data removed; announcements will be seeded dynamically by application
-
+INSERT INTO `announcements` (`id`, `title`, `message`, `type`, `priority`, `targetRole`, `department`, `attachments`, `isActive`, `createdById`, `creatorRole`, `expiresAt`, `createdAt`, `updatedAt`) VALUES
+(1, 'Welcome to Eduvertex ERP', 'Welcome to the new Eduvertex ERP system. This system will help manage all academic and administrative activities.', 'general', 'medium', '[\"all\"]', NULL, '[]', 1, 1, 'superadmin', NULL, '2024-01-01 00:00:00', '2024-01-01 00:00:00'),
+(2, 'Semester 6 Timetable Released', 'The timetable for Semester 6 has been released. Please check the timetable section for details.', 'academic', 'high', '[\"student\"]', NULL, '[]', 1, 1, 'superadmin', NULL, '2024-01-01 00:00:00', '2024-01-01 00:00:00'),
+(3, 'Faculty Meeting Tomorrow', 'All faculty members are requested to attend the meeting tomorrow at 10 AM in the conference hall.', 'general', 'medium', '[\"faculty\"]', NULL, '[]', 1, 1, 'superadmin', NULL, '2024-01-01 00:00:00', '2024-01-01 00:00:00');
 
 -- --------------------------------------------------------
 
@@ -73,8 +75,9 @@ CREATE TABLE `classes` (
 -- Dumping data for table `classes`
 --
 
--- static class data removed; will be created by migration scripts
-
+INSERT INTO `classes` (`id`, `name`, `section`, `room`, `department_id`, `semester`, `batch`, `capacity`, `status`) VALUES
+(1, 'CSE A', 'A', '101', 1, 6, '2021-2025', 60, 'active'),
+(2, 'CSE B', 'B', '102', 1, 6, '2021-2025', 60, 'active'),
 (3, 'ECE A', 'A', '201', 2, 6, '2021-2025', 60, 'active'),
 (4, 'ECE B', 'B', '202', 2, 6, '2021-2025', 60, 'active'),
 (5, 'MECH A', 'A', '301', 3, 6, '2021-2025', 60, 'active'),
@@ -110,8 +113,11 @@ CREATE TABLE `departments` (
 -- Dumping data for table `departments`
 --
 
--- static department list removed; departments are managed dynamically
-
+INSERT INTO `departments` (`id`, `short_name`, `full_name`) VALUES
+(1, 'CSE', 'B.E. Computer Science & Engineering'),
+(2, 'CIVIL', 'B.E. Civil Engineering'),
+(3, 'ECE', 'B.E. Electronics & Communication Engineering'),
+(4, 'eee', 'B.E. Electrical and Electronics Engineering'),
 (5, 'mech', 'B.E. Mechanical Engineering'),
 (6, 'AI&DS', 'B.Tech. Artificial Intelligence & Data Science'),
 (7, 'IT', 'B.Tech. Information Technology'),
@@ -405,8 +411,14 @@ CREATE TABLE `roles` (
 -- Dumping data for table `roles`
 --
 
--- role definitions removed; they will be inserted at runtime or via seed script
-
+INSERT INTO `roles` (`role_id`, `role_name`) VALUES
+(1, 'super-admin'),
+(2, 'super-admin'),
+(3, 'executive-admin'),
+(4, 'academic-admin'),
+(5, 'faculty'),
+(6, 'student'),
+(7, 'department-admin');
 
 -- --------------------------------------------------------
 
@@ -1672,7 +1684,12 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
--- static user accounts removed; credentials are managed at runtime
+INSERT INTO `users` (`id`, `name`, `email`, `password`, `role_id`, `phone`, `isActive`, `createdAt`, `updatedAt`, `avatar`) VALUES
+(2, 'mathalai sundaram', 'executive@nscet.org', '$2a$10$ELjprebdIeb3GTTMKk1oZujDrXZ2g8P41gNfiqVwVCKiflkwpO1eu', 3, '9876543211', 1, '0000-00-00 00:00:00', '2026-02-20 05:08:42', NULL),
+(3, 'Academic Admin', 'academic@nscet.org', '$2a$10$rtVcTSxhiJKb4Cm3GdJWTety1jN8MAbcweTMHTRw2TQOE79tziyEq', 4, '9876543212', 1, '0000-00-00 00:00:00', '0000-00-00 00:00:00', NULL),
+(109, 'GOAT', 'nscetadmin@gmail.com', '$2a$10$ELjprebdIeb3GTTMKk1oZujDrXZ2g8P41gNfiqVwVCKiflkwpO1eu', 2, '9876543210', 1, '2026-02-20 05:39:02', '2026-02-20 05:39:02', NULL),
+(112, 'Test Admin', 'testadmin@nscet.org', '$2a$10$ELjprebdIeb3GTTMKk1oZujDrXZ2g8P41gNfiqVwVCKiflkwpO1eu', 1, '9876543210', 1, '2026-02-20 06:24:50', '2026-02-20 06:24:50', NULL);
+
 --
 -- Indexes for dumped tables
 --
@@ -2070,7 +2087,7 @@ ALTER TABLE `student_sports`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=113;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=114;
 
 --
 -- Constraints for dumped tables

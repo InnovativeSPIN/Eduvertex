@@ -6,7 +6,7 @@ import { Badge } from "@/pages/admin/department-admin/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 interface Announcement {
-    _id: string;
+    id: number;
     title: string;
     message: string;
     creatorRole: string;
@@ -23,7 +23,10 @@ export function IntegratedNotificationBell() {
     const fetchAnnouncements = async () => {
         try {
             setLoading(true);
-            const response = await fetch('/api/v1/announcements');
+            const token = localStorage.getItem('authToken');
+            const response = await fetch('/api/v1/announcements', {
+                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+            });
             const result = await response.json();
             if (result.success) {
                 setAnnouncements(result.data.slice(0, 10)); // Top 10
@@ -125,7 +128,7 @@ export function IntegratedNotificationBell() {
                                 <div className="divide-y divide-border/40">
                                     {announcements.map((ann) => (
                                         <div
-                                            key={ann._id}
+                                            key={ann.id}
                                             className="p-4 hover:bg-muted/30 transition-colors cursor-pointer group"
                                         >
                                             <div className="flex gap-3">

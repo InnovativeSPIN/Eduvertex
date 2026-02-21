@@ -28,14 +28,14 @@ interface Attachment {
 }
 
 interface Announcement {
-    _id: string;
+    id: number;
     title: string;
     message: string;
     targetRole: string[];
     department?: string;
     attachments: Attachment[];
     createdBy: {
-        _id: string;
+        id?: number;
         name: string;
         avatar?: string;
     };
@@ -62,10 +62,25 @@ export default function SuperAdminAnnouncements() {
     const fetchAnnouncements = async () => {
         try {
             setLoading(true);
-            const response = await fetch('/api/v1/announcements/admin');
+            const token = localStorage.getItem('authToken');
+            const response = await fetch('/api/v1/announcements/admin', {
+                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+            });
             const result = await response.json();
             if (result.success) {
-                setAnnouncements(result.data);
+                // Normalize targetRole and attachments to ensure they're always arrays
+                const normalizedData = result.data.map((announcement: any) => ({
+                    ...announcement,
+                    targetRole: Array.isArray(announcement.targetRole) 
+                        ? announcement.targetRole 
+                        : (typeof announcement.targetRole === 'string' 
+                            ? announcement.targetRole.split(',').map((r: string) => r.trim())
+                            : ['all']),
+                    attachments: Array.isArray(announcement.attachments) 
+                        ? announcement.attachments 
+                        : []
+                }));
+                setAnnouncements(normalizedData);
             }
         } catch (error) {
             console.error('Error fetching announcements:', error);
@@ -101,8 +116,10 @@ export default function SuperAdminAnnouncements() {
         });
 
         try {
+            const token = localStorage.getItem('authToken');
             const response = await fetch('/api/v1/announcements', {
                 method: 'POST',
+                headers: token ? { 'Authorization': `Bearer ${token}` } : {},
                 body: formData
             });
             const result = await response.json();
@@ -131,8 +148,10 @@ export default function SuperAdminAnnouncements() {
         if (!window.confirm('Are you sure you want to delete this announcement?')) return;
 
         try {
+            const token = localStorage.getItem('authToken');
             const response = await fetch(`/api/v1/announcements/${id}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
             });
             const result = await response.json();
 
@@ -166,7 +185,8 @@ export default function SuperAdminAnnouncements() {
     const filteredAnnouncements = announcements.filter(a => {
         const matchesSearch = a.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
             a.message.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesRole = filterRole === 'all' || a.targetRole.includes(filterRole);
+        const targetRoles = Array.isArray(a.targetRole) ? a.targetRole : [];
+        const matchesRole = filterRole === 'all' || targetRoles.includes(filterRole);
         return matchesSearch && matchesRole;
     });
 
@@ -327,7 +347,7 @@ export default function SuperAdminAnnouncements() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredAnnouncements.map((announcement) => (
                             <motion.div
-                                key={announcement._id}
+                                key={announcement.id}
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 className="bg-card group rounded-2xl border border-border hover:border-primary/30 transition-all shadow-sm hover:shadow-xl hover:-translate-y-1 overflow-hidden"
@@ -335,7 +355,7 @@ export default function SuperAdminAnnouncements() {
                                 <div className="p-5 flex flex-col h-full">
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="flex -space-x-1">
-                                            {announcement.targetRole.map((role) => (
+                                            {(Array.isArray(announcement.targetRole) ? announcement.targetRole : []).map((role) => (
                                                 <Badge
                                                     key={role}
                                                     variant="secondary"
@@ -353,7 +373,7 @@ export default function SuperAdminAnnouncements() {
                                         </div>
                                         {(user?.role === 'superadmin' || user?.role === 'super-admin') && (
                                             <button
-                                                onClick={() => handleDelete(announcement._id)}
+                                                onClick={() => handleDelete(String(announcement.id))}
                                                 className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors opacity-0 group-hover:opacity-100"
                                             >
                                                 <Trash2 className="w-4 h-4" />
@@ -370,9 +390,9 @@ export default function SuperAdminAnnouncements() {
                                     </p>
 
                                     <div className="space-y-4">
-                                        {announcement.attachments.length > 0 && (
+                                        {(announcement.attachments || []).length > 0 && (
                                             <div className="flex flex-wrap gap-2 py-3 border-y border-border/40">
-                                                {announcement.attachments.map((file, i) => (
+                                                {(announcement.attachments || []).map((file, i) => (
                                                     <a
                                                         key={i}
                                                         href={file.url}
@@ -391,14 +411,14 @@ export default function SuperAdminAnnouncements() {
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
-                                                    {announcement.createdBy.avatar ? (
+                                                    {announcement.createdBy?.avatar ? (
                                                         <img src={announcement.createdBy.avatar} className="w-full h-full rounded-full object-cover" />
                                                     ) : (
-                                                        <span className="text-[10px] font-black">{announcement.createdBy.name.charAt(0)}</span>
+                                                        <span className="text-[10px] font-black">{announcement.createdBy?.name?.charAt(0) || 'A'}</span>
                                                     )}
                                                 </div>
                                                 <div className="flex flex-col">
-                                                    <span className="text-[11px] font-bold">{announcement.createdBy.name}</span>
+                                                    <span className="text-[11px] font-bold">{announcement.createdBy?.name || 'Unknown'}</span>
                                                     <span className="text-[10px] text-muted-foreground">{announcement.creatorRole}</span>
                                                 </div>
                                             </div>
