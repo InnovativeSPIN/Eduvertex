@@ -1,9 +1,7 @@
 import ErrorResponse from '../../utils/errorResponse.js';
 import asyncHandler from '../../middleware/async.js';
-import Leave from '../../models/Leave.model.js';
-import LeaveBalance from '../../models/LeaveBalance.model.js';
-import User from '../../models/User.model.js';
-import Department from '../../models/Department.model.js';
+import { models } from '../../models/index.js';
+const { Leave, LeaveBalance, User, Department } = models;
 import { Op } from 'sequelize';
 
 // @desc      Get all leave applications

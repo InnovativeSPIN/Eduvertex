@@ -38,13 +38,20 @@ initModels();
 // Connect to database
 connectDB().then(() => {
   console.log('Database connected successfully');
-  seedSuperAdmin().then(() => {
-    console.log('Seeding completed');
+  // Only run the seeder when explicitly requested. Set SEED_SUPERADMIN=true
+  // (e.g. in development when you need to recreate credentials).
+  if (process.env.SEED_SUPERADMIN === 'true') {
+    seedSuperAdmin().then(() => {
+      console.log('Seeding completed');
+      startServer();
+    }).catch(err => {
+      console.error('Seeding failed:', err);
+      process.exit(1);
+    });
+  } else {
+    // skip seeding and just start
     startServer();
-  }).catch(err => {
-    console.error('Seeding failed:', err);
-    process.exit(1);
-  });
+  }
 }).catch(err => {
   console.error('Database connection failed:', err);
   process.exit(1);

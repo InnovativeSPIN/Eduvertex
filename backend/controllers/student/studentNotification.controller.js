@@ -1,7 +1,7 @@
 import asyncHandler from '../../middleware/async.js';
 import ErrorResponse from '../../utils/errorResponse.js';
-import StudentNotification from '../../models/StudentNotification.model.js';
-import Student from '../../models/Student.model.js';
+import { models } from '../../models/index.js';
+const { StudentNotification, Student } = models;
 import { Op } from 'sequelize';
 
 const getStudentId = async (userId, next) => {

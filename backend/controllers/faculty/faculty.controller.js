@@ -1,10 +1,9 @@
 import ErrorResponse from '../../utils/errorResponse.js';
 import asyncHandler from '../../middleware/async.js';
-import Faculty from '../../models/Faculty.model.js';
-import User from '../../models/User.model.js';
-import Department from '../../models/Department.model.js';
-import Subject from '../../models/Subject.model.js';
-import ClassModel from '../../models/Class.model.js';
+import { models } from '../../models/index.js';
+const { Faculty, User } = models;
+// additional models imported from models index
+const { Department, Subject, Class: ClassModel } = models;
 import { Op } from 'sequelize';
 
 // @desc      Get all faculty
@@ -32,12 +31,11 @@ export const getAllFaculty = asyncHandler(async (req, res, next) => {
     where.designation = req.query.designation;
   }
 
-  // Search by name or employee ID
+  // Search by full name or employee code or email
   if (req.query.search) {
     where[Op.or] = [
-      { firstName: { [Op.like]: `%${req.query.search}%` } },
-      { lastName: { [Op.like]: `%${req.query.search}%` } },
-      { employeeId: { [Op.like]: `%${req.query.search}%` } },
+      { Name: { [Op.like]: `%${req.query.search}%` } },
+      { faculty_college_code: { [Op.like]: `%${req.query.search}%` } },
       { email: { [Op.like]: `%${req.query.search}%` } }
     ];
   }
@@ -46,25 +44,35 @@ export const getAllFaculty = asyncHandler(async (req, res, next) => {
   const faculty = await Faculty.findAll({
     where,
     include: [
-      { model: Department, as: 'department', attributes: ['name', 'code'] },
-      { model: Subject, as: 'subjects', attributes: ['name', 'code'] },
-      { model: User, as: 'user', attributes: ['name', 'email'] }
+      { model: Department, as: 'department', attributes: ['short_name', 'full_name'] }
     ],
     offset: startIndex,
     limit,
     order: [['createdAt', 'DESC']]
   });
 
+  // transform to match frontend shape
+  const facultyData = faculty.map((f) => {
+    const obj = f.toJSON();
+    // copy full name into firstName/lastName slots
+    obj.firstName = obj.Name || '';
+    obj.lastName = '';
+    if (obj.department) {
+      obj.department.name = obj.department.short_name || obj.department.full_name;
+    }
+    return obj;
+  });
+
   res.status(200).json({
     success: true,
-    count: faculty.length,
+    count: facultyData.length,
     total,
     pagination: {
       page,
       limit,
       totalPages: Math.ceil(total / limit)
     },
-    data: faculty
+    data: facultyData
   });
 });
 
@@ -72,12 +80,10 @@ export const getAllFaculty = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/faculty/:id
 // @access    Private
 export const getFaculty = asyncHandler(async (req, res, next) => {
-  const faculty = await Faculty.findByPk(req.params.id, {
+  let faculty = await Faculty.findByPk(req.params.id, {
     include: [
-      { model: Department, as: 'department', attributes: ['name', 'code'] },
-      { model: Subject, as: 'subjects', attributes: ['name', 'code', 'credits'] },
-      { model: ClassModel, as: 'assignedClasses' },
-      { model: User, as: 'user', attributes: ['name', 'email'] }
+      { model: Department, as: 'department', attributes: ['short_name', 'full_name'] },
+      { model: ClassModel, as: 'assignedClasses' }
     ]
   });
 
@@ -85,9 +91,16 @@ export const getFaculty = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse(`Faculty not found with id of ${req.params.id}`, 404));
   }
 
+  const obj = faculty.toJSON();
+  obj.firstName = obj.Name || '';
+  obj.lastName = '';
+  if (obj.department) {
+    obj.department.name = obj.department.short_name || obj.department.full_name;
+  }
+
   res.status(200).json({
     success: true,
-    data: faculty
+    data: obj
   });
 });
 
@@ -110,20 +123,7 @@ export const createFaculty = asyncHandler(async (req, res, next) => {
     }
   }
 
-  // Create user account first
-  const userData = {
-    name: `${req.body.firstName} ${req.body.lastName}`,
-    email: req.body.email,
-    password: req.body.password || 'default123',
-    role: 'faculty',
-    phone: req.body.phone,
-    department: req.body.department
-  };
-
-  const user = await User.create(userData);
-
   // Create faculty profile
-  req.body.userId = user.id;
   req.body.departmentId = req.body.department;
   delete req.body.department;
   const faculty = await Faculty.create(req.body);
@@ -183,8 +183,6 @@ export const deleteFaculty = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse(`Faculty not found with id of ${req.params.id}`, 404));
   }
 
-  // Also delete the associated user
-  await User.destroy({ where: { id: faculty.userId } });
   await faculty.destroy();
 
   res.status(200).json({
@@ -203,15 +201,24 @@ export const getFacultyByDepartment = asyncHandler(async (req, res, next) => {
       status: 'active'
     },
     include: [
-      { model: Department, as: 'department', attributes: ['name', 'code'] },
-      { model: Subject, as: 'subjects', attributes: ['name', 'code'] }
+      { model: Department, as: 'department', attributes: ['short_name', 'full_name'] }
     ]
+  });
+
+  const facultyData = faculty.map((f) => {
+    const obj = f.toJSON();
+    obj.firstName = obj.Name || '';
+    obj.lastName = '';
+    if (obj.department) {
+      obj.department.name = obj.department.short_name || obj.department.full_name;
+    }
+    return obj;
   });
 
   res.status(200).json({
     success: true,
-    count: faculty.length,
-    data: faculty
+    count: facultyData.length,
+    data: facultyData
   });
 });
 
@@ -277,10 +284,6 @@ export const updateFacultyStatus = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse(`Faculty not found with id of ${req.params.id}`, 404));
   }
 
-  // Update user active status
-  await User.update({
-    isActive: req.body.status === 'active'
-  }, { where: { id: faculty.userId } });
 
   res.status(200).json({
     success: true,
@@ -292,21 +295,12 @@ export const updateFacultyStatus = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/faculty/me/profile
 // @access    Private/Faculty
 export const getMyProfile = asyncHandler(async (req, res, next) => {
-  const faculty = await Faculty.findOne({
-    where: { userId: req.user.id },
-    include: [
-      { model: Department, as: 'department', attributes: ['name', 'code'] },
-      { model: Subject, as: 'subjects', attributes: ['name', 'code', 'credits'] },
-      { model: ClassModel, as: 'assignedClasses' }
-    ]
-  });
-
-  if (!faculty) {
-    return next(new ErrorResponse('Faculty profile not found', 404));
+  if (!req.user) {
+    return next(new ErrorResponse('Not authorized to access this route', 401));
   }
-
+  // req.user is already the faculty instance loaded by protect middleware
   res.status(200).json({
     success: true,
-    data: faculty
+    data: req.user
   });
 });

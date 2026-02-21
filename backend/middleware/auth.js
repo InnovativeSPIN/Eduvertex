@@ -96,6 +96,12 @@ export const protect = asyncHandler(async (req, res, next) => {
       return next(new ErrorResponse('Not authorized to access this route', 401));
     }
 
+    // normalize role property so callers can treat it as string
+    if (req.user.role && typeof req.user.role === 'object') {
+      // sequelize returns an object with role_name; convert it
+      req.user.role = req.user.role.role_name || '';
+    }
+
     next();
   } catch (err) {
     return next(new ErrorResponse('Not authorized to access this route', 401));
@@ -109,8 +115,17 @@ export const authorize = (...roles) => {
       return next(new ErrorResponse('Not authorized to access this route', 401));
     }
 
-    // Normalize user role: trim, lowercase, and treat 'super-admin' as 'superadmin'
-    const userRole = req.user.role.trim().toLowerCase();
+    // Normalize user role: convert objects to strings, trim, lowercase,
+    // and treat 'super-admin' as 'superadmin'.
+    let userRoleRaw = req.user.role;
+    if (userRoleRaw && typeof userRoleRaw === 'object' && userRoleRaw.role_name) {
+      userRoleRaw = userRoleRaw.role_name;
+    }
+    if (typeof userRoleRaw !== 'string') {
+      userRoleRaw = String(userRoleRaw);
+    }
+
+    const userRole = userRoleRaw.trim().toLowerCase();
     const normalizedUserRole = userRole === 'super-admin' ? 'superadmin' : userRole;
 
     // Normalize allowed roles similarly

@@ -1,10 +1,7 @@
 import ErrorResponse from '../../utils/errorResponse.js';
 import asyncHandler from '../../middleware/async.js';
-import Student from '../../models/Student.model.js';
-import User from '../../models/User.model.js';
-import Department from '../../models/Department.model.js';
-import ClassModel from '../../models/Class.model.js';
-import Subject from '../../models/Subject.model.js';
+import { models } from '../../models/index.js';
+const { Student, Department, Class: ClassModel, Subject } = models;
 import { Op, Sequelize } from 'sequelize';
 
 // @desc      Get all students
@@ -54,16 +51,25 @@ export const getAllStudents = asyncHandler(async (req, res, next) => {
   }
 
   const total = await Student.count({ where });
-  const students = await Student.findAll({
+  let students = await Student.findAll({
     where,
     include: [
-      { model: Department, as: 'department', attributes: ['name', 'code'] },
-      { model: ClassModel, as: 'class', attributes: ['name', 'section'] },
-      { model: User, as: 'user', attributes: ['name', 'email'] }
+      // department model stores short_name/full_name instead of name/code
+      { model: Department, as: 'department', attributes: ['short_name', 'full_name'] },
+      { model: ClassModel, as: 'class', attributes: ['name', 'section'] }
     ],
     offset: startIndex,
     limit,
     order: [['createdAt', 'DESC']]
+  });
+
+  // convert to plain objects and add a "name" alias for department
+  students = students.map((s) => {
+    const obj = s.toJSON();
+    if (obj.department) {
+      obj.department.name = obj.department.short_name || obj.department.full_name;
+    }
+    return obj;
   });
 
   res.status(200).json({
@@ -85,12 +91,18 @@ export const getAllStudents = asyncHandler(async (req, res, next) => {
 export const getStudent = asyncHandler(async (req, res, next) => {
   const student = await Student.findByPk(req.params.id, {
     include: [
-      { model: Department, as: 'department', attributes: ['name', 'code'] },
+      { model: Department, as: 'department', attributes: ['short_name', 'full_name'] },
       { model: ClassModel, as: 'class', attributes: ['name', 'section', 'room'] },
-      { model: Subject, as: 'subjects', attributes: ['name', 'code', 'credits'] },
-      { model: User, as: 'user', attributes: ['name', 'email'] }
+      { model: Subject, as: 'subjects', attributes: ['name', 'code', 'credits'] }
     ]
   });
+
+  // normalize department name
+  if (student && student.department) {
+    const dept = student.department.toJSON();
+    dept.name = dept.short_name || dept.full_name;
+    student.department = dept;
+  }
 
   if (!student) {
     return next(new ErrorResponse(`Student not found with id of ${req.params.id}`, 404));
@@ -106,26 +118,14 @@ export const getStudent = asyncHandler(async (req, res, next) => {
 // @route     POST /api/v1/students
 // @access    Private/Admin
 export const createStudent = asyncHandler(async (req, res, next) => {
-  // Create user account first
-  const userData = {
-    name: `${req.body.firstName} ${req.body.lastName}`,
-    email: req.body.email,
-    password: req.body.password || 'student123',
-    role: 'student',
-    phone: req.body.phone
-  };
-
-  const user = await User.create(userData);
-
   // Generate student ID if not provided
   if (!req.body.studentId) {
     const department = await Department.findByPk(req.body.department);
-    const departmentCode = department ? department.code : 'GEN';
+    const departmentCode = department ? department.short_name || department.full_name : 'GEN';
     req.body.studentId = await Student.generateStudentId(req.body.batch, departmentCode);
   }
 
   // Create student profile
-  req.body.userId = user.id;
   req.body.departmentId = req.body.department;
   req.body.classId = req.body.class;
   delete req.body.department;
@@ -175,8 +175,6 @@ export const deleteStudent = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse(`Student not found with id of ${req.params.id}`, 404));
   }
 
-  // Also delete the associated user
-  await User.destroy({ where: { id: student.userId } });
   await student.destroy();
 
   res.status(200).json({
@@ -194,7 +192,7 @@ export const getStudentsByClass = asyncHandler(async (req, res, next) => {
       classId: req.params.classId,
       status: 'active'
     },
-    include: [{ model: Department, as: 'department', attributes: ['name', 'code'] }],
+    include: [{ model: Department, as: 'department', attributes: ['short_name', 'full_name'] }],
     order: [['rollNumber', 'ASC']]
   });
 
@@ -239,10 +237,7 @@ export const updateStudentStatus = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse(`Student not found with id of ${req.params.id}`, 404));
   }
 
-  // Update user active status
-  await User.update({
-    isActive: req.body.status === 'active'
-  }, { where: { id: student.userId } });
+  
 
   res.status(200).json({
     success: true,
@@ -299,7 +294,8 @@ export const getMyProfile = asyncHandler(async (req, res, next) => {
 export const getStudentStats = asyncHandler(async (req, res, next) => {
   const totalStudents = await Student.count();
   const activeStudents = await Student.count({ where: { status: 'active' } });
-  const graduatedStudents = await Student.count({ where: { status: 'graduated' } });
+  // completed now replaces the old graduated status
+  const completedStudents = await Student.count({ where: { status: 'completed' } });
 
   const byDepartment = await Student.findAll({
     where: { status: 'active' },
@@ -326,7 +322,7 @@ export const getStudentStats = asyncHandler(async (req, res, next) => {
     data: {
       totalStudents,
       activeStudents,
-      graduatedStudents,
+      completedStudents,
       byDepartment,
       bySemester,
       byBatch

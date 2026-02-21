@@ -1,25 +1,24 @@
 import ErrorResponse from '../../utils/errorResponse.js';
 import asyncHandler from '../../middleware/async.js';
-import Department from '../../models/Department.model.js';
-import User from '../../models/User.model.js';
-
-import Faculty from '../../models/Faculty.model.js';
-import Student from '../../models/Student.model.js';
+import { models } from '../../models/index.js';
+const { Department, User, Faculty, Student } = models;
 
 // @desc      Get all departments
 // @route     GET /api/v1/departments
 // @access    Private/Admin
 export const getDepartments = asyncHandler(async (req, res, next) => {
+    // order by short_name since the table doesn't have a "name" column
     const departments = await Department.findAll({
-        order: [['name', 'ASC']]
+        order: [['short_name', 'ASC']]
     });
 
     // Fetch counts and HOD for each department
     const departmentsWithInfo = await Promise.all(departments.map(async (dept) => {
+        // the user table has no departmentCode column; use short_name from dept
         const hod = await User.findOne({
             where: {
                 role: 'department-admin',
-                departmentCode: dept.code
+                departmentCode: dept.short_name || dept.full_name
             },
             attributes: ['name', 'email']
         });
@@ -29,6 +28,7 @@ export const getDepartments = asyncHandler(async (req, res, next) => {
 
         return {
             ...dept.toJSON(),
+            name: dept.short_name || dept.full_name,
             headOfDepartment: hod ? hod.name : 'Not Assigned',
             hodCount: hod ? 1 : 0,
             facultyCount: facultyCount,
@@ -40,8 +40,7 @@ export const getDepartments = asyncHandler(async (req, res, next) => {
         success: true,
         count: departmentsWithInfo.length,
         data: departmentsWithInfo
-    });
-});
+    });});
 
 // @desc      Get single department
 // @route     GET /api/v1/departments/:id
@@ -53,10 +52,11 @@ export const getDepartment = asyncHandler(async (req, res, next) => {
         return next(new ErrorResponse(`Department not found with id of ${req.params.id}`, 404));
     }
 
+    // lookup HOD using department short_name/full_name since there is no code field
     const hod = await User.findOne({
         where: {
             role: 'department-admin',
-            departmentCode: department.code
+            departmentCode: department.short_name || department.full_name
         },
         attributes: ['name', 'email']
     });

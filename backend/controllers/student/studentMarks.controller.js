@@ -1,9 +1,7 @@
 import asyncHandler from '../../middleware/async.js';
 import ErrorResponse from '../../utils/errorResponse.js';
-import StudentMarks from '../../models/StudentMarks.model.js';
-import StudentInternalMark from '../../models/StudentInternalMark.model.js';
-import Subject from '../../models/Subject.model.js';
-import Student from '../../models/Student.model.js';
+import { models } from '../../models/index.js';
+const { StudentMarks, StudentInternalMark, Subject, Student } = models;
 
 // ─── Helper ────────────────────────────────────────────────────────────────
 const getStudentRecord = async (userId, next) => {

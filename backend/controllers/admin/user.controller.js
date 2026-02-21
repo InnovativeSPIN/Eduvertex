@@ -1,8 +1,8 @@
 import path from 'path';
 import ErrorResponse from '../../utils/errorResponse.js';
 import asyncHandler from '../../middleware/async.js';
-import User from '../../models/User.model.js';
-import Role from '../../models/Role.model.js';
+import { models } from '../../models/index.js';
+const { User, Role } = models;
 import { Op } from 'sequelize';
 
 // @desc      Upload photo for user
@@ -190,22 +190,10 @@ export const createUser = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse('A valid admin role is required', 400));
   }
 
-  // Check if adding a department admin (HOD)
-  if (req.body.role_id) {
-    const roleRec = await Role.findByPk(req.body.role_id);
-    if (roleRec && roleRec.role_name === 'department-admin' && req.body.departmentCode) {
-      const existingHOD = await User.findOne({
-        where: {
-          role_id: req.body.role_id,
-          departmentCode: req.body.departmentCode
-        }
-      });
-
-      if (existingHOD) {
-        return next(new ErrorResponse(`Department ${req.body.departmentCode} already has a Head of Department (${existingHOD.name})`, 400));
-      }
-    }
-  }
+  // previously we ensured a department did not have more than one HOD by
+  // checking departmentCode. the users table doesn't currently store a
+  // departmentCode/dept column, so skip this validation until the schema is
+  // updated.
 
   const user = await User.create(req.body);
 
@@ -245,23 +233,7 @@ export const updateUser = asyncHandler(async (req, res, next) => {
     }
   }
 
-  // Check if updating to a department admin (HOD)
-  if (req.body.role_id) {
-    const roleRec = await Role.findByPk(req.body.role_id);
-    if (roleRec && roleRec.role_name === 'department-admin' && req.body.departmentCode) {
-      const existingHOD = await User.findOne({
-        where: {
-          role_id: req.body.role_id,
-          departmentCode: req.body.departmentCode,
-          id: { [Op.ne]: req.params.id }
-        }
-      });
-
-      if (existingHOD) {
-        return next(new ErrorResponse(`Department ${req.body.departmentCode} already has a Head of Department (${existingHOD.name})`, 400));
-      }
-    }
-  }
+  // skip HOD uniqueness check since departmentCode isn't stored in users table
 
   await User.update(req.body, { where: { id: req.params.id } });
   const user = await User.findByPk(req.params.id, {

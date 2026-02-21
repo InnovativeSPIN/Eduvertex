@@ -1,14 +1,7 @@
 import ErrorResponse from '../../utils/errorResponse.js';
 import asyncHandler from '../../middleware/async.js';
-import Timetable from '../../models/Timetable.model.js';
-import PeriodConfig from '../../models/PeriodConfig.model.js';
-import Faculty from '../../models/Faculty.model.js';
-import Student from '../../models/Student.model.js';
-import TimetableSlot from '../../models/TimetableSlot.model.js';
-import Department from '../../models/Department.model.js';
-import ClassModel from '../../models/Class.model.js';
-import Subject from '../../models/Subject.model.js';
-import User from '../../models/User.model.js';
+import { models } from '../../models/index.js';
+const { Timetable, PeriodConfig, Faculty, Student, TimetableSlot, Department, Class: ClassModel, Subject, User } = models;
 import { Op } from 'sequelize';
 
 // @desc      Get all timetables

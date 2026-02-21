@@ -1,8 +1,7 @@
 import asyncHandler from '../../middleware/async.js';
 import ErrorResponse from '../../utils/errorResponse.js';
-import DisciplinaryRecord from '../../models/DisciplinaryRecord.model.js';
-import Student from '../../models/Student.model.js';
-import Faculty from '../../models/Faculty.model.js';
+import { models } from '../../models/index.js';
+const { DisciplinaryRecord, Student, Faculty } = models;
 
 const getStudentId = async (userId, next) => {
     const student = await Student.findOne({ where: { userId } });

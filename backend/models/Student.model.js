@@ -75,6 +75,11 @@ const Student = (sequelize) => {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     },
+    // link to user account (added later via migration)
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
     admissionType: {
       type: DataTypes.ENUM('regular', 'lateral', 'management'),
       defaultValue: 'regular',
@@ -84,7 +89,8 @@ const Student = (sequelize) => {
       defaultValue: 'pending',
     },
     status: {
-      type: DataTypes.ENUM('active', 'inactive', 'graduated', 'dropped', 'suspended'),
+      // only three values now: active, completed, inactive
+      type: DataTypes.ENUM('active', 'completed', 'inactive'),
       defaultValue: 'active',
     },
     password: {
@@ -131,6 +137,11 @@ const Student = (sequelize) => {
     StudentModel.belongsTo(models.Class, {
       foreignKey: 'classId',
       as: 'class',
+    });
+    // allow joining back to the user account
+    StudentModel.belongsTo(models.User, {
+      foreignKey: 'userId',
+      as: 'user',
     });
   };
 

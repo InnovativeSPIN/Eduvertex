@@ -77,6 +77,11 @@ const User = (sequelize) => {
       foreignKey: 'createdById',
       as: 'announcements'
     });
+    // if a user is a student, link to profile
+    UserModel.hasOne(models.Student, {
+      foreignKey: 'userId',
+      as: 'student'
+    });
   };
 
   return UserModel;
