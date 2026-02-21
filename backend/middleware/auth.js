@@ -18,6 +18,12 @@ export const protect = asyncHandler(async (req, res, next) => {
   } else if (req.cookies.token) {
     // Set token from cookie
     token = req.cookies.token;
+  } else if (req.headers.authorization) {
+    // Accept Authorization header even if it doesn't use the Bearer scheme
+    token = req.headers.authorization;
+  } else if (req.headers['x-auth-token']) {
+    // Accept a custom header often used by clients
+    token = req.headers['x-auth-token'];
   }
 
   // Make sure token exists
@@ -108,6 +114,7 @@ export const protect = asyncHandler(async (req, res, next) => {
 
     next();
   } catch (err) {
+    console.error('Auth protect error:', err && err.message ? err.message : err);
     return next(new ErrorResponse('Not authorized to access this route', 401));
   }
 });

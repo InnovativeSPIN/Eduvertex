@@ -225,7 +225,8 @@ export const login = asyncHandler(async (req, res, next) => {
   // 1. Check for faculty in faculty_profiles table FIRST (priority)
   user = await Faculty.findOne({
     where: { email },
-    attributes: { include: ['password'] }
+    attributes: { include: ['password'] },
+    include: [{ model: models.Department, as: 'department', attributes: ['short_name', 'full_name'] }]
   });
 
   if (user) {
@@ -246,7 +247,8 @@ export const login = asyncHandler(async (req, res, next) => {
         { studentId: email } // 'email' variable really holds the identifier string
       ]
     },
-    attributes: { exclude: ['userId'] }
+    attributes: { exclude: ['userId'] },
+    include: [{ model: models.Department, as: 'department', attributes: ['short_name', 'full_name'] }]
   });
 
   if (user) {
@@ -378,6 +380,50 @@ export const getStudentDetails = asyncHandler(async (req, res, next) => {
       department: student.department?.short_name || student.department?.full_name,
       year: parseInt(student.year) || undefined,
       semester: student.semester
+    }
+  });
+});
+
+// @desc      Get faculty details by email or college code
+// @route     GET /api/v1/auth/faculty-details/:identifier
+// @access    Public
+export const getFacultyDetails = asyncHandler(async (req, res, next) => {
+  const identifier = req.params.identifier;
+
+  if (!identifier) {
+    return next(new ErrorResponse('Please provide a faculty identifier', 400));
+  }
+
+  // Search by email or faculty_college_code
+  const faculty = await Faculty.findOne({
+    where: {
+      [Op.or]: [
+        { email: identifier },
+        { faculty_college_code: identifier }
+      ]
+    },
+    attributes: { exclude: ['password'] },
+    include: [
+      {
+        model: models.Department,
+        as: 'department',
+        attributes: ['short_name', 'full_name']
+      }
+    ]
+  });
+
+  if (!faculty) {
+    return next(new ErrorResponse('Faculty not found', 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    data: {
+      name: faculty.Name || `${faculty.firstName || ''} ${faculty.lastName || ''}`.trim(),
+      collegeId: faculty.faculty_college_code,
+      department: faculty.department?.short_name || faculty.department?.full_name,
+      email: faculty.email,
+      designation: faculty.designation || undefined
     }
   });
 });

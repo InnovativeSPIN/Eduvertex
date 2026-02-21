@@ -42,6 +42,14 @@ const User = (sequelize) => {
       type: DataTypes.STRING(255),
       allowNull: true,
     },
+    department_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'departments',
+        key: 'id'
+      }
+    },
   }, {
     tableName: 'users',
     timestamps: true,
@@ -73,6 +81,7 @@ const User = (sequelize) => {
 
   UserModel.associate = (models) => {
     UserModel.belongsTo(models.Role, { foreignKey: 'role_id', targetKey: 'role_id', as: 'role' });
+    UserModel.belongsTo(models.Department, { foreignKey: 'department_id', as: 'department' });
     UserModel.hasMany(models.Announcement, {
       foreignKey: 'createdById',
       as: 'announcements'

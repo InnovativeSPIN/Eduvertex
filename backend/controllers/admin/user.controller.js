@@ -2,7 +2,7 @@ import path from 'path';
 import ErrorResponse from '../../utils/errorResponse.js';
 import asyncHandler from '../../middleware/async.js';
 import { models } from '../../models/index.js';
-const { User, Role } = models;
+const { User, Role, Faculty, Department } = models;
 import { Op } from 'sequelize';
 
 // @desc      Upload photo for user
@@ -83,7 +83,8 @@ export const getUsers = asyncHandler(async (req, res, next) => {
 
     let where = {};
     let include = [
-      { model: Role, as: 'role', attributes: ['role_name'] }
+      { model: Role, as: 'role', attributes: ['role_name'] },
+      { model: Department, as: 'department', attributes: ['short_name', 'full_name'] }
     ];
     // if query.role is supplied we leave include as-is; otherwise include still needed for mapping later
 
@@ -122,9 +123,13 @@ export const getUsers = asyncHandler(async (req, res, next) => {
     });
 
     // map each user to include a flattened role property
-    const data = users.map((u) => {
+    let data = users.map((u) => {
       const pu = u.toJSON();
       pu.role = pu.role?.role_name || null;
+      // normalize department to use short_name if available
+      if (pu.department && typeof pu.department === 'object') {
+        pu.department = pu.department.short_name || pu.department.full_name || null;
+      }
       return pu;
     });
 

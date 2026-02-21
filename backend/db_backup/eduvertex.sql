@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 21, 2026 at 08:20 AM
+-- Generation Time: Feb 21, 2026 at 04:29 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -248,8 +248,8 @@ INSERT INTO `faculty_profiles` (`faculty_id`, `faculty_college_code`, `coe_id`, 
 (133, 'ME14', NULL, NULL, NULL, 'SIVAGANESAN.V', 'sivaganesanv.faculty@nscet.org', NULL, '$2a$10$IlcgP8INGp8gPWVOAEloreSUEPPWVYQ.q5II/KWESGDGIlmzrzv0e', 5, 5, NULL, NULL, NULL, NULL, NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, '2026-02-19 16:38:21', '2026-02-20 06:43:32'),
 (134, 'ME16', NULL, NULL, NULL, 'NAGARAJA.R', 'nagarajar.faculty@nscet.org', NULL, '$2a$10$IlcgP8INGp8gPWVOAEloreSUEPPWVYQ.q5II/KWESGDGIlmzrzv0e', 5, 5, NULL, NULL, NULL, NULL, NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, '2026-02-19 16:38:21', '2026-02-20 06:43:32'),
 (135, 'ME18', NULL, NULL, NULL, 'NAGARAJAN.B', 'nagarajanb.faculty@nscet.org', NULL, '$2a$10$IlcgP8INGp8gPWVOAEloreSUEPPWVYQ.q5II/KWESGDGIlmzrzv0e', 5, 5, NULL, NULL, NULL, NULL, NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, '2026-02-19 16:38:21', '2026-02-20 06:43:32'),
-(137, 'CS4', NULL, NULL, NULL, 'UDHAYA KUMAR.R', 'udhaya.kumarr@nscet.org', NULL, '$2a$10$IlcgP8INGp8gPWVOAEloreSUEPPWVYQ.q5II/KWESGDGIlmzrzv0e', 5, 7, NULL, NULL, NULL, NULL, NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, '2026-02-19 16:38:21', '2026-02-20 06:43:32'),
-(149, 'CS10', NULL, NULL, NULL, 'VIGNESH.L.S', 'vigneshls.faculty@nscet.org', NULL, '$2a$10$IlcgP8INGp8gPWVOAEloreSUEPPWVYQ.q5II/KWESGDGIlmzrzv0e', 5, 6, NULL, NULL, NULL, NULL, NULL, '/uploads/faculty/vignesh_l_s.png', 'active', NULL, NULL, NULL, NULL, NULL, '2026-02-19 16:38:21', '2026-02-20 06:52:49'),
+(137, 'CS4', NULL, NULL, NULL, 'UDHAYA KUMAR.R', 'udhaya.kumarr@nscet.org', NULL, '$2a$10$IlcgP8INGp8gPWVOAEloreSUEPPWVYQ.q5II/KWESGDGIlmzrzv0e', 5, 7, 'Assistant Professor', NULL, NULL, NULL, NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, '2026-02-19 16:38:21', '2026-02-21 14:52:40'),
+(149, 'CS10', NULL, NULL, NULL, 'VIGNESH.L.S', 'vigneshls.faculty@nscet.org', NULL, '$2a$10$IlcgP8INGp8gPWVOAEloreSUEPPWVYQ.q5II/KWESGDGIlmzrzv0e', 5, 6, 'HEAD OF THE DEPARTMENT', NULL, NULL, NULL, NULL, '/uploads/faculty/vignesh_l_s.png', 'active', NULL, NULL, NULL, NULL, NULL, '2026-02-19 16:38:21', '2026-02-21 14:52:29'),
 (166, 'EC4', NULL, NULL, NULL, 'IDHAYACHANDRAN M', 'idhayachandran.m@nscet.org', NULL, '$2a$10$IlcgP8INGp8gPWVOAEloreSUEPPWVYQ.q5II/KWESGDGIlmzrzv0e', 5, 3, NULL, NULL, NULL, NULL, NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, '2026-02-19 16:38:21', '2026-02-20 06:43:32'),
 (167, 'EC10', NULL, NULL, NULL, 'DR. N MATHAVAN', 'dr2.n@nscet.org', NULL, '$2a$10$IlcgP8INGp8gPWVOAEloreSUEPPWVYQ.q5II/KWESGDGIlmzrzv0e', 5, 3, NULL, NULL, NULL, NULL, NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, '2026-02-19 16:38:21', '2026-02-20 06:43:32'),
 (168, 'EC11', NULL, NULL, NULL, 'TAMIL SELVI T', 'tamil.selvi@nscet.org', NULL, '$2a$10$IlcgP8INGp8gPWVOAEloreSUEPPWVYQ.q5II/KWESGDGIlmzrzv0e', 5, 3, NULL, NULL, NULL, NULL, NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, '2026-02-19 16:38:21', '2026-02-20 06:43:32'),
@@ -1677,18 +1677,20 @@ CREATE TABLE `users` (
   `isActive` tinyint(1) DEFAULT 1,
   `createdAt` datetime NOT NULL,
   `updatedAt` datetime NOT NULL,
-  `avatar` varchar(255) DEFAULT NULL
+  `avatar` varchar(255) DEFAULT NULL,
+  `department_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `email`, `password`, `role_id`, `phone`, `isActive`, `createdAt`, `updatedAt`, `avatar`) VALUES
-(2, 'mathalai sundaram', 'executive@nscet.org', '$2a$10$ELjprebdIeb3GTTMKk1oZujDrXZ2g8P41gNfiqVwVCKiflkwpO1eu', 3, '9876543211', 1, '0000-00-00 00:00:00', '2026-02-20 05:08:42', NULL),
-(3, 'Academic Admin', 'academic@nscet.org', '$2a$10$rtVcTSxhiJKb4Cm3GdJWTety1jN8MAbcweTMHTRw2TQOE79tziyEq', 4, '9876543212', 1, '0000-00-00 00:00:00', '0000-00-00 00:00:00', NULL),
-(109, 'GOAT', 'nscetadmin@gmail.com', '$2a$10$ELjprebdIeb3GTTMKk1oZujDrXZ2g8P41gNfiqVwVCKiflkwpO1eu', 2, '9876543210', 1, '2026-02-20 05:39:02', '2026-02-20 05:39:02', NULL),
-(112, 'Test Admin', 'testadmin@nscet.org', '$2a$10$ELjprebdIeb3GTTMKk1oZujDrXZ2g8P41gNfiqVwVCKiflkwpO1eu', 1, '9876543210', 1, '2026-02-20 06:24:50', '2026-02-20 06:24:50', NULL);
+INSERT INTO `users` (`id`, `name`, `email`, `password`, `role_id`, `phone`, `isActive`, `createdAt`, `updatedAt`, `avatar`, `department_id`) VALUES
+(2, 'mathalai sundaram', 'executive@nscet.org', '$2a$10$ELjprebdIeb3GTTMKk1oZujDrXZ2g8P41gNfiqVwVCKiflkwpO1eu', 3, '9876543211', 1, '0000-00-00 00:00:00', '2026-02-20 05:08:42', NULL, NULL),
+(3, 'Academic Admin', 'academic@nscet.org', '$2a$10$rtVcTSxhiJKb4Cm3GdJWTety1jN8MAbcweTMHTRw2TQOE79tziyEq', 4, '9876543212', 1, '0000-00-00 00:00:00', '0000-00-00 00:00:00', NULL, NULL),
+(109, 'GOAT', 'nscetadmin@gmail.com', '$2a$10$ELjprebdIeb3GTTMKk1oZujDrXZ2g8P41gNfiqVwVCKiflkwpO1eu', 2, '9876543210', 1, '2026-02-20 05:39:02', '2026-02-20 05:39:02', NULL, NULL),
+(112, 'Test Admin', 'testadmin@nscet.org', '$2a$10$ELjprebdIeb3GTTMKk1oZujDrXZ2g8P41gNfiqVwVCKiflkwpO1eu', 1, '9876543210', 1, '2026-02-20 06:24:50', '2026-02-20 06:24:50', NULL, NULL),
+(115, 'VIGNESH.L.S', 'hodad@nscet.org', '$2a$10$k8xR7y2dqHnGNxcMQTecZeQyn2T.OBcOYAHP4xpkfv0VEIS2rBZ.W', 7, NULL, 1, '2026-02-21 14:54:39', '2026-02-21 14:54:56', '/uploads/avatars/photo_115.png', 6);
 
 --
 -- Indexes for dumped tables
@@ -1955,7 +1957,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `announcements`
 --
 ALTER TABLE `announcements`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `faculty_events`
@@ -2087,7 +2089,7 @@ ALTER TABLE `student_sports`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=114;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=116;
 
 --
 -- Constraints for dumped tables
