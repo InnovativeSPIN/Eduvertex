@@ -250,10 +250,10 @@ export default function Profile() {
 
   useEffect(() => {
     if (user) {
-      const departmentFullName = typeof user.department === 'object' 
+      const departmentFullName = typeof user.department === 'object'
         ? user.department?.full_name || user.department?.short_name || ''
         : user.department || '';
-      
+
       setFacultyData(prev => ({
         ...prev,
         name: user.name || prev.name,
@@ -275,6 +275,7 @@ export default function Profile() {
   const [editingEvent, setEditingEvent] = useState<{ index: number } | null>(null);
   const [newEvent, setNewEvent] = useState({ name: "", date: "", organizer: "", url: "" });
   const [tempEvent, setTempEvent] = useState({ name: "", date: "", organizer: "", url: "" });
+  const [newEventOrganizerType, setNewEventOrganizerType] = useState<"" | "organized" | "participated">("");
 
   const [addingResearch, setAddingResearch] = useState(false);
   const [editingResearch, setEditingResearch] = useState<{ index: number } | null>(null);
@@ -295,12 +296,14 @@ export default function Profile() {
   const [newEducation, setNewEducation] = useState<EducationDetail>({
     degree: "",
     branch: "",
-    college: "",
+    college: "Nadar Saraswathi College of Engineering and Technology",
     university: "",
     year: "",
     percentage: "",
     url: "",
   });
+  const [newDegreeIsOther, setNewDegreeIsOther] = useState(false);
+  const [newBranchIsOther, setNewBranchIsOther] = useState(false);
 
   const [membershipData, setMembershipData] = useState<MembershipDetail[]>(memberships);
   const [editingMembership, setEditingMembership] = useState<number | null>(null);
@@ -320,7 +323,7 @@ export default function Profile() {
   const [addingTeachingExp, setAddingTeachingExp] = useState(false);
   const [newTeachingExp, setNewTeachingExp] = useState<ExperienceDetail>({
     designation: "",
-    institutionName: "",
+    institutionName: "Nadar Saraswathi College of Engineering and Technology",
     university: "",
     department: "",
     from: "",
@@ -329,6 +332,8 @@ export default function Profile() {
     current: false,
     url: "",
   });
+  const [newDesignationIsOther, setNewDesignationIsOther] = useState(false);
+  const [newTeachingDeptIsOther, setNewTeachingDeptIsOther] = useState(false);
 
   const [industryExpData, setIndustryExpData] = useState<IndustryDetail[]>(industryExperience);
   const [editingIndustryExp, setEditingIndustryExp] = useState<number | null>(null);
@@ -344,6 +349,7 @@ export default function Profile() {
     current: false,
     url: "",
   });
+  const [newJobTitleIsOther, setNewJobTitleIsOther] = useState(false);
 
   // PhD editing states
   const [editingPhd, setEditingPhd] = useState(false);
@@ -413,7 +419,7 @@ export default function Profile() {
     try {
       const token = localStorage.getItem('authToken');
       console.log('[PROFILE UPDATE] Token from localStorage:', token ? 'EXISTS' : 'MISSING');
-      
+
       if (!token) {
         setFieldError('Authentication token not found. Please log in again.');
         setLoading(false);
@@ -445,7 +451,7 @@ export default function Profile() {
       }
 
       await response.json();
-      
+
       setFacultyData((prev) => ({
         ...prev,
         [field]: tempValue,
@@ -453,7 +459,7 @@ export default function Profile() {
       setEditingField(null);
       setTempValue("");
       setFieldError("");
-      
+
       toast({
         title: 'Profile updated',
         description: `Your ${field} has been updated successfully.`
@@ -543,7 +549,7 @@ export default function Profile() {
     setNewEducation({
       degree: "",
       branch: "",
-      college: "",
+      college: "Nadar Saraswathi College of Engineering and Technology",
       university: "",
       year: "",
       percentage: "",
@@ -553,10 +559,12 @@ export default function Profile() {
 
   const handleCancelAddEducation = () => {
     setAddingEducation(false);
+    setNewDegreeIsOther(false);
+    setNewBranchIsOther(false);
     setNewEducation({
       degree: "",
       branch: "",
-      college: "",
+      college: "Nadar Saraswathi College of Engineering and Technology",
       university: "",
       year: "",
       percentage: "",
@@ -580,10 +588,12 @@ export default function Profile() {
     setTimeout(() => {
       setEducationData([...educationData, newEducation]);
       setAddingEducation(false);
+      setNewDegreeIsOther(false);
+      setNewBranchIsOther(false);
       setNewEducation({
         degree: "",
         branch: "",
-        college: "",
+        college: "Nadar Saraswathi College of Engineering and Technology",
         university: "",
         year: "",
         percentage: "",
@@ -689,9 +699,11 @@ export default function Profile() {
   // Teaching Experience handlers
   const handleAddTeachingExp = () => {
     setAddingTeachingExp(true);
+    setNewDesignationIsOther(false);
+    setNewTeachingDeptIsOther(false);
     setNewTeachingExp({
       designation: "",
-      institutionName: "",
+      institutionName: "Nadar Saraswathi College of Engineering and Technology",
       university: "",
       department: "",
       from: "",
@@ -704,9 +716,11 @@ export default function Profile() {
 
   const handleCancelAddTeachingExp = () => {
     setAddingTeachingExp(false);
+    setNewDesignationIsOther(false);
+    setNewTeachingDeptIsOther(false);
     setNewTeachingExp({
       designation: "",
-      institutionName: "",
+      institutionName: "Nadar Saraswathi College of Engineering and Technology",
       university: "",
       department: "",
       from: "",
@@ -731,9 +745,11 @@ export default function Profile() {
     setTimeout(() => {
       setTeachingExpData([...teachingExpData, newTeachingExp]);
       setAddingTeachingExp(false);
+      setNewDesignationIsOther(false);
+      setNewTeachingDeptIsOther(false);
       setNewTeachingExp({
         designation: "",
-        institutionName: "",
+        institutionName: "Nadar Saraswathi College of Engineering and Technology",
         university: "",
         department: "",
         from: "",
@@ -803,6 +819,7 @@ export default function Profile() {
   // Industry Experience handlers
   const handleAddIndustryExp = () => {
     setAddingIndustryExp(true);
+    setNewJobTitleIsOther(false);
     setNewIndustryExp({
       jobTitle: "",
       company: "",
@@ -817,6 +834,7 @@ export default function Profile() {
 
   const handleCancelAddIndustryExp = () => {
     setAddingIndustryExp(false);
+    setNewJobTitleIsOther(false);
     setNewIndustryExp({
       jobTitle: "",
       company: "",
@@ -843,6 +861,7 @@ export default function Profile() {
     setTimeout(() => {
       setIndustryExpData([...industryExpData, newIndustryExp]);
       setAddingIndustryExp(false);
+      setNewJobTitleIsOther(false);
       setNewIndustryExp({
         jobTitle: "",
         company: "",
@@ -914,6 +933,7 @@ export default function Profile() {
   // Events Handlers
   const handleAddEvent = () => {
     setAddingEvent(true);
+    setNewEventOrganizerType("");
     setNewEvent({ name: "", date: "", organizer: "", url: "" });
   };
 
@@ -932,6 +952,7 @@ export default function Profile() {
       [selectedEventCategory]: [...prev[selectedEventCategory], newEvent]
     }));
     setAddingEvent(false);
+    setNewEventOrganizerType("");
     toast({ title: "Event added", description: "New event has been added successfully." });
   };
 
@@ -1497,58 +1518,116 @@ export default function Profile() {
                     <div className="grid grid-cols-2 gap-3">
                       <div className="flex flex-col gap-1">
                         <label className="text-xs font-medium">Degree *</label>
-                        <Select
-                          value={newEducation.degree}
-                          onValueChange={(value) => handleNewEducationChange('degree', value)}
-                          disabled={loading}
-                        >
-                          <SelectTrigger className="h-10 text-sm">
-                            <SelectValue placeholder="Select Degree" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Ph.D.">Ph.D.</SelectItem>
-                            <SelectItem value="M.E.">M.E.</SelectItem>
-                            <SelectItem value="B.E.">B.E.</SelectItem>
-                            <SelectItem value="B.Tech">B.Tech</SelectItem>
-                            <SelectItem value="M.Tech">M.Tech</SelectItem>
-                            <SelectItem value="M.S.">M.S.</SelectItem>
-                            <SelectItem value="Diploma">Diploma</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        {newDegreeIsOther ? (
+                          <div className="relative flex items-center">
+                            <input
+                              type="text"
+                              placeholder="Type your degree"
+                              value={newEducation.degree}
+                              onChange={(e) => handleNewEducationChange('degree', e.target.value)}
+                              className="input input-bordered text-sm h-10 pr-8 w-full"
+                              disabled={loading}
+                              autoFocus
+                            />
+                            <button
+                              type="button"
+                              onClick={() => { setNewDegreeIsOther(false); handleNewEducationChange('degree', ''); }}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                              title="Back to dropdown"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <Select
+                            value={newEducation.degree}
+                            onValueChange={(value) => {
+                              if (value === "Other") {
+                                setNewDegreeIsOther(true);
+                                handleNewEducationChange('degree', '');
+                              } else {
+                                handleNewEducationChange('degree', value);
+                              }
+                            }}
+                            disabled={loading}
+                          >
+                            <SelectTrigger className="h-10 text-sm">
+                              <SelectValue placeholder="Select Degree" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Ph.D.">Ph.D.</SelectItem>
+                              <SelectItem value="M.E.">M.E.</SelectItem>
+                              <SelectItem value="B.E.">B.E.</SelectItem>
+                              <SelectItem value="B.Tech">B.Tech</SelectItem>
+                              <SelectItem value="M.Tech">M.Tech</SelectItem>
+                              <SelectItem value="M.S.">M.S.</SelectItem>
+                              <SelectItem value="Diploma">Diploma</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
                       </div>
                       <div className="flex flex-col gap-1">
                         <label className="text-xs font-medium">Branch *</label>
-                        <Select
-                          value={newEducation.branch}
-                          onValueChange={(value) => handleNewEducationChange('branch', value)}
-                          disabled={loading}
-                        >
-                          <SelectTrigger className="h-10 text-sm">
-                            <SelectValue placeholder="Select Branch" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Computer Science Engineering">Computer Science Engineering</SelectItem>
-                            <SelectItem value="Electronics & Communication Engineering">Electronics & Communication Engineering</SelectItem>
-                            <SelectItem value="Electrical & Electronics Engineering">Electrical & Electronics Engineering</SelectItem>
-                            <SelectItem value="Mechanical Engineering">Mechanical Engineering</SelectItem>
-                            <SelectItem value="Civil Engineering">Civil Engineering</SelectItem>
-                            <SelectItem value="Information Technology">Information Technology</SelectItem>
-                            <SelectItem value="Artificial Intelligence & Data Science">Artificial Intelligence & Data Science</SelectItem>
-                            <SelectItem value="Artificial Intelligence & Machine Learning">Artificial Intelligence & Machine Learning</SelectItem>
-                            <SelectItem value="Cyber Security">Cyber Security</SelectItem>
-                            <SelectItem value="Internet of Things">Internet of Things</SelectItem>
-                            <SelectItem value="Data Science">Data Science</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        {newBranchIsOther ? (
+                          <div className="relative flex items-center">
+                            <input
+                              type="text"
+                              placeholder="Type your branch"
+                              value={newEducation.branch}
+                              onChange={(e) => handleNewEducationChange('branch', e.target.value)}
+                              className="input input-bordered text-sm h-10 pr-8 w-full"
+                              disabled={loading}
+                              autoFocus
+                            />
+                            <button
+                              type="button"
+                              onClick={() => { setNewBranchIsOther(false); handleNewEducationChange('branch', ''); }}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                              title="Back to dropdown"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <Select
+                            value={newEducation.branch}
+                            onValueChange={(value) => {
+                              if (value === "Other") {
+                                setNewBranchIsOther(true);
+                                handleNewEducationChange('branch', '');
+                              } else {
+                                handleNewEducationChange('branch', value);
+                              }
+                            }}
+                            disabled={loading}
+                          >
+                            <SelectTrigger className="h-10 text-sm">
+                              <SelectValue placeholder="Select Branch" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Computer Science Engineering">Computer Science Engineering</SelectItem>
+                              <SelectItem value="Electronics & Communication Engineering">Electronics & Communication Engineering</SelectItem>
+                              <SelectItem value="Electrical & Electronics Engineering">Electrical & Electronics Engineering</SelectItem>
+                              <SelectItem value="Mechanical Engineering">Mechanical Engineering</SelectItem>
+                              <SelectItem value="Civil Engineering">Civil Engineering</SelectItem>
+                              <SelectItem value="Information Technology">Information Technology</SelectItem>
+                              <SelectItem value="Artificial Intelligence & Data Science">Artificial Intelligence & Data Science</SelectItem>
+                              <SelectItem value="Artificial Intelligence & Machine Learning">Artificial Intelligence & Machine Learning</SelectItem>
+                              <SelectItem value="Cyber Security">Cyber Security</SelectItem>
+                              <SelectItem value="Internet of Things">Internet of Things</SelectItem>
+                              <SelectItem value="Data Science">Data Science</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
                       </div>
                     </div>
                     <div className="flex flex-col gap-1">
                       <label className="text-xs font-medium">College</label>
                       <input
                         type="text"
-                        placeholder="e.g., Anna University"
+                        placeholder="Nadar saraswathi college of engineering and technology"
                         value={newEducation.college}
                         onChange={(e) => handleNewEducationChange('college', e.target.value)}
                         className="input input-bordered text-sm"
@@ -1987,17 +2066,55 @@ export default function Profile() {
                       Add New Teaching Experience
                     </h4>
                     <div className="space-y-3">
+                      {/* Designation dropdown */}
                       <div className="flex flex-col gap-1">
                         <label className="text-xs font-medium">Designation *</label>
-                        <input
-                          type="text"
-                          placeholder="e.g., Assistant Professor"
-                          value={newTeachingExp.designation}
-                          onChange={(e) => handleNewTeachingExpChange('designation', e.target.value)}
-                          className="input input-bordered text-sm"
-                          disabled={loading}
-                        />
+                        {newDesignationIsOther ? (
+                          <div className="relative flex items-center">
+                            <input
+                              type="text"
+                              placeholder="Type your designation"
+                              value={newTeachingExp.designation}
+                              onChange={(e) => handleNewTeachingExpChange('designation', e.target.value)}
+                              className="input input-bordered text-sm h-10 pr-8 w-full"
+                              disabled={loading}
+                              autoFocus
+                            />
+                            <button
+                              type="button"
+                              onClick={() => { setNewDesignationIsOther(false); handleNewTeachingExpChange('designation', ''); }}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                              title="Back to dropdown"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <Select
+                            value={newTeachingExp.designation}
+                            onValueChange={(value) => {
+                              if (value === "Other") {
+                                setNewDesignationIsOther(true);
+                                handleNewTeachingExpChange('designation', '');
+                              } else {
+                                handleNewTeachingExpChange('designation', value);
+                              }
+                            }}
+                            disabled={loading}
+                          >
+                            <SelectTrigger className="h-10 text-sm">
+                              <SelectValue placeholder="Select Designation" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Professor">Professor</SelectItem>
+                              <SelectItem value="Assistant Professor">Assistant Professor</SelectItem>
+                              <SelectItem value="Non-Teaching Faculty">Non-Teaching Faculty</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
                       </div>
+                      {/* Institution Name */}
                       <div className="flex flex-col gap-1">
                         <label className="text-xs font-medium">Institution Name *</label>
                         <input
@@ -2009,6 +2126,7 @@ export default function Profile() {
                           disabled={loading}
                         />
                       </div>
+                      {/* University */}
                       <div className="flex flex-col gap-1">
                         <label className="text-xs font-medium">University *</label>
                         <input
@@ -2020,23 +2138,68 @@ export default function Profile() {
                           disabled={loading}
                         />
                       </div>
+                      {/* Department dropdown */}
                       <div className="flex flex-col gap-1">
                         <label className="text-xs font-medium">Department *</label>
-                        <input
-                          type="text"
-                          placeholder="e.g., Computer Science"
-                          value={newTeachingExp.department}
-                          onChange={(e) => handleNewTeachingExpChange('department', e.target.value)}
-                          className="input input-bordered text-sm"
-                          disabled={loading}
-                        />
+                        {newTeachingDeptIsOther ? (
+                          <div className="relative flex items-center">
+                            <input
+                              type="text"
+                              placeholder="Type your department"
+                              value={newTeachingExp.department}
+                              onChange={(e) => handleNewTeachingExpChange('department', e.target.value)}
+                              className="input input-bordered text-sm h-10 pr-8 w-full"
+                              disabled={loading}
+                              autoFocus
+                            />
+                            <button
+                              type="button"
+                              onClick={() => { setNewTeachingDeptIsOther(false); handleNewTeachingExpChange('department', ''); }}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                              title="Back to dropdown"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <Select
+                            value={newTeachingExp.department}
+                            onValueChange={(value) => {
+                              if (value === "Other") {
+                                setNewTeachingDeptIsOther(true);
+                                handleNewTeachingExpChange('department', '');
+                              } else {
+                                handleNewTeachingExpChange('department', value);
+                              }
+                            }}
+                            disabled={loading}
+                          >
+                            <SelectTrigger className="h-10 text-sm">
+                              <SelectValue placeholder="Select Department" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Computer Science Engineering">Computer Science Engineering</SelectItem>
+                              <SelectItem value="Electronics & Communication Engineering">Electronics & Communication Engineering</SelectItem>
+                              <SelectItem value="Electrical & Electronics Engineering">Electrical & Electronics Engineering</SelectItem>
+                              <SelectItem value="Mechanical Engineering">Mechanical Engineering</SelectItem>
+                              <SelectItem value="Civil Engineering">Civil Engineering</SelectItem>
+                              <SelectItem value="Information Technology">Information Technology</SelectItem>
+                              <SelectItem value="Artificial Intelligence & Data Science">Artificial Intelligence & Data Science</SelectItem>
+                              <SelectItem value="Artificial Intelligence & Machine Learning">Artificial Intelligence & Machine Learning</SelectItem>
+                              <SelectItem value="Cyber Security">Cyber Security</SelectItem>
+                              <SelectItem value="Internet of Things">Internet of Things</SelectItem>
+                              <SelectItem value="Data Science">Data Science</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
                       </div>
+                      {/* From / To date pickers */}
                       <div className="grid grid-cols-2 gap-3">
                         <div className="flex flex-col gap-1">
                           <label className="text-xs font-medium">From Date</label>
                           <input
-                            type="text"
-                            placeholder="DD.MM.YYYY"
+                            type="date"
                             value={newTeachingExp.from}
                             onChange={(e) => handleNewTeachingExpChange('from', e.target.value)}
                             className="input input-bordered text-sm"
@@ -2046,15 +2209,15 @@ export default function Profile() {
                         <div className="flex flex-col gap-1">
                           <label className="text-xs font-medium">To Date</label>
                           <input
-                            type="text"
-                            placeholder="DD.MM.YYYY or Present"
+                            type="date"
                             value={newTeachingExp.to}
                             onChange={(e) => handleNewTeachingExpChange('to', e.target.value)}
                             className="input input-bordered text-sm"
-                            disabled={loading}
+                            disabled={loading || newTeachingExp.current}
                           />
                         </div>
                       </div>
+                      {/* Period */}
                       <div className="flex flex-col gap-1">
                         <label className="text-xs font-medium">Period</label>
                         <input
@@ -2300,17 +2463,58 @@ export default function Profile() {
                       Add New Industry Experience
                     </h4>
                     <div className="space-y-3">
+                      {/* Job Title dropdown */}
                       <div className="flex flex-col gap-1">
                         <label className="text-xs font-medium">Job Title *</label>
-                        <input
-                          type="text"
-                          placeholder="e.g., Software Engineer"
-                          value={newIndustryExp.jobTitle}
-                          onChange={(e) => handleNewIndustryExpChange('jobTitle', e.target.value)}
-                          className="input input-bordered text-sm"
-                          disabled={loading}
-                        />
+                        {newJobTitleIsOther ? (
+                          <div className="relative flex items-center">
+                            <input
+                              type="text"
+                              placeholder="Type your job title"
+                              value={newIndustryExp.jobTitle}
+                              onChange={(e) => handleNewIndustryExpChange('jobTitle', e.target.value)}
+                              className="input input-bordered text-sm h-10 pr-8 w-full"
+                              disabled={loading}
+                              autoFocus
+                            />
+                            <button
+                              type="button"
+                              onClick={() => { setNewJobTitleIsOther(false); handleNewIndustryExpChange('jobTitle', ''); }}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                              title="Back to dropdown"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <Select
+                            value={newIndustryExp.jobTitle}
+                            onValueChange={(value) => {
+                              if (value === "Other") {
+                                setNewJobTitleIsOther(true);
+                                handleNewIndustryExpChange('jobTitle', '');
+                              } else {
+                                handleNewIndustryExpChange('jobTitle', value);
+                              }
+                            }}
+                            disabled={loading}
+                          >
+                            <SelectTrigger className="h-10 text-sm">
+                              <SelectValue placeholder="Select Job Title" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Software Engineer">Software Engineer</SelectItem>
+                              <SelectItem value="Data Analyst">Data Analyst</SelectItem>
+                              <SelectItem value="Web Developer">Web Developer</SelectItem>
+                              <SelectItem value="System Administrator">System Administrator</SelectItem>
+                              <SelectItem value="Network Engineer">Network Engineer</SelectItem>
+                              <SelectItem value="Project Manager">Project Manager</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
                       </div>
+                      {/* Company */}
                       <div className="flex flex-col gap-1">
                         <label className="text-xs font-medium">Company *</label>
                         <input
@@ -2322,6 +2526,7 @@ export default function Profile() {
                           disabled={loading}
                         />
                       </div>
+                      {/* Location */}
                       <div className="flex flex-col gap-1">
                         <label className="text-xs font-medium">Location</label>
                         <input
@@ -2333,12 +2538,12 @@ export default function Profile() {
                           disabled={loading}
                         />
                       </div>
+                      {/* From / To date pickers */}
                       <div className="grid grid-cols-2 gap-3">
                         <div className="flex flex-col gap-1">
                           <label className="text-xs font-medium">From Date</label>
                           <input
-                            type="text"
-                            placeholder="DD.MM.YYYY"
+                            type="date"
                             value={newIndustryExp.from}
                             onChange={(e) => handleNewIndustryExpChange('from', e.target.value)}
                             className="input input-bordered text-sm"
@@ -2348,15 +2553,15 @@ export default function Profile() {
                         <div className="flex flex-col gap-1">
                           <label className="text-xs font-medium">To Date</label>
                           <input
-                            type="text"
-                            placeholder="DD.MM.YYYY or Present"
+                            type="date"
                             value={newIndustryExp.to}
                             onChange={(e) => handleNewIndustryExpChange('to', e.target.value)}
                             className="input input-bordered text-sm"
-                            disabled={loading}
+                            disabled={loading || newIndustryExp.current}
                           />
                         </div>
                       </div>
+                      {/* Period */}
                       <div className="flex flex-col gap-1">
                         <label className="text-xs font-medium">Period</label>
                         <input
@@ -2570,7 +2775,7 @@ export default function Profile() {
                 <BookOpen className="w-5 h-5 text-secondary" />
                 Subjects Handled & Results
               </h3>
-              
+
               {/* Filter Buttons */}
               <div className="mb-6 flex items-center gap-3 flex-wrap">
                 <Button
@@ -2611,44 +2816,43 @@ export default function Profile() {
                 {subjectsHandled
                   .filter((subject) => selectedSubjectFilter === null || subject.category === selectedSubjectFilter)
                   .map((subject, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="p-4 bg-muted/30 rounded-lg border border-border hover:border-primary/30 transition-colors"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <Badge variant="secondary">{subject.program}</Badge>
-                          <Badge 
-                            className={`text-white ${
-                              subject.category === "T" ? "bg-blue-600" :
-                              subject.category === "P" ? "bg-green-600" :
-                              subject.category === "TCL" ? "bg-orange-500" :
-                              "bg-gray-600"
-                            }`}
-                          >
-                            {subject.category}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            Semester {subject.semester}
-                          </span>
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="p-4 bg-muted/30 rounded-lg border border-border hover:border-primary/30 transition-colors"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <Badge variant="secondary">{subject.program}</Badge>
+                            <Badge
+                              className={`text-white ${subject.category === "T" ? "bg-blue-600" :
+                                subject.category === "P" ? "bg-green-600" :
+                                  subject.category === "TCL" ? "bg-orange-500" :
+                                    "bg-gray-600"
+                                }`}
+                            >
+                              {subject.category}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              Semester {subject.semester}
+                            </span>
+                          </div>
+                          <p className="font-semibold text-foreground">{subject.subject}</p>
                         </div>
-                        <p className="font-semibold text-foreground">{subject.subject}</p>
+                        <div className="text-right">
+                          <p className="text-xs text-muted-foreground">Result</p>
+                          <p className={`text - lg font - bold ${parseInt(subject.result) >= 90 ? "text-success" :
+                            parseInt(subject.result) >= 80 ? "text-secondary" : "text-warning"
+                            } `}>
+                            {subject.result}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs text-muted-foreground">Result</p>
-                        <p className={`text - lg font - bold ${parseInt(subject.result) >= 90 ? "text-success" :
-                          parseInt(subject.result) >= 80 ? "text-secondary" : "text-warning"
-                          } `}>
-                          {subject.result}
-                        </p>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  ))}
               </div>
 
               <div className="mt-6 p-4 bg-secondary/10 rounded-lg border border-secondary/30">
@@ -2724,15 +2928,53 @@ export default function Profile() {
                         className="input input-bordered w-full bg-white text-foreground"
                       />
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-1 md:col-span-2">
                       <label className="text-xs font-semibold text-muted-foreground ml-1">Organizer</label>
-                      <input
-                        type="text"
-                        placeholder="e.g., IIT Bombay"
-                        value={newEvent.organizer}
-                        onChange={(e) => setNewEvent({ ...newEvent, organizer: e.target.value })}
-                        className="input input-bordered w-full bg-white text-foreground"
-                      />
+                      {newEventOrganizerType === "participated" ? (
+                        <div className="relative flex items-center">
+                          <input
+                            type="text"
+                            placeholder="Enter organizer name / organization / institute"
+                            value={newEvent.organizer}
+                            onChange={(e) => setNewEvent({ ...newEvent, organizer: e.target.value })}
+                            className="input input-bordered w-full bg-white text-foreground pr-8"
+                            autoFocus
+                          />
+                          <button
+                            type="button"
+                            onClick={() => { setNewEventOrganizerType(""); setNewEvent({ ...newEvent, organizer: "" }); }}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                            title="Back to dropdown"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <Select
+                          value={newEventOrganizerType}
+                          onValueChange={(value: "organized" | "participated") => {
+                            setNewEventOrganizerType(value);
+                            if (value === "organized") {
+                              setNewEvent({ ...newEvent, organizer: facultyData.name });
+                            } else {
+                              setNewEvent({ ...newEvent, organizer: "" });
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="h-10 text-sm bg-white">
+                            <SelectValue placeholder="Select organizer type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="organized">Organized</SelectItem>
+                            <SelectItem value="participated">Participated</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                      {newEventOrganizerType === "organized" && (
+                        <p className="text-xs text-muted-foreground mt-1 ml-1 flex items-center gap-1">
+                          <span className="font-medium text-foreground">{facultyData.name}</span>
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-muted-foreground ml-1">URL (Optional)</label>
@@ -2753,7 +2995,7 @@ export default function Profile() {
                     </div>
                   </div>
                   <div className="flex gap-3 justify-end mt-6">
-                    <Button size="sm" variant="outline" onClick={() => setAddingEvent(false)}>Cancel</Button>
+                    <Button size="sm" variant="outline" onClick={() => { setAddingEvent(false); setNewEventOrganizerType(""); setNewEvent({ name: "", date: "", organizer: "", url: "" }); }}>Cancel</Button>
                     <Button size="sm" onClick={handleSaveNewEvent} className="bg-green-600 hover:bg-green-700">Save Event</Button>
                   </div>
                 </motion.div>
