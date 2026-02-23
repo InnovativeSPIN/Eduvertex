@@ -44,12 +44,43 @@ const Subject = (sequelize) => {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    is_laboratory: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    class_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: 'Specific class if subject is class-specific, NULL for department-wide',
+    },
+    min_hours_per_week: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 3,
+      validate: {
+        min: 0,
+        max: 20
+      }
+    },
+    max_students: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: 'Maximum students allowed, NULL for no limit',
+      validate: {
+        min: 1
+      }
+    },
+    created_by: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      comment: 'Department admin who created the subject',
+    },
     description: {
       type: DataTypes.TEXT,
       allowNull: true,
     },
     status: {
-      type: DataTypes.ENUM('active', 'inactive'),
+      type: DataTypes.ENUM('active', 'inactive', 'archived'),
       defaultValue: 'active',
     },
   }, {
@@ -66,12 +97,30 @@ const Subject = (sequelize) => {
       as: 'department',
     });
 
+    // Subject belongs to Class (optional)
+    SubjectModel.belongsTo(models.Class, {
+      foreignKey: 'class_id',
+      as: 'class',
+    });
+
+    // Subject belongs to User who created it
+    SubjectModel.belongsTo(models.User, {
+      foreignKey: 'created_by',
+      as: 'creator',
+    });
+
     // Subject can be assigned to many faculty through faculty_subject_assignments
     SubjectModel.belongsToMany(models.Faculty, {
-      through: 'faculty_subject_assignments',
+      through: models.FacultySubjectAssignment,
       foreignKey: 'subject_id',
       otherKey: 'faculty_id',
       as: 'assignedFaculty',
+    });
+
+    // Subject has many class mappings
+    SubjectModel.hasMany(models.SubjectClassMapping, {
+      foreignKey: 'subject_id',
+      as: 'classMappings',
     });
   };
 

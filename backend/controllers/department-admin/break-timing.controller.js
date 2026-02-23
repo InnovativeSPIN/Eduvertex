@@ -1,4 +1,4 @@
-import models from '../../models/index.js';
+import { models } from '../../models/index.js';
 import asyncHandler from '../../middleware/async.js';
 import ErrorResponse from '../../utils/errorResponse.js';
 

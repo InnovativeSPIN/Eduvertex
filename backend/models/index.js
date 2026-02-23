@@ -23,6 +23,7 @@ import YearBreakTiming from './YearBreakTiming.model.js';
 import TimetableSlotAssignment from './TimetableSlotAssignment.model.js';
 import TimetableNotification from './TimetableNotification.model.js';
 import FacultySubjectAssignment from './FacultySubjectAssignment.model.js';
+import SubjectClassMapping from './SubjectClassMapping.model.js';
 
 // Initialize models
 const models = {
@@ -47,6 +48,7 @@ const models = {
   TimetableSlotAssignment: TimetableSlotAssignment(sequelize),
   TimetableNotification: TimetableNotification(sequelize),
   FacultySubjectAssignment: FacultySubjectAssignment(sequelize),
+  SubjectClassMapping: SubjectClassMapping(sequelize),
 };
 
 // Define associations
