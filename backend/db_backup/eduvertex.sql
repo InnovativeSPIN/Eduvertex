@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 23, 2026 at 09:41 PM
+-- Generation Time: Feb 23, 2026 at 10:55 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -321,7 +321,6 @@ INSERT INTO `faculty_profiles` (`faculty_id`, `faculty_college_code`, `coe_id`, 
 (404, 'NS20T32', NULL, NULL, NULL, 'VINOTH KUMAR J', 'ns20t32@nscet.org', NULL, '$2a$10$IlcgP8INGp8gPWVOAEloreSUEPPWVYQ.q5II/KWESGDGIlmzrzv0e', 5, 6, NULL, NULL, 'No', NULL, NULL, NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, '2026-02-19 16:39:11', '2026-02-20 06:43:32', NULL, 0, 0),
 (405, 'NS70T02', NULL, NULL, NULL, 'KANIMOLI J', 'ns70t02@nscet.org', NULL, '$2a$10$IlcgP8INGp8gPWVOAEloreSUEPPWVYQ.q5II/KWESGDGIlmzrzv0e', 5, 6, NULL, NULL, 'No', NULL, NULL, NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, '2026-02-19 16:39:11', '2026-02-23 20:26:34', NULL, 0, 0),
 (406, 'NS80T01', NULL, NULL, NULL, 'NAGAJOTHI P', 'ns80t01@nscet.org', NULL, '$2a$10$IlcgP8INGp8gPWVOAEloreSUEPPWVYQ.q5II/KWESGDGIlmzrzv0e', 5, 6, NULL, NULL, 'No', NULL, NULL, NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, '2026-02-19 16:39:11', '2026-02-23 20:37:53', NULL, 1, 0),
-(407, 'CS10', NULL, NULL, NULL, 'VIGNESH.L.S', 'lsvignesh@nscet.org', NULL, '$2a$10$IlcgP8INGp8gPWVOAEloreSUEPPWVYQ.q5II/KWESGDGIlmzrzv0e', 5, 6, NULL, NULL, 'No', NULL, NULL, NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, '2026-02-19 16:39:11', '2026-02-20 06:43:32', NULL, 0, 0),
 (408, 'NS2207T15', NULL, NULL, NULL, 'PRATHAP. C', 'ns2207t15@nscet.org', NULL, '$2a$10$IlcgP8INGp8gPWVOAEloreSUEPPWVYQ.q5II/KWESGDGIlmzrzv0e', 5, 6, NULL, NULL, 'No', NULL, NULL, NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, '2026-02-19 16:39:11', '2026-02-23 20:38:00', NULL, 0, 1),
 (409, 'NS30T03', NULL, NULL, NULL, 'GANESH.K', 'ns30t03@nscet.org', NULL, '$2a$10$IlcgP8INGp8gPWVOAEloreSUEPPWVYQ.q5II/KWESGDGIlmzrzv0e', 5, 4, NULL, NULL, 'No', NULL, NULL, NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, '2026-02-19 16:39:11', '2026-02-20 06:43:32', NULL, 0, 0),
 (410, 'NS40T16', NULL, NULL, NULL, 'Dr.R.ATHILINGAM', 'ns40t16@nscet.org', NULL, '$2a$10$IlcgP8INGp8gPWVOAEloreSUEPPWVYQ.q5II/KWESGDGIlmzrzv0e', 5, 4, NULL, NULL, 'No', NULL, NULL, NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, '2026-02-19 16:39:11', '2026-02-20 06:43:32', NULL, 0, 0),
@@ -379,6 +378,25 @@ CREATE TABLE `faculty_subjects_handled` (
   `academic_year` varchar(20) DEFAULT NULL,
   `pass_percentage` decimal(5,2) DEFAULT NULL,
   `document_url` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `faculty_subject_assignments`
+--
+
+CREATE TABLE `faculty_subject_assignments` (
+  `id` int(11) NOT NULL,
+  `faculty_id` int(11) NOT NULL,
+  `subject_id` int(11) NOT NULL,
+  `academic_year` varchar(9) NOT NULL,
+  `semester` tinyint(2) NOT NULL,
+  `class_id` int(11) DEFAULT NULL,
+  `allocation_date` date NOT NULL DEFAULT curdate(),
+  `status` enum('active','inactive','suspended') NOT NULL DEFAULT 'active',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -1610,6 +1628,64 @@ CREATE TABLE `student_sports` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `subjects`
+--
+
+CREATE TABLE `subjects` (
+  `id` int(11) NOT NULL,
+  `subject_code` varchar(20) NOT NULL,
+  `subject_name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `department_id` int(11) NOT NULL,
+  `semester` tinyint(2) NOT NULL COMMENT '1-8 semesters',
+  `class_id` int(11) DEFAULT NULL,
+  `credits` decimal(4,2) NOT NULL DEFAULT 4.00,
+  `type` enum('Theory','Practical','Theory+Practical','Project','Seminar','Internship') NOT NULL DEFAULT 'Theory',
+  `is_elective` tinyint(1) NOT NULL DEFAULT 0,
+  `is_laboratory` tinyint(1) NOT NULL DEFAULT 0,
+  `min_hours_per_week` int(11) DEFAULT 3,
+  `max_students` int(11) DEFAULT NULL,
+  `status` enum('active','inactive','archived') NOT NULL DEFAULT 'active',
+  `created_by` int(11) DEFAULT 1 COMMENT 'Department admin who created',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `subjects`
+--
+
+INSERT INTO `subjects` (`id`, `subject_code`, `subject_name`, `description`, `department_id`, `semester`, `class_id`, `credits`, `type`, `is_elective`, `is_laboratory`, `min_hours_per_week`, `max_students`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 'CS101', 'Programming in C', 'Fundamentals of C programming', 1, 1, NULL, 3.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-24 02:39:16', '2026-02-24 02:39:16'),
+(2, 'CS102', 'Programming Lab - C', 'C Programming practical lab sessions', 1, 1, NULL, 1.50, 'Practical', 0, 0, 3, NULL, 'active', 1, '2026-02-24 02:39:16', '2026-02-24 02:39:16'),
+(3, 'CS103', 'Data Structures', 'Arrays, Linked Lists, Stacks, Queues', 1, 2, NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-24 02:39:16', '2026-02-24 02:39:16'),
+(4, 'CS104', 'Database Management', 'Relational databases and SQL', 1, 3, NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-24 02:39:16', '2026-02-24 02:39:16'),
+(5, 'EC101', 'Basic Electronics', 'Diodes, Transistors, and Applications', 2, 1, NULL, 3.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-24 02:39:16', '2026-02-24 02:39:16'),
+(6, 'EC102', 'Electronics Lab', 'Practical electronics experiments', 2, 1, NULL, 1.50, 'Practical', 0, 0, 3, NULL, 'active', 1, '2026-02-24 02:39:16', '2026-02-24 02:39:16'),
+(7, 'ME101', 'Engineering Mechanics', 'Statics and Dynamics', 3, 1, NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-24 02:39:16', '2026-02-24 02:39:16'),
+(8, 'ME102', 'Thermodynamics', 'Laws of thermodynamics and applications', 3, 2, NULL, 3.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-24 02:39:16', '2026-02-24 02:39:16');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `subject_class_mappings`
+--
+
+CREATE TABLE `subject_class_mappings` (
+  `id` int(11) NOT NULL,
+  `subject_id` int(11) NOT NULL,
+  `class_id` int(11) NOT NULL,
+  `department_id` int(11) NOT NULL,
+  `semester` tinyint(2) NOT NULL,
+  `academic_year` varchar(9) NOT NULL,
+  `is_core` tinyint(1) NOT NULL DEFAULT 1,
+  `status` enum('active','inactive') NOT NULL DEFAULT 'active',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `timetables`
 --
 
@@ -1740,7 +1816,7 @@ INSERT INTO `users` (`id`, `name`, `email`, `password`, `role_id`, `phone`, `isA
 (3, 'Academic Admin', 'academic@nscet.org', '$2a$10$rtVcTSxhiJKb4Cm3GdJWTety1jN8MAbcweTMHTRw2TQOE79tziyEq', 4, '9876543212', 1, '0000-00-00 00:00:00', '0000-00-00 00:00:00', NULL, NULL),
 (109, 'GOAT', 'nscetadmin@gmail.com', '$2a$10$ELjprebdIeb3GTTMKk1oZujDrXZ2g8P41gNfiqVwVCKiflkwpO1eu', 2, '9876543210', 1, '2026-02-20 05:39:02', '2026-02-20 05:39:02', NULL, NULL),
 (112, 'Test Admin', 'testadmin@nscet.org', '$2a$10$ELjprebdIeb3GTTMKk1oZujDrXZ2g8P41gNfiqVwVCKiflkwpO1eu', 1, '9876543210', 1, '2026-02-20 06:24:50', '2026-02-20 06:24:50', NULL, NULL),
-(115, 'VIGNESH.L.S', 'hodad@nscet.org', '$2a$10$ELjprebdIeb3GTTMKk1oZujDrXZ2g8P41gNfiqVwVCKiflkwpO1eu', 7, '8072435849', 1, '2026-02-21 14:54:39', '2026-02-23 18:05:05', '/uploads/avatars/photo_115.png', 6);
+(115, 'VIGNESH.L.S', 'hodad@nscet.org', '$2a$10$ELjprebdIeb3GTTMKk1oZujDrXZ2g8P41gNfiqVwVCKiflkwpO1eu', 7, '8072435849', 1, '2026-02-21 14:54:39', '2026-02-23 21:51:41', '/uploads/avatars/vignesh_l_s.png', 6);
 
 -- --------------------------------------------------------
 
@@ -1833,6 +1909,17 @@ ALTER TABLE `faculty_research`
 --
 ALTER TABLE `faculty_subjects_handled`
   ADD PRIMARY KEY (`faculty_id`);
+
+--
+-- Indexes for table `faculty_subject_assignments`
+--
+ALTER TABLE `faculty_subject_assignments`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_faculty_subject_class` (`faculty_id`,`subject_id`,`class_id`,`academic_year`),
+  ADD KEY `idx_fsa_subject` (`subject_id`),
+  ADD KEY `idx_fsa_class` (`class_id`),
+  ADD KEY `idx_fsa_academic_year` (`academic_year`),
+  ADD KEY `idx_fsa_status` (`status`);
 
 --
 -- Indexes for table `faculy_edu_qualification`
@@ -1993,6 +2080,29 @@ ALTER TABLE `student_sports`
   ADD KEY `idx_student_approval` (`studentId`,`approvalStatus`);
 
 --
+-- Indexes for table `subjects`
+--
+ALTER TABLE `subjects`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `subject_code` (`subject_code`),
+  ADD KEY `idx_subject_code` (`subject_code`),
+  ADD KEY `idx_subject_dept` (`department_id`),
+  ADD KEY `idx_subject_semester` (`semester`),
+  ADD KEY `idx_subject_class` (`class_id`),
+  ADD KEY `idx_subject_status` (`status`);
+
+--
+-- Indexes for table `subject_class_mappings`
+--
+ALTER TABLE `subject_class_mappings`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_subject_class_semester` (`subject_id`,`class_id`,`semester`,`academic_year`),
+  ADD KEY `idx_scm_class` (`class_id`),
+  ADD KEY `idx_scm_semester` (`semester`),
+  ADD KEY `idx_scm_dept` (`department_id`),
+  ADD KEY `idx_scm_subject` (`subject_id`);
+
+--
 -- Indexes for table `timetables`
 --
 ALTER TABLE `timetables`
@@ -2088,6 +2198,12 @@ ALTER TABLE `faculty_phd`
 --
 ALTER TABLE `faculty_profiles`
   MODIFY `faculty_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=431;
+
+--
+-- AUTO_INCREMENT for table `faculty_subject_assignments`
+--
+ALTER TABLE `faculty_subject_assignments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `faculy_edu_qualification`
@@ -2186,6 +2302,18 @@ ALTER TABLE `student_sports`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `subjects`
+--
+ALTER TABLE `subjects`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT for table `subject_class_mappings`
+--
+ALTER TABLE `subject_class_mappings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `timetable_notifications`
 --
 ALTER TABLE `timetable_notifications`
@@ -2240,11 +2368,25 @@ ALTER TABLE `faculty_phd`
   ADD CONSTRAINT `faculty_phd_ibfk_1` FOREIGN KEY (`faculty_id`) REFERENCES `faculty_profiles` (`faculty_id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `faculty_subject_assignments`
+--
+ALTER TABLE `faculty_subject_assignments`
+  ADD CONSTRAINT `fk_fsa_class` FOREIGN KEY (`class_id`) REFERENCES `classes` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_fsa_faculty` FOREIGN KEY (`faculty_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_fsa_subject` FOREIGN KEY (`subject_id`) REFERENCES `subjects` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `faculy_edu_qualification`
 --
 ALTER TABLE `faculy_edu_qualification`
   ADD CONSTRAINT `faculy_edu_qualification_ibfk_1` FOREIGN KEY (`faculty_id`) REFERENCES `faculty_profiles` (`faculty_id`) ON DELETE CASCADE,
   ADD CONSTRAINT `faculy_edu_qualification_ibfk_2` FOREIGN KEY (`faculty_id`) REFERENCES `faculty_profiles` (`faculty_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `student_attendance_entry`
+--
+ALTER TABLE `student_attendance_entry`
+  ADD CONSTRAINT `fk_attendance_subject` FOREIGN KEY (`subject_id`) REFERENCES `subjects` (`id`) ON UPDATE CASCADE;
 
 --
 -- Constraints for table `timetable_notifications`
@@ -2254,6 +2396,12 @@ ALTER TABLE `timetable_notifications`
   ADD CONSTRAINT `timetable_notifications_ibfk_2` FOREIGN KEY (`class_id`) REFERENCES `classes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `timetable_notifications_ibfk_3` FOREIGN KEY (`faculty_id`) REFERENCES `faculty_profiles` (`faculty_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `timetable_notifications_ibfk_4` FOREIGN KEY (`requested_by`) REFERENCES `faculty_profiles` (`faculty_id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `timetable_slots`
+--
+ALTER TABLE `timetable_slots`
+  ADD CONSTRAINT `fk_timetable_slots_subject` FOREIGN KEY (`subject_id`) REFERENCES `subjects` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `timetable_slot_assignments`
