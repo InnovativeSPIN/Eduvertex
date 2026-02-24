@@ -256,7 +256,9 @@ export default function Profile() {
         name: user.name || prev.name,
         email: user.email || prev.email,
         profilePhoto: user.avatar || prev.profilePhoto,
-        department: user.department || prev.department
+        department: typeof user.department === 'object'
+          ? (user.department.short_name || user.department.full_name || prev.department)
+          : (user.department || prev.department)
       }));
     }
   }, [user]);

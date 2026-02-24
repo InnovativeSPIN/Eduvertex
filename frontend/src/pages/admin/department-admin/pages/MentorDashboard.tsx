@@ -8,6 +8,10 @@ import { NotificationBell } from "@/pages/admin/department-admin/components/noti
 export function MentorDashboard() {
   const { setSelectedYear } = useMentor();
   const navigate = useNavigate();
+  const { getStudentsByYear } = useMentor();
+
+  // show a small preview of 2nd year students under the header
+  const previewStudents = getStudentsByYear("2nd").slice(0, 6);
 
   const years = [
     { id: "2nd", label: "2nd Year", color: "from-[#790c0c] to-[#01898d]" },
@@ -43,6 +47,31 @@ export function MentorDashboard() {
           <NotificationBell />
         </div>
       </motion.div>
+      {/* Students preview (like screenshot) */}
+      <div className="max-w-6xl mx-auto mt-8">
+        <div className="grid md:grid-cols-3 gap-6">
+          {previewStudents.map((student: any) => (
+            <motion.div
+              key={student.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-xl p-6 shadow-lg"
+            >
+              <div className="flex justify-center mb-4">
+                <img src={student.photos?.studentPhoto} alt={student.basicInfo?.name} className="w-20 h-20 rounded-full border-4" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-800 text-center mb-1">{student.basicInfo?.name}</h3>
+              <p className="text-sm text-gray-600 text-center mb-4">{student.id} | {student.basicInfo?.rollNumber}</p>
+              <div className="space-y-2 text-sm text-gray-700 mb-4">
+                <div className="flex justify-between"><span className="font-semibold">Department:</span><span>{student.basicInfo?.department}</span></div>
+                <div className="flex justify-between"><span className="font-semibold">Section:</span><span>{student.basicInfo?.section}</span></div>
+                <div className="flex justify-between"><span className="font-semibold">Semester:</span><span>{student.basicInfo?.semester}</span></div>
+              </div>
+              <button onClick={() => { setSelectedYear('2nd'); navigate(`/admin/department-admin/mentor/2nd`); }} className="w-full bg-gradient-to-r from-[#790c0c] to-[#01898d] text-white font-semibold py-2 rounded-lg">View Profile</button>
+            </motion.div>
+          ))}
+        </div>
+      </div>
 
       {/* Header */}
       <motion.div

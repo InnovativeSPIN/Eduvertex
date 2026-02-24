@@ -84,7 +84,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               userObj.email = prof.email || userObj.email;
               userObj.avatar = prof.avatar || prof.profile_image_url || userObj.avatar;
               userObj.designation = prof.designation || userObj.designation;
-              userObj.department = prof.department || userObj.department;
+              // Normalize department to a short string to avoid rendering objects
+              if (prof.department) {
+                userObj.department = typeof prof.department === 'object'
+                  ? (prof.department.short_name || prof.department.full_name)
+                  : prof.department;
+              } else {
+                userObj.department = userObj.department;
+              }
               userObj.is_timetable_incharge = prof.is_timetable_incharge || userObj.is_timetable_incharge;
               userObj.is_placement_coordinator = prof.is_placement_coordinator || userObj.is_placement_coordinator;
             }
@@ -175,7 +182,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const updateUserData = (newData: Partial<User>) => {
     setUser(prev => {
       if (!prev) return null;
-      const updated = { ...prev, ...newData };
+      const normDept = (newData as any).department && typeof (newData as any).department === 'object'
+        ? ((newData as any).department.short_name || (newData as any).department.full_name)
+        : (newData as any).department;
+      const merged = { ...prev, ...newData, ...(normDept ? { department: normDept } : {}) };
+      const updated = merged;
       localStorage.setItem('eduvertex_user', JSON.stringify(updated));
       return updated;
     });
