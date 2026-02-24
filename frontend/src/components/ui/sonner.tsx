@@ -23,16 +23,44 @@ const Toaster = ({ ...props }: ToasterProps) => {
 
 // Wrap the original toast to defer invocations so they don't cause state updates
 // during the render phase of other components (avoids React warning).
-function toast(...args: any[]) {
-  // defer to next microtask
-  Promise.resolve().then(() => {
+// Create a wrapped toast function that defers invocations but also
+// preserves the original toast methods (e.g., toast.success, toast.error)
+function createDeferredToast() {
+  const wrapped: any = (...args: any[]) => {
+    setTimeout(() => {
+      try {
+        (originalToast as any)(...args);
+      } catch (e) {
+        console.error('Deferred toast error', e);
+      }
+    }, 0);
+  };
+
+  // Copy all callable properties from originalToast (like .success/.error)
+  Object.keys(originalToast).forEach((key) => {
     try {
-      (originalToast as any)(...args);
+      const val = (originalToast as any)[key];
+      if (typeof val === 'function') {
+        wrapped[key] = (...args: any[]) => {
+          setTimeout(() => {
+            try {
+              (val as any)(...args);
+            } catch (e) {
+              console.error('Deferred toast method error', e);
+            }
+          }, 0);
+        };
+      } else {
+        wrapped[key] = val;
+      }
     } catch (e) {
-      // swallow to avoid interrupting render; library will still log if needed
-      console.error('Deferred toast error', e);
+      // ignore any non-enumerable properties
     }
   });
+
+  return wrapped as typeof originalToast;
 }
+
+const toast = createDeferredToast();
 
 export { Toaster, toast };

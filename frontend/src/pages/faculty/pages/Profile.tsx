@@ -301,6 +301,44 @@ export default function Profile() {
             url: ""
           })));
         }
+        // PhD records (faculty_phd table)
+        try {
+          const phdResponse = await fetch('/api/v1/faculty/phd', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (!phdResponse.ok) {
+            // Endpoint may not exist on backend; skip without attempting to parse HTML error pages
+            console.debug('[PROFILE] /faculty/phd returned', phdResponse.status, phdResponse.statusText);
+          } else {
+            const phdResult = await phdResponse.json();
+            if (phdResult.success && Array.isArray(phdResult.data)) {
+              const entries = phdResult.data.map((r: any) => ({
+                id: r.phd_id ?? r.id ?? null,
+                orcidId: r.orcid_id ?? r.orcidId ?? "",
+                phdStatus: r.status ?? r.phd_status ?? r.phdStatus ?? "Pursuing",
+                thesisTitle: r.thesis_title ?? r.thesisTitle ?? "",
+                registerNo: r.register_no ?? r.registerNo ?? "",
+                guideName: r.guide_name ?? r.guideName ?? "",
+              }));
+
+              if (entries.length > 0) {
+                const primary = entries[0];
+                setFacultyData(prev => ({
+                  ...prev,
+                  phdStatus: primary.phdStatus || prev.phdStatus,
+                  orcidId: primary.orcidId || prev.orcidId,
+                  thesisTitle: primary.thesisTitle || prev.thesisTitle,
+                  registerNo: primary.registerNo || prev.registerNo,
+                  guideName: primary.guideName || prev.guideName,
+                }));
+
+                setPhdList(entries.slice(1));
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to fetch PhD records', e);
+        }
       } catch (error) {
         console.error('Failed to fetch data:', error);
       }
@@ -404,7 +442,7 @@ export default function Profile() {
   });
   const [addingPhd, setAddingPhd] = useState(false);
   const [newPhd, setNewPhd] = useState({ orcidId: "", phdStatus: "Pursuing", thesisTitle: "", registerNo: "", guideName: "" });
-  const [phdList, setPhdList] = useState<{ orcidId: string; phdStatus: string; thesisTitle: string; registerNo: string; guideName: string }[]>([]);
+  const [phdList, setPhdList] = useState<{ id?: number; orcidId: string; phdStatus: string; thesisTitle: string; registerNo: string; guideName: string }[]>([]);
   const [editingPhdIndex, setEditingPhdIndex] = useState<number | null>(null);
   const [tempPhdEntry, setTempPhdEntry] = useState({ orcidId: "", phdStatus: "Pursuing", thesisTitle: "", registerNo: "", guideName: "" });
 
@@ -1644,17 +1682,84 @@ export default function Profile() {
     setNewPhd({ orcidId: "", phdStatus: "Pursuing", thesisTitle: "", registerNo: "", guideName: "" });
   };
 
-  const handleSaveNewPhd = () => {
-    setPhdList(prev => [...prev, { ...newPhd }]);
-    setAddingPhd(false);
-    setNewPhd({ orcidId: "", phdStatus: "Pursuing", thesisTitle: "", registerNo: "", guideName: "" });
-    toast({ title: 'PhD record added', description: 'New PhD record has been added successfully.' });
+  const handleSaveNewPhd = async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      // Fallback to local addition
+      setPhdList(prev => [...prev, { ...newPhd }]);
+      setAddingPhd(false);
+      setNewPhd({ orcidId: "", phdStatus: "Pursuing", thesisTitle: "", registerNo: "", guideName: "" });
+      toast({ title: 'PhD record added', description: 'New PhD record has been added locally (not persisted).' });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch('/api/v1/faculty/phd', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          status: newPhd.phdStatus,
+          orcid_id: newPhd.orcidId,
+          thesis_title: newPhd.thesisTitle,
+          register_no: newPhd.registerNo,
+          guide_name: newPhd.guideName
+        })
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        const id = result.data?.phd_id ?? result.data?.id ?? null;
+        const entry = { id, orcidId: newPhd.orcidId, phdStatus: newPhd.phdStatus, thesisTitle: newPhd.thesisTitle, registerNo: newPhd.registerNo, guideName: newPhd.guideName };
+        setPhdList(prev => [...prev, entry]);
+        setAddingPhd(false);
+        setNewPhd({ orcidId: "", phdStatus: "Pursuing", thesisTitle: "", registerNo: "", guideName: "" });
+        toast({ title: 'PhD record added', description: 'New PhD record has been saved.' });
+      } else {
+        throw new Error(result.message || result.error || 'Failed to save PhD record');
+      }
+    } catch (error: any) {
+      console.error('Failed to save PhD record', error);
+      toast({ title: 'Error', description: error.message || 'Failed to save PhD record.', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDeleteAdditionalPhd = (index: number) => {
-    setPhdList(prev => prev.filter((_, i) => i !== index));
-    setEditingPhdIndex(null);
-    toast({ title: 'PhD record deleted' });
+  const handleDeleteAdditionalPhd = async (index: number) => {
+    const entry = phdList[index];
+    if (entry?.id) {
+      if (!window.confirm('Are you sure you want to delete this PhD record?')) return;
+      const token = localStorage.getItem('authToken');
+      if (!token) return;
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/v1/faculty/phd/${entry.id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const result = await response.json();
+        if (result.success) {
+          setPhdList(prev => prev.filter((_, i) => i !== index));
+          setEditingPhdIndex(null);
+          toast({ title: 'PhD record deleted' });
+        } else {
+          throw new Error(result.message || 'Failed to delete PhD record');
+        }
+      } catch (error: any) {
+        console.error('Delete PhD error', error);
+        toast({ title: 'Error', description: error.message || 'Failed to delete PhD record.', variant: 'destructive' });
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setPhdList(prev => prev.filter((_, i) => i !== index));
+      setEditingPhdIndex(null);
+      toast({ title: 'PhD record deleted' });
+    }
   };
 
   const handleEditPhdEntry = (index: number) => {
