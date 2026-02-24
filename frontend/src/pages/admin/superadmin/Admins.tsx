@@ -4,7 +4,7 @@ import { DataTable } from '@/pages/admin/superadmin/components/dashboard/DataTab
 import { UserFormModal } from '@/pages/admin/superadmin/components/modals/UserFormModal';
 import { Admin } from '@/types/auth';
 import { Badge } from '@/pages/admin/superadmin/components/ui/badge';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/sonner';
 import {
     AlertDialog,
     AlertDialogAction,

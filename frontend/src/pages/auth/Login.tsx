@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/pages/admin/superadmin/components/ui/select';
 import { GraduationCap, Lock, Mail, Users, User as UserIcon, Calendar, Building } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/sonner';
 
 const roleRoutes: Partial<Record<UserRole, string>> = {
   'department-admin': '/admin/department-admin',

@@ -35,6 +35,8 @@ import {
 
 // Types for Profile Data
 interface EducationDetail {
+  id?: number;
+  membership_id?: string;
   degree: string;
   branch: string;
   college: string;
@@ -45,13 +47,15 @@ interface EducationDetail {
 }
 
 interface MembershipDetail {
-  society: string;
-  id: string;
+  id?: number;
+  membership_id?: string;
+  society_name: string;
   status: string;
   url: string;
 }
 
 interface ExperienceDetail {
+  id?: number;
   designation: string;
   institutionName: string;
   university: string;
@@ -64,6 +68,7 @@ interface ExperienceDetail {
 }
 
 interface IndustryDetail {
+  id?: number;
   jobTitle: string;
   company: string;
   location: string;
@@ -131,55 +136,6 @@ const educationalQualifications = [
 ];
 
 // Experience Details (split into teaching and industry)
-const teachingExperience = [
-  {
-    designation: "Assistant Professor",
-    institutionName: "Nadar Saraswathi College of Engineering and Technology",
-    university: "Anna University",
-    department: "Artificial Intelligence and Data Science",
-    from: "01.09.2023",
-    to: "Present",
-    period: "1 Yr 1 M",
-    current: true,
-    url: "https://example.com/exp-certificate-1.pdf"
-  },
-  {
-    designation: "Assistant Professor",
-    institutionName: "AAA College of Engineering and Technology",
-    university: "Anna University",
-    department: "Artificial Intelligence and Data Science",
-    from: "15.08.2021",
-    to: "31.05.2023",
-    period: "1 Yr 10 M",
-    current: false,
-    url: "https://example.com/exp-certificate-2.pdf"
-  },
-  {
-    designation: "Assistant Professor",
-    institutionName: "Ultra College of Engineering and Technology",
-    university: "Anna University",
-    department: "Artificial Intelligence and Data Science",
-    from: "21.09.2020",
-    to: "20.07.2021",
-    period: "10 M",
-    current: false,
-    url: "https://example.com/exp-certificate-3.pdf"
-  },
-];
-
-const industryExperience = [
-  {
-    jobTitle: "Front End Developer and Instructor",
-    company: "Azhimat, Chennai",
-    location: "Chennai",
-    from: "01.06.2019",
-    to: "30.08.2020",
-    period: "1 Yr 2 M",
-    current: false,
-    url: "https://example.com/industry-proof.pdf"
-  },
-];
-
 // Subjects Handled
 const subjectsHandled = [
   { program: "B.E - CSE", semester: "3", subject: "CS3301 - Data Structures", result: "82%", category: "T", url: "https://example.com/subject-proof-1.pdf" },
@@ -266,6 +222,93 @@ export default function Profile() {
     }
   }, [user]);
 
+  // Fetch education and membership records from DB
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (!token) return;
+
+        const response = await fetch('/api/v1/faculty/education', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const result = await response.json();
+        if (result.success && Array.isArray(result.data)) {
+          // Education has 'degree', Memberships have 'society_name'
+          const education = result.data.filter((item: any) => item.degree && item.degree !== 'Membership');
+          const pMemberships = result.data.filter((item: any) => item.society_name || item.degree === 'Membership');
+
+          setEducationData(education.map((r: any) => ({
+            // Use primary id when provided; do not fall back to membership_id/faculty_id
+            id: r.id ?? null,
+            membership_id: r.membership_id,
+            degree: r.degree,
+            branch: r.branch,
+            college: r.college,
+            university: r.university,
+            year: r.year,
+            percentage: r.percentage,
+            url: ""
+          })));
+
+          setMembershipData(pMemberships.map((r: any) => ({
+            // Prefer DB primary id; keep membership_id separate
+            id: r.id ?? null,
+            membership_id: r.membership_id,
+            society_name: r.society_name,
+            status: r.status,
+            url: ""
+          })));
+        }
+        // Teaching experiences
+        const expResponse = await fetch('/api/v1/faculty/experience', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const expResult = await expResponse.json();
+        if (expResult.success && Array.isArray(expResult.data)) {
+          setTeachingExpData(expResult.data.map((r: any) => ({
+            id: r.id,
+            designation: r.designation,
+            institutionName: r.institution_name,
+            university: r.university,
+            department: r.department,
+            from: r.from_date,
+            to: r.to_date,
+            period: r.period,
+            current: r.is_current,
+            url: ""
+          })));
+        }
+
+        // Industry experiences (separate table)
+        const indResponse = await fetch('/api/v1/faculty/experience/industry', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const indResult = await indResponse.json();
+        if (indResult.success && Array.isArray(indResult.data)) {
+          setIndustryExpData(indResult.data.map((r: any) => ({
+            id: r.id,
+            jobTitle: r.job_title,
+            company: r.company,
+            location: r.location,
+            from: r.from_date,
+            to: r.to_date,
+            period: r.period,
+            current: r.is_current,
+            url: ""
+          })));
+        }
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+      }
+    };
+
+    fetchData();
+  }, [user]);
+
   // Events and Research states
   const [eventsData, setEventsData] = useState(initialEventsData);
   const [researchData, setResearchData] = useState(initialResearchData);
@@ -288,8 +331,7 @@ export default function Profile() {
   const [fieldError, setFieldError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Education and membership states
-  const [educationData, setEducationData] = useState<EducationDetail[]>(educationalQualifications);
+  const [educationData, setEducationData] = useState<EducationDetail[]>([]);
   const [editingEducation, setEditingEducation] = useState<number | null>(null);
   const [tempEducation, setTempEducation] = useState<EducationDetail | null>(null);
   const [addingEducation, setAddingEducation] = useState(false);
@@ -305,19 +347,19 @@ export default function Profile() {
   const [newDegreeIsOther, setNewDegreeIsOther] = useState(false);
   const [newBranchIsOther, setNewBranchIsOther] = useState(false);
 
-  const [membershipData, setMembershipData] = useState<MembershipDetail[]>(memberships);
+  const [membershipData, setMembershipData] = useState<MembershipDetail[]>([]);
   const [editingMembership, setEditingMembership] = useState<number | null>(null);
   const [tempMembership, setTempMembership] = useState<MembershipDetail | null>(null);
   const [addingMembership, setAddingMembership] = useState(false);
   const [newMembership, setNewMembership] = useState<MembershipDetail>({
-    society: "",
-    id: "",
+    membership_id: "",
+    society_name: "",
     status: "Active",
     url: "",
   });
 
   // Experience states
-  const [teachingExpData, setTeachingExpData] = useState<ExperienceDetail[]>(teachingExperience);
+  const [teachingExpData, setTeachingExpData] = useState<ExperienceDetail[]>([]);
   const [editingTeachingExp, setEditingTeachingExp] = useState<number | null>(null);
   const [tempTeachingExp, setTempTeachingExp] = useState<ExperienceDetail | null>(null);
   const [addingTeachingExp, setAddingTeachingExp] = useState(false);
@@ -335,7 +377,7 @@ export default function Profile() {
   const [newDesignationIsOther, setNewDesignationIsOther] = useState(false);
   const [newTeachingDeptIsOther, setNewTeachingDeptIsOther] = useState(false);
 
-  const [industryExpData, setIndustryExpData] = useState<IndustryDetail[]>(industryExperience);
+  const [industryExpData, setIndustryExpData] = useState<IndustryDetail[]>([]);
   const [editingIndustryExp, setEditingIndustryExp] = useState<number | null>(null);
   const [tempIndustryExp, setTempIndustryExp] = useState<IndustryDetail | null>(null);
   const [addingIndustryExp, setAddingIndustryExp] = useState(false);
@@ -495,20 +537,61 @@ export default function Profile() {
 
   const handleSaveEducation = async (index: number) => {
     if (!tempEducation) return;
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      toast({ title: 'Not authenticated', description: 'Please log in and try again.', variant: 'destructive' });
+      return;
+    }
+
+    const recId = educationData[index]?.id;
+    console.debug('[PROFILE] handleSaveEducation', { recId, hasToken: !!token });
+    if (recId === undefined || recId === null) {
+      toast({ title: 'Error', description: 'Record id missing; cannot update.', variant: 'destructive' });
+      return;
+    }
+
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      const updated = [...educationData];
-      updated[index] = tempEducation;
-      setEducationData(updated);
-      setEditingEducation(null);
-      setTempEducation(null);
-      setLoading(false);
-      toast({
-        title: 'Education updated',
-        description: 'Educational qualification has been updated successfully.'
+    try {
+      const response = await fetch(`/api/v1/faculty/education/${recId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          degree: tempEducation.degree || null,
+          branch: tempEducation.branch || null,
+          college: tempEducation.college || null,
+          university: tempEducation.university || null,
+          year: tempEducation.year || null,
+          percentage: tempEducation.percentage || null,
+          url: tempEducation.url || null
+        })
       });
-    }, 1000);
+
+      const result = await response.json();
+      if (result.success) {
+        const updated = [...educationData];
+        updated[index] = { ...tempEducation, id: result.data.id };
+        setEducationData(updated);
+        setEditingEducation(null);
+        setTempEducation(null);
+        toast({
+          title: 'Education updated',
+          description: 'Educational qualification has been updated successfully.'
+        });
+      } else {
+        throw new Error(result.error || 'Failed to update record');
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update education record.',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEducationFieldChange = (field: string, value: string) => {
@@ -528,20 +611,56 @@ export default function Profile() {
 
   const handleSaveMembership = async (index: number) => {
     if (!tempMembership) return;
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      const updated = [...membershipData];
-      updated[index] = tempMembership;
-      setMembershipData(updated);
-      setEditingMembership(null);
-      setTempMembership(null);
-      setLoading(false);
-      toast({
-        title: 'Membership updated',
-        description: 'Professional membership has been updated successfully.'
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      toast({ title: 'Not authenticated', description: 'Please log in and try again.', variant: 'destructive' });
+      return;
+    }
+
+    const recId = membershipData[index]?.id;
+    console.debug('[PROFILE] handleSaveMembership', { recId, hasToken: !!token });
+    if (recId === undefined || recId === null) {
+      toast({ title: 'Error', description: 'Record id missing; cannot update.', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/v1/faculty/education/${recId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          society_name: tempMembership.society_name || null,
+          status: tempMembership.status || null,
+          membership_id: tempMembership.membership_id || null,
+          url: tempMembership.url || null
+        })
       });
-    }, 1000);
+
+      const result = await response.json();
+      if (result.success) {
+        const updated = [...membershipData];
+        updated[index] = { ...tempMembership, id: result.data.id };
+        setMembershipData(updated);
+        setEditingMembership(null);
+        setTempMembership(null);
+        toast({
+          title: 'Membership updated'
+        });
+      } else {
+        throw new Error(result.error || 'Failed to update record');
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update membership record.',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleMembershipFieldChange = (field: string, value: string) => {
@@ -588,28 +707,72 @@ export default function Profile() {
       return;
     }
 
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setEducationData([...educationData, newEducation]);
-      setAddingEducation(false);
-      setNewDegreeIsOther(false);
-      setNewBranchIsOther(false);
-      setNewEducation({
-        degree: "",
-        branch: "",
-        college: "Nadar Saraswathi College of Engineering and Technology",
-        university: "",
-        year: "",
-        percentage: "",
-        url: "",
+    try {
+      const response = await fetch('/api/v1/faculty/education', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          degree: newEducation.degree || null,
+          branch: newEducation.branch || null,
+          college: newEducation.college || null,
+          university: newEducation.university || null,
+          year: newEducation.year || null,
+          percentage: newEducation.percentage || null,
+          url: newEducation.url || null
+        })
       });
-      setLoading(false);
+
+      const result = await response.json();
+      if (result.success) {
+        const updatedRow = { ...newEducation, id: result.data.id };
+
+        // Update Education state
+        if (educationData.some(e => e.id === result.data.id)) {
+          setEducationData(educationData.map(e => e.id === result.data.id ? updatedRow : e));
+        } else {
+          setEducationData([...educationData, updatedRow]);
+        }
+
+        // Also update Membership state if this row exists there
+        if (membershipData.some(m => m.id === result.data.id)) {
+          setMembershipData(membershipData.map(m => m.id === result.data.id ? { ...m, ...result.data } : m));
+        }
+
+        setAddingEducation(false);
+        setNewDegreeIsOther(false);
+        setNewBranchIsOther(false);
+        setNewEducation({
+          degree: "",
+          branch: "",
+          college: "Nadar Saraswathi College of Engineering and Technology",
+          university: "",
+          year: "",
+          percentage: "",
+          url: "",
+        });
+        toast({
+          title: 'Education added',
+          description: 'New educational qualification has been added successfully.'
+        });
+      } else {
+        throw new Error(result.error || 'Failed to save record');
+      }
+    } catch (error: any) {
       toast({
-        title: 'Education added',
-        description: 'New educational qualification has been added successfully.'
+        title: 'Error',
+        description: error.message || 'Failed to save education record.',
+        variant: 'destructive'
       });
-    }, 1000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleNewEducationChange = (field: string, value: string) => {
@@ -618,16 +781,47 @@ export default function Profile() {
 
   const handleDeleteEducation = async (index: number) => {
     if (window.confirm('Are you sure you want to delete this educational qualification?')) {
+      const token = localStorage.getItem('authToken');
+      if (!token) return;
+
       setLoading(true);
-      setTimeout(() => {
-        const updated = educationData.filter((_, i) => i !== index);
-        setEducationData(updated);
-        setLoading(false);
-        toast({
-          title: 'Education deleted',
-          description: 'Educational qualification has been deleted successfully.'
+      try {
+        const response = await fetch(`/api/v1/faculty/education/${educationData[index].id}?section=education`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         });
-      }, 500);
+
+        const result = await response.json();
+        if (result.success) {
+          // If record was fully deleted, remove from both lists
+          if (!result.data || Object.keys(result.data).length === 0) {
+            setEducationData(educationData.filter((_, i) => i !== index));
+            setMembershipData(membershipData.filter(m => m.id !== educationData[index].id));
+          } else {
+            // Record was just updated (section cleared), remove from education list
+            setEducationData(educationData.filter((_, i) => i !== index));
+            // Update membership list if it exists there
+            setMembershipData(membershipData.map(m => m.id === result.data.id ? result.data : m));
+          }
+
+          toast({
+            title: 'Education deleted',
+            description: 'Educational qualification has been cleared successfully.'
+          });
+        } else {
+          throw new Error(result.error || 'Failed to delete record');
+        }
+      } catch (error: any) {
+        toast({
+          title: 'Error',
+          description: error.message || 'Failed to delete education record.',
+          variant: 'destructive'
+        });
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -635,8 +829,8 @@ export default function Profile() {
   const handleAddMembership = () => {
     setAddingMembership(true);
     setNewMembership({
-      society: "",
-      id: "",
+      membership_id: "",
+      society_name: "",
       status: "Active",
       url: "",
     });
@@ -645,8 +839,8 @@ export default function Profile() {
   const handleCancelAddMembership = () => {
     setAddingMembership(false);
     setNewMembership({
-      society: "",
-      id: "",
+      membership_id: "",
+      society_name: "",
       status: "Active",
       url: "",
     });
@@ -654,7 +848,7 @@ export default function Profile() {
 
   const handleSaveNewMembership = async () => {
     // Validate required fields
-    if (!newMembership.society || !newMembership.id) {
+    if (!newMembership.society_name || !newMembership.membership_id) {
       toast({
         title: 'Validation Error',
         description: 'Please fill in society name and ID fields.',
@@ -663,23 +857,63 @@ export default function Profile() {
       return;
     }
 
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setMembershipData([...membershipData, newMembership]);
-      setAddingMembership(false);
-      setNewMembership({
-        society: "",
-        id: "",
-        status: "Active",
-        url: "",
+    try {
+      const response = await fetch('/api/v1/faculty/education', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          society_name: newMembership.society_name || null,
+          status: newMembership.status || null,
+          membership_id: newMembership.membership_id || null,
+          url: newMembership.url || null
+        })
       });
-      setLoading(false);
+
+      const result = await response.json();
+      if (result.success) {
+        const updatedRow = { ...newMembership, id: result.data.id };
+
+        // Update Membership state
+        if (membershipData.some(m => m.id === result.data.id)) {
+          setMembershipData(membershipData.map(m => m.id === result.data.id ? updatedRow : m));
+        } else {
+          setMembershipData([...membershipData, updatedRow]);
+        }
+
+        // Also update Education state if this row exists there
+        if (educationData.some(e => e.id === result.data.id)) {
+          setEducationData(educationData.map(e => e.id === result.data.id ? { ...e, ...result.data } : e));
+        }
+
+        setAddingMembership(false);
+        setNewMembership({
+          membership_id: "",
+          society_name: "",
+          status: "Active",
+          url: "",
+        });
+        toast({
+          title: 'Membership added'
+        });
+      } else {
+        throw new Error(result.error || 'Failed to save record');
+      }
+    } catch (error: any) {
       toast({
-        title: 'Membership added',
-        description: 'New professional membership has been added successfully.'
+        title: 'Error',
+        description: error.message || 'Failed to save membership record.',
+        variant: 'destructive'
       });
-    }, 1000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleNewMembershipChange = (field: string, value: string) => {
@@ -688,16 +922,47 @@ export default function Profile() {
 
   const handleDeleteMembership = async (index: number) => {
     if (window.confirm('Are you sure you want to delete this membership?')) {
+      const token = localStorage.getItem('authToken');
+      if (!token) return;
+
       setLoading(true);
-      setTimeout(() => {
-        const updated = membershipData.filter((_, i) => i !== index);
-        setMembershipData(updated);
-        setLoading(false);
-        toast({
-          title: 'Membership deleted',
-          description: 'Professional membership has been deleted successfully.'
+      try {
+        const response = await fetch(`/api/v1/faculty/education/${membershipData[index].id}?section=membership`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         });
-      }, 500);
+
+        const result = await response.json();
+        if (result.success) {
+          // If record was fully deleted, remove from both lists
+          if (!result.data || Object.keys(result.data).length === 0) {
+            setMembershipData(membershipData.filter((_, i) => i !== index));
+            setEducationData(educationData.filter(e => e.id !== membershipData[index].id));
+          } else {
+            // Record was just updated (section cleared), remove from membership list
+            setMembershipData(membershipData.filter((_, i) => i !== index));
+            // Update education list if it exists there
+            setEducationData(educationData.map(e => e.id === result.data.id ? result.data : e));
+          }
+
+          toast({
+            title: 'Membership deleted',
+            description: 'Professional membership has been cleared successfully.'
+          });
+        } else {
+          throw new Error(result.error || 'Failed to delete record');
+        }
+      } catch (error: any) {
+        toast({
+          title: 'Error',
+          description: error.message || 'Failed to delete membership record.',
+          variant: 'destructive'
+        });
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -746,29 +1011,93 @@ export default function Profile() {
       return;
     }
 
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+
     setLoading(true);
-    setTimeout(() => {
-      setTeachingExpData([...teachingExpData, newTeachingExp]);
-      setAddingTeachingExp(false);
-      setNewDesignationIsOther(false);
-      setNewTeachingDeptIsOther(false);
-      setNewTeachingExp({
-        designation: "",
-        institutionName: "Nadar Saraswathi College of Engineering and Technology",
-        university: "",
-        department: "",
-        from: "",
-        to: "",
-        period: "",
-        current: false,
-        url: "",
+    try {
+      const response = await fetch('/api/v1/faculty/experience', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          designation: newTeachingExp.designation,
+          institution_name: newTeachingExp.institutionName,
+          university: newTeachingExp.university,
+          department: newTeachingExp.department,
+          from_date: newTeachingExp.from,
+          to_date: newTeachingExp.to,
+          period: newTeachingExp.period,
+          is_current: newTeachingExp.current
+        })
       });
-      setLoading(false);
+
+      const result = await response.json();
+      if (result.success) {
+        // Update both sections if the row is shared
+        const updatedEntry = {
+          id: result.data.id,
+          designation: result.data.designation,
+          institutionName: result.data.institution_name,
+          university: result.data.university,
+          department: result.data.department,
+          from: result.data.from_date,
+          to: result.data.to_date,
+          period: result.data.period,
+          current: result.data.is_current,
+          url: ""
+        };
+
+        const existingIndex = teachingExpData.findIndex(e => e.id === result.data.id);
+        if (existingIndex > -1) {
+          const updated = [...teachingExpData];
+          updated[existingIndex] = updatedEntry;
+          setTeachingExpData(updated);
+        } else {
+          setTeachingExpData([...teachingExpData, updatedEntry]);
+        }
+
+        // Also update industry if it exists there
+        setIndustryExpData(industryExpData.map(e => e.id === result.data.id ? {
+          ...e,
+          from: result.data.from_date,
+          to: result.data.to_date,
+          period: result.data.period,
+          current: result.data.is_current
+        } : e));
+
+        setAddingTeachingExp(false);
+        setNewDesignationIsOther(false);
+        setNewTeachingDeptIsOther(false);
+        setNewTeachingExp({
+          designation: "",
+          institutionName: "Nadar Saraswathi College of Engineering and Technology",
+          university: "",
+          department: "",
+          from: "",
+          to: "",
+          period: "",
+          current: false,
+          url: "",
+        });
+        toast({
+          title: 'Experience added',
+          description: 'Teaching experience has been added successfully.'
+        });
+      } else {
+        throw new Error(result.error || 'Failed to save experience');
+      }
+    } catch (error: any) {
       toast({
-        title: 'Experience added',
-        description: 'Teaching experience has been added successfully.'
+        title: 'Error',
+        description: error.message || 'Failed to save teaching experience.',
+        variant: 'destructive'
       });
-    }, 1000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleNewTeachingExpChange = (field: string, value: string | boolean) => {
@@ -787,19 +1116,72 @@ export default function Profile() {
 
   const handleSaveTeachingExp = async (index: number) => {
     if (!tempTeachingExp) return;
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      toast({ title: 'Not authenticated', description: 'Please log in and try again.', variant: 'destructive' });
+      return;
+    }
+
+    const recId = teachingExpData[index]?.id;
+    console.debug('[PROFILE] handleSaveTeachingExp', { recId, hasToken: !!token });
+    if (recId === undefined || recId === null) {
+      toast({ title: 'Error', description: 'Record id missing; cannot update.', variant: 'destructive' });
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
-      const updated = [...teachingExpData];
-      updated[index] = tempTeachingExp;
-      setTeachingExpData(updated);
-      setEditingTeachingExp(null);
-      setTempTeachingExp(null);
-      setLoading(false);
-      toast({
-        title: 'Experience updated',
-        description: 'Teaching experience has been updated successfully.'
+    try {
+      const response = await fetch(`/api/v1/faculty/experience/${recId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          designation: tempTeachingExp.designation,
+          institution_name: tempTeachingExp.institutionName,
+          university: tempTeachingExp.university,
+          department: tempTeachingExp.department,
+          from_date: tempTeachingExp.from,
+          to_date: tempTeachingExp.to,
+          period: tempTeachingExp.period,
+          is_current: tempTeachingExp.current
+        })
       });
-    }, 1000);
+
+      const result = await response.json();
+      if (result.success) {
+        const updated = [...teachingExpData];
+        updated[index] = { ...tempTeachingExp, id: result.data.id };
+        setTeachingExpData(updated);
+
+        // Update industry if shared
+        setIndustryExpData(industryExpData.map(e => e.id === result.data.id ? {
+          ...e,
+          from: result.data.from_date,
+          to: result.data.to_date,
+          period: result.data.period,
+          current: result.data.is_current
+        } : e));
+
+        setEditingTeachingExp(null);
+        setTempTeachingExp(null);
+        toast({
+          title: 'Experience updated',
+          description: 'Teaching experience has been updated successfully.'
+        });
+      } else {
+        throw new Error(result.error || 'Failed to update record');
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update teaching experience.',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleTeachingExpFieldChange = (field: string, value: string | boolean) => {
@@ -808,16 +1190,53 @@ export default function Profile() {
 
   const handleDeleteTeachingExp = async (index: number) => {
     if (window.confirm('Are you sure you want to delete this teaching experience?')) {
+      const token = localStorage.getItem('authToken');
+      if (!token) return;
+
       setLoading(true);
-      setTimeout(() => {
-        const updated = teachingExpData.filter((_, i) => i !== index);
-        setTeachingExpData(updated);
-        setLoading(false);
-        toast({
-          title: 'Experience deleted',
-          description: 'Teaching experience has been deleted successfully.'
+      try {
+        const response = await fetch(`/api/v1/faculty/experience/${teachingExpData[index].id}?section=teaching`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         });
-      }, 500);
+
+        const result = await response.json();
+        if (result.success) {
+          // If record was fully deleted, remove from both lists
+          if (!result.data || Object.keys(result.data).length === 0) {
+            setTeachingExpData(teachingExpData.filter((_, i) => i !== index));
+            setIndustryExpData(industryExpData.filter(m => m.id !== teachingExpData[index].id));
+          } else {
+            // Record was just updated (section cleared), remove from teaching list
+            setTeachingExpData(teachingExpData.filter((_, i) => i !== index));
+            // Update industry list if it exists there
+            setIndustryExpData(industryExpData.map(m => m.id === result.data.id ? {
+              ...m,
+              from: result.data.from_date,
+              to: result.data.to_date,
+              period: result.data.period,
+              current: result.data.is_current
+            } : m));
+          }
+
+          toast({
+            title: 'Experience deleted',
+            description: 'Teaching experience has been cleared successfully.'
+          });
+        } else {
+          throw new Error(result.error || 'Failed to delete record');
+        }
+      } catch (error: any) {
+        toast({
+          title: 'Error',
+          description: error.message || 'Failed to delete teaching experience.',
+          variant: 'destructive'
+        });
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -862,27 +1281,89 @@ export default function Profile() {
       return;
     }
 
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+
     setLoading(true);
-    setTimeout(() => {
-      setIndustryExpData([...industryExpData, newIndustryExp]);
-      setAddingIndustryExp(false);
-      setNewJobTitleIsOther(false);
-      setNewIndustryExp({
-        jobTitle: "",
-        company: "",
-        location: "",
-        from: "",
-        to: "",
-        period: "",
-        current: false,
-        url: "",
+    try {
+      const response = await fetch('/api/v1/faculty/experience/industry', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          job_title: newIndustryExp.jobTitle,
+          company: newIndustryExp.company,
+          location: newIndustryExp.location,
+          from_date: newIndustryExp.from,
+          to_date: newIndustryExp.to,
+          period: newIndustryExp.period,
+          is_current: newIndustryExp.current
+        })
       });
-      setLoading(false);
+
+      const result = await response.json();
+      if (result.success) {
+        setAddingIndustryExp(false);
+        setNewJobTitleIsOther(false);
+
+        const updatedEntry = {
+          id: result.data.id,
+          jobTitle: result.data.job_title,
+          company: result.data.company,
+          location: result.data.location,
+          from: result.data.from_date,
+          to: result.data.to_date,
+          period: result.data.period,
+          current: result.data.is_current,
+          url: ""
+        };
+
+        const existingIndex = industryExpData.findIndex(e => e.id === result.data.id);
+        if (existingIndex > -1) {
+          const updated = [...industryExpData];
+          updated[existingIndex] = updatedEntry;
+          setIndustryExpData(updated);
+        } else {
+          setIndustryExpData([...industryExpData, updatedEntry]);
+        }
+
+        // Update teaching if shared
+        setTeachingExpData(teachingExpData.map(e => e.id === result.data.id ? {
+          ...e,
+          from: result.data.from_date,
+          to: result.data.to_date,
+          period: result.data.period,
+          current: result.data.is_current
+        } : e));
+
+        setNewIndustryExp({
+          jobTitle: "",
+          company: "",
+          location: "",
+          from: "",
+          to: "",
+          period: "",
+          current: false,
+          url: "",
+        });
+        toast({
+          title: 'Experience added',
+          description: 'Industry experience has been added successfully.'
+        });
+      } else {
+        throw new Error(result.error || 'Failed to save experience');
+      }
+    } catch (error: any) {
       toast({
-        title: 'Experience added',
-        description: 'Industry experience has been added successfully.'
+        title: 'Error',
+        description: error.message || 'Failed to save industry experience.',
+        variant: 'destructive'
       });
-    }, 1000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleNewIndustryExpChange = (field: string, value: string | boolean) => {
@@ -901,19 +1382,71 @@ export default function Profile() {
 
   const handleSaveIndustryExp = async (index: number) => {
     if (!tempIndustryExp) return;
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      toast({ title: 'Not authenticated', description: 'Please log in and try again.', variant: 'destructive' });
+      return;
+    }
+
+    const recId = industryExpData[index]?.id;
+    console.debug('[PROFILE] handleSaveIndustryExp', { recId, hasToken: !!token });
+    if (recId === undefined || recId === null) {
+      toast({ title: 'Error', description: 'Record id missing; cannot update.', variant: 'destructive' });
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
-      const updated = [...industryExpData];
-      updated[index] = tempIndustryExp;
-      setIndustryExpData(updated);
-      setEditingIndustryExp(null);
-      setTempIndustryExp(null);
-      setLoading(false);
-      toast({
-        title: 'Experience updated',
-        description: 'Industry experience has been updated successfully.'
+    try {
+      const response = await fetch(`/api/v1/faculty/experience/industry/${recId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          job_title: tempIndustryExp.jobTitle,
+          company: tempIndustryExp.company,
+          location: tempIndustryExp.location,
+          from_date: tempIndustryExp.from,
+          to_date: tempIndustryExp.to,
+          period: tempIndustryExp.period,
+          is_current: tempIndustryExp.current
+        })
       });
-    }, 1000);
+
+      const result = await response.json();
+      if (result.success) {
+        const updated = [...industryExpData];
+        updated[index] = { ...tempIndustryExp, id: result.data.id };
+        setIndustryExpData(updated);
+
+        // Update teaching if shared
+        setTeachingExpData(teachingExpData.map(e => e.id === result.data.id ? {
+          ...e,
+          from: result.data.from_date,
+          to: result.data.to_date,
+          period: result.data.period,
+          current: result.data.is_current
+        } : e));
+
+        setEditingIndustryExp(null);
+        setTempIndustryExp(null);
+        toast({
+          title: 'Experience updated',
+          description: 'Industry experience has been updated successfully.'
+        });
+      } else {
+        throw new Error(result.error || 'Failed to update record');
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update industry experience.',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleIndustryExpFieldChange = (field: string, value: string | boolean) => {
@@ -922,16 +1455,51 @@ export default function Profile() {
 
   const handleDeleteIndustryExp = async (index: number) => {
     if (window.confirm('Are you sure you want to delete this industry experience?')) {
+      const token = localStorage.getItem('authToken');
+      if (!token) return;
+
       setLoading(true);
-      setTimeout(() => {
-        const updated = industryExpData.filter((_, i) => i !== index);
-        setIndustryExpData(updated);
-        setLoading(false);
-        toast({
-          title: 'Experience deleted',
-          description: 'Industry experience has been deleted successfully.'
+      try {
+        const response = await fetch(`/api/v1/faculty/experience/industry/${industryExpData[index].id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
         });
-      }, 500);
+
+        const result = await response.json();
+        if (result.success) {
+          // If record was fully deleted, remove from both lists
+          if (!result.data || Object.keys(result.data).length === 0) {
+            setIndustryExpData(industryExpData.filter((_, i) => i !== index));
+            setTeachingExpData(teachingExpData.filter(m => m.id !== industryExpData[index].id));
+          } else {
+            // Record was just updated (section cleared), remove from industry list
+            setIndustryExpData(industryExpData.filter((_, i) => i !== index));
+            // Update teaching list if it exists there
+            setTeachingExpData(teachingExpData.map(m => m.id === result.data.id ? {
+              ...m,
+              from: result.data.from_date,
+              to: result.data.to_date,
+              period: result.data.period,
+              current: result.data.is_current
+            } : m));
+          }
+
+          toast({
+            title: 'Experience deleted',
+            description: 'Industry experience has been cleared successfully.'
+          });
+        } else {
+          throw new Error(result.error || 'Failed to delete record');
+        }
+      } catch (error: any) {
+        toast({
+          title: 'Error',
+          description: error.message || 'Failed to delete industry experience.',
+          variant: 'destructive'
+        });
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -1204,7 +1772,7 @@ export default function Profile() {
           <p className="text-muted-foreground -mt-4"></p>
         </div>
         <div className="flex items-center gap-3">
-          <NotificationBell />
+         
           <Button onClick={handleDownloadProfile} className="bg-secondary hover:bg-secondary/90">
             <Download className="w-4 h-4 mr-2" />
             Download Profile
@@ -1915,8 +2483,8 @@ export default function Profile() {
                       <input
                         type="text"
                         placeholder="e.g., IEEE, ACM, IAENG"
-                        value={newMembership.society}
-                        onChange={(e) => handleNewMembershipChange('society', e.target.value)}
+                        value={newMembership.society_name}
+                        onChange={(e) => handleNewMembershipChange('society_name', e.target.value)}
                         className="input input-bordered text-sm"
                         disabled={loading}
                       />
@@ -1926,8 +2494,8 @@ export default function Profile() {
                       <input
                         type="text"
                         placeholder="e.g., 123456"
-                        value={newMembership.id}
-                        onChange={(e) => handleNewMembershipChange('id', e.target.value)}
+                        value={newMembership.membership_id}
+                        onChange={(e) => handleNewMembershipChange('membership_id', e.target.value)}
                         className="input input-bordered text-sm"
                         disabled={loading}
                       />
@@ -1985,8 +2553,8 @@ export default function Profile() {
                           <label className="text-sm font-medium w-24">Society:</label>
                           <input
                             type="text"
-                            value={tempMembership!.society}
-                            onChange={(e) => handleMembershipFieldChange('society', e.target.value)}
+                            value={tempMembership!.society_name}
+                            onChange={(e) => handleMembershipFieldChange('society_name', e.target.value)}
                             className="input input-bordered flex-1 text-sm"
                             disabled={loading}
                           />
@@ -1995,8 +2563,8 @@ export default function Profile() {
                           <label className="text-sm font-medium w-24">ID:</label>
                           <input
                             type="text"
-                            value={tempMembership!.id}
-                            onChange={(e) => handleMembershipFieldChange('id', e.target.value)}
+                            value={tempMembership!.membership_id}
+                            onChange={(e) => handleMembershipFieldChange('membership_id', e.target.value)}
                             className="input input-bordered flex-1 text-sm"
                             disabled={loading}
                           />
@@ -2043,8 +2611,8 @@ export default function Profile() {
                             <Award className="w-5 h-5 text-secondary" />
                           </div>
                           <div>
-                            <p className="font-semibold text-foreground">{membership.society}</p>
-                            <p className="text-sm text-muted-foreground">ID: {membership.id}</p>
+                            <p className="font-semibold text-foreground">{membership.society_name}</p>
+                            <p className="text-sm text-muted-foreground">ID: {membership.membership_id}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
