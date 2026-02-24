@@ -82,39 +82,30 @@ interface IndustryDetail {
 // Faculty data based on the Self-Appraisal Form
 const initialFacultyData = {
   // Basic Information
-  name: "C.Prathap",
-  employeeId: "NS20T15",
-  aicteId: "AICTE-123456",
-  coeId: "COE-789012",
-  designation: "Assistant Professor",
-  department: "Artificial Intelligence and Data Science",
-  collegeCode: "NS20T11",
-  orcidId: "0000-0001-5391-3610",
-  dateOfBirth: "24.10.1995",
-  age: 29,
-  dateOfJoining: "01.09.2023",
-  email: "Velvinojagan@gmail.com",
-  phone: "+91 8072435849",
-  address: "Vadapudupatti, Theni 625531",
-  linkedinUrl: "https://www.linkedin.com/in/prathap/",
+  name: "",
+  employeeId: "",
+  aicteId: "",
+  coeId: "",
+  designation: "",
+  department: "",
+  collegeCode: "",
+  orcidId: "",
+  dateOfBirth: "",
+  age: "",
+  dateOfJoining: "",
+  email: "",
+  phone: "+918072435849",
+  address: "",
+  linkedinUrl: "",
   profilePhoto: "",
-  phdStatus: "Pursuing",
-  thesisTitle: "Advanced Machine Learning Algorithms for Predictive Analytics",
-  registerNo: "PHD2023101",
-  guideName: "Dr. S. Ramasamy",
+  phdStatus: "",
+  thesisTitle: "",
+  registerNo: "",
+  guideName: "",
 };
 
 // Educational Qualifications
 const educationalQualifications = [
-  {
-    degree: "Ph.D.",
-    branch: "Information and Communication Engineering",
-    college: "-",
-    university: "Anna University",
-    year: "Pursuing",
-    percentage: "-",
-    url: "https://example.com/phd-proof.pdf"
-  },
   {
     degree: "M.E",
     branch: "Computer Science Engineering",
@@ -144,9 +135,7 @@ const subjectsHandled = [
 ];
 
 // Professional Memberships
-const memberships = [
-  { society: "COE Member", id: "304180", status: "Active", url: "https://example.com/membership-card.pdf" },
-];
+
 
 // Leave Details
 const leaveDetails = {
@@ -219,6 +208,33 @@ export default function Profile() {
         department: departmentFullName || prev.department,
         linkedinUrl: (user as any)?.linkedin_url || prev.linkedinUrl
       }));
+
+      // fetch full faculty profile from backend to populate IDs and dates
+      (async () => {
+        try {
+          const token = localStorage.getItem('authToken');
+          if (!token) return;
+          const res = await fetch('/api/v1/faculty/me/profile', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (!res.ok) return;
+          const payload = await res.json();
+          if (payload && payload.success && payload.data) {
+            const p = payload.data;
+            setFacultyData(prev => ({
+              ...prev,
+              aicteId: p.aicte_id ?? p.aicteId ?? prev.aicteId,
+              coeId: p.coe_id ?? p.coeId ?? prev.coeId,
+              orcidId: p.orcid_id ?? p.orcidId ?? prev.orcidId,
+              dateOfBirth: p.date_of_birth ?? p.dob ?? prev.dateOfBirth,
+              dateOfJoining: p.date_of_joining ?? p.dateOfJoining ?? prev.dateOfJoining,
+              linkedinUrl: p.linkedin_url ?? p.linkedinUrl ?? prev.linkedinUrl,
+            }));
+          }
+        } catch (e) {
+          console.warn('Failed to fetch faculty profile', e);
+        }
+      })();
     }
   }, [user]);
 
@@ -315,7 +331,7 @@ export default function Profile() {
               const entries = phdResult.data.map((r: any) => ({
                 id: r.phd_id ?? r.id ?? null,
                 orcidId: r.orcid_id ?? r.orcidId ?? "",
-                phdStatus: r.status ?? r.phd_status ?? r.phdStatus ?? "Pursuing",
+                phdStatus: r.status ?? r.phd_status ?? r.phdStatus ?? "",
                 thesisTitle: r.thesis_title ?? r.thesisTitle ?? "",
                 registerNo: r.register_no ?? r.registerNo ?? "",
                 guideName: r.guide_name ?? r.guideName ?? "",
@@ -331,6 +347,7 @@ export default function Profile() {
                   registerNo: primary.registerNo || prev.registerNo,
                   guideName: primary.guideName || prev.guideName,
                 }));
+                setPrimaryPhdId(primary.id ?? null);
 
                 setPhdList(entries.slice(1));
               }
@@ -441,10 +458,11 @@ export default function Profile() {
     guideName: "",
   });
   const [addingPhd, setAddingPhd] = useState(false);
-  const [newPhd, setNewPhd] = useState({ orcidId: "", phdStatus: "Pursuing", thesisTitle: "", registerNo: "", guideName: "" });
+  const [newPhd, setNewPhd] = useState({ orcidId: "", phdStatus: "", thesisTitle: "", registerNo: "", guideName: "" });
   const [phdList, setPhdList] = useState<{ id?: number; orcidId: string; phdStatus: string; thesisTitle: string; registerNo: string; guideName: string }[]>([]);
+  const [primaryPhdId, setPrimaryPhdId] = useState<number | null>(null);
   const [editingPhdIndex, setEditingPhdIndex] = useState<number | null>(null);
-  const [tempPhdEntry, setTempPhdEntry] = useState({ orcidId: "", phdStatus: "Pursuing", thesisTitle: "", registerNo: "", guideName: "" });
+  const [tempPhdEntry, setTempPhdEntry] = useState({ orcidId: "", phdStatus: "", thesisTitle: "", registerNo: "", guideName: "" });
 
   function validateEmail(email: string) {
     return /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email);
@@ -468,6 +486,93 @@ export default function Profile() {
     setEditingField(field);
     setTempValue(currentValue);
     setFieldError("");
+  };
+
+  const handleDeletePrimaryPhd = async () => {
+    if (primaryPhdId) {
+      if (!window.confirm('Are you sure you want to delete the primary PhD record?')) return;
+      const token = localStorage.getItem('authToken');
+      if (!token) return;
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/v1/faculty/phd/${primaryPhdId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const result = await response.json();
+        if (result.success) {
+          // Refresh canonical list
+          const phdResponse = await fetch('/api/v1/faculty/phd', { headers: { 'Authorization': `Bearer ${token}` } });
+          if (phdResponse.ok) {
+            const phdResult = await phdResponse.json();
+            if (phdResult.success && Array.isArray(phdResult.data)) {
+              const entries = phdResult.data.map((r: any) => ({
+                id: r.phd_id ?? r.id ?? null,
+                orcidId: r.orcid_id ?? r.orcidId ?? "",
+                phdStatus: r.status ?? r.phd_status ?? r.phdStatus ?? "",
+                thesisTitle: r.thesis_title ?? r.thesisTitle ?? "",
+                registerNo: r.register_no ?? r.registerNo ?? "",
+                guideName: r.guide_name ?? r.guideName ?? "",
+              }));
+
+              if (entries.length > 0) {
+                const primary = entries[0];
+                setPrimaryPhdId(primary.id ?? null);
+                setFacultyData(prev => ({
+                  ...prev,
+                  phdStatus: primary.phdStatus || prev.phdStatus,
+                  orcidId: primary.orcidId || prev.orcidId,
+                  thesisTitle: primary.thesisTitle || prev.thesisTitle,
+                  registerNo: primary.registerNo || prev.registerNo,
+                  guideName: primary.guideName || prev.guideName,
+                }));
+                setPhdList(entries.slice(1));
+              } else {
+                // No entries remain
+                setPrimaryPhdId(null);
+                setFacultyData(prev => ({ ...prev, phdStatus: "", orcidId: "", thesisTitle: "", registerNo: "", guideName: "" }));
+                setPhdList([]);
+              }
+            }
+          }
+
+          toast({ title: 'Primary PhD deleted' });
+        } else {
+          throw new Error(result.message || 'Failed to delete PhD');
+        }
+      } catch (error: any) {
+        console.error('Delete primary PhD error', error);
+        toast({ title: 'Error', description: error.message || 'Failed to delete PhD.', variant: 'destructive' });
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      // No primary id persisted; clear fields via profile update
+      const token = localStorage.getItem('authToken');
+      if (!token) return;
+      setLoading(true);
+      try {
+        const response = await fetch('http://localhost:3005/api/v1/faculty/update-profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ phd_status: "", orcid_id: "", thesis_title: "", register_no: "", guide_name: "" })
+        });
+        const result = await response.json();
+        if (result.success) {
+          setFacultyData(prev => ({ ...prev, phdStatus: "", orcidId: "", thesisTitle: "", registerNo: "", guideName: "" }));
+          setPhdList([]);
+          setPrimaryPhdId(null);
+          toast({ title: 'Primary PhD cleared' });
+        } else {
+          throw new Error(result.message || 'Failed to clear primary PhD');
+        }
+      } catch (error: any) {
+        console.error('Clear primary PhD error', error);
+        toast({ title: 'Error', description: error.message || 'Failed to clear primary PhD.', variant: 'destructive' });
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   const handleCancelEdit = () => {
@@ -512,7 +617,18 @@ export default function Profile() {
       }
 
       const updatePayload: any = {};
-      updatePayload[field] = tempValue;
+      let valueToSave: string | undefined = tempValue;
+      if (field === 'phone') {
+        const cleaned = tempValue.replace(/\D/g, '');
+        if (cleaned.length === 10) {
+          valueToSave = '+91' + cleaned;
+        } else if (cleaned.length > 10 && tempValue.startsWith('+')) {
+          valueToSave = tempValue;
+        } else {
+          valueToSave = tempValue;
+        }
+      }
+      updatePayload[field] = valueToSave;
 
       const response = await fetch('http://localhost:3005/api/v1/faculty/update-profile', {
         method: 'PUT',
@@ -1640,7 +1756,7 @@ export default function Profile() {
     setEditingPhd(true);
     setTempPhd({
       orcidId: facultyData.orcidId || "",
-      phdStatus: facultyData.phdStatus || "Pursuing",
+      phdStatus: facultyData.phdStatus || "",
       thesisTitle: facultyData.thesisTitle || "",
       registerNo: facultyData.registerNo || "",
       guideName: facultyData.guideName || "",
@@ -1653,19 +1769,55 @@ export default function Profile() {
 
   const handleSavePhd = async () => {
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) throw new Error('Not authenticated');
+
+      const resp = await fetch('/api/v1/faculty/update-profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({
+          phd_status: tempPhd.phdStatus,
+          orcid_id: tempPhd.orcidId,
+          thesis_title: tempPhd.thesisTitle,
+          register_no: tempPhd.registerNo,
+          guide_name: tempPhd.guideName
+        })
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.message || 'Failed to update PhD status');
+      }
+
       setFacultyData((prev) => ({
         ...prev,
-        ...tempPhd,
+        phdStatus: tempPhd.phdStatus,
+        orcidId: tempPhd.orcidId || prev.orcidId,
+        thesisTitle: tempPhd.thesisTitle || prev.thesisTitle,
+        registerNo: tempPhd.registerNo || prev.registerNo,
+        guideName: tempPhd.guideName || prev.guideName,
       }));
+      // Refresh phd list from server
+      try {
+        const phdRes = await fetch('/api/v1/faculty/phd', { headers: { 'Authorization': `Bearer ${token}` } });
+        if (phdRes.ok) {
+          const phdJson = await phdRes.json();
+          if (phdJson.success && Array.isArray(phdJson.data)) {
+            setPhdList(phdJson.data.map((r: any) => ({ id: r.phd_id ?? r.id, orcidId: r.orcid_id, phdStatus: r.status, thesisTitle: r.thesis_title, registerNo: r.register_no, guideName: r.guide_name })));
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to refresh phd list', e);
+      }
       setEditingPhd(false);
+      toast({ title: 'PhD details updated', description: 'Your PhD information has been updated successfully.' });
+    } catch (error: any) {
+      console.error('Failed to save PhD details', error);
+      toast({ title: 'Error', description: error.message || 'Failed to update PhD details', variant: 'destructive' });
+    } finally {
       setLoading(false);
-      toast({
-        title: 'PhD details updated',
-        description: 'Your PhD information has been updated successfully.'
-      });
-    }, 1000);
+    }
   };
 
   const handlePhdFieldChange = (field: string, value: string) => {
@@ -1674,12 +1826,12 @@ export default function Profile() {
 
   const handleAddPhd = () => {
     setAddingPhd(true);
-    setNewPhd({ orcidId: "", phdStatus: "Pursuing", thesisTitle: "", registerNo: "", guideName: "" });
+    setNewPhd({ orcidId: "", phdStatus: "", thesisTitle: "", registerNo: "", guideName: "" });
   };
 
   const handleCancelAddPhd = () => {
     setAddingPhd(false);
-    setNewPhd({ orcidId: "", phdStatus: "Pursuing", thesisTitle: "", registerNo: "", guideName: "" });
+    setNewPhd({ orcidId: "", phdStatus: "", thesisTitle: "", registerNo: "", guideName: "" });
   };
 
   const handleSaveNewPhd = async () => {
@@ -1688,7 +1840,7 @@ export default function Profile() {
       // Fallback to local addition
       setPhdList(prev => [...prev, { ...newPhd }]);
       setAddingPhd(false);
-      setNewPhd({ orcidId: "", phdStatus: "Pursuing", thesisTitle: "", registerNo: "", guideName: "" });
+      setNewPhd({ orcidId: "", phdStatus: "", thesisTitle: "", registerNo: "", guideName: "" });
       toast({ title: 'PhD record added', description: 'New PhD record has been added locally (not persisted).' });
       return;
     }
@@ -1712,11 +1864,42 @@ export default function Profile() {
 
       const result = await response.json();
       if (result.success) {
-        const id = result.data?.phd_id ?? result.data?.id ?? null;
-        const entry = { id, orcidId: newPhd.orcidId, phdStatus: newPhd.phdStatus, thesisTitle: newPhd.thesisTitle, registerNo: newPhd.registerNo, guideName: newPhd.guideName };
-        setPhdList(prev => [...prev, entry]);
+        // Refresh PhD list from backend so UI reflects canonical data
+        try {
+          const phdResp = await fetch('/api/v1/faculty/phd', { headers: { 'Authorization': `Bearer ${token}` } });
+          if (phdResp.ok) {
+            const phdJson = await phdResp.json();
+            if (phdJson && phdJson.success && Array.isArray(phdJson.data)) {
+              const entries = phdJson.data.map((r: any) => ({
+                id: r.phd_id ?? r.id ?? null,
+                orcidId: r.orcid_id ?? r.orcidId ?? "",
+                phdStatus: r.status ?? r.phd_status ?? r.phdStatus ?? "",
+                thesisTitle: r.thesis_title ?? r.thesisTitle ?? "",
+                registerNo: r.register_no ?? r.registerNo ?? "",
+                guideName: r.guide_name ?? r.guideName ?? "",
+              }));
+
+              if (entries.length > 0) {
+                const primary = entries[0];
+                setFacultyData(prev => ({
+                  ...prev,
+                  phdStatus: primary.phdStatus || prev.phdStatus,
+                  orcidId: primary.orcidId || prev.orcidId,
+                  thesisTitle: primary.thesisTitle || prev.thesisTitle,
+                  registerNo: primary.registerNo || prev.registerNo,
+                  guideName: primary.guideName || prev.guideName,
+                }));
+                setPrimaryPhdId(primary.id ?? null);
+                setPhdList(entries.slice(1));
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to refresh PhD records after create', e);
+        }
+
         setAddingPhd(false);
-        setNewPhd({ orcidId: "", phdStatus: "Pursuing", thesisTitle: "", registerNo: "", guideName: "" });
+        setNewPhd({ orcidId: "", phdStatus: "", thesisTitle: "", registerNo: "", guideName: "" });
         toast({ title: 'PhD record added', description: 'New PhD record has been saved.' });
       } else {
         throw new Error(result.message || result.error || 'Failed to save PhD record');
@@ -1935,21 +2118,27 @@ export default function Profile() {
 
           <div className="mt-6 space-y-4">
             {/* AICTE ID */}
-            <div className="flex items-center gap-3 text-sm">
-              <Building className="w-4 h-4 text-primary flex-shrink-0" />
-              <span className="text-muted-foreground line-clamp-2">AICTE ID: {facultyData.aicteId}</span>
-            </div>
+            {facultyData.aicteId ? (
+              <div className="flex items-center gap-3 text-sm">
+                <Building className="w-4 h-4 text-primary flex-shrink-0" />
+                <span className="text-muted-foreground line-clamp-2">AICTE ID: {facultyData.aicteId}</span>
+              </div>
+            ) : null}
             {/* COE ID */}
-            <div className="flex items-center gap-3 text-sm">
-              <Building className="w-4 h-4 text-primary flex-shrink-0" />
-              <span className="text-muted-foreground line-clamp-2">COE ID: {facultyData.coeId}</span>
-            </div>
+            {facultyData.coeId ? (
+              <div className="flex items-center gap-3 text-sm">
+                <Building className="w-4 h-4 text-primary flex-shrink-0" />
+                <span className="text-muted-foreground line-clamp-2">COE ID: {facultyData.coeId}</span>
+              </div>
+            ) : null}
 
             {/* ORCID ID */}
-            <div className="flex items-center gap-3 text-sm">
-              <Globe className="w-4 h-4 text-primary flex-shrink-0" />
-              <span className="text-muted-foreground line-clamp-2">ORCID ID: {facultyData.orcidId}</span>
-            </div>
+            {facultyData.orcidId ? (
+              <div className="flex items-center gap-3 text-sm">
+                <Globe className="w-4 h-4 text-primary flex-shrink-0" />
+                <span className="text-muted-foreground line-clamp-2">ORCID ID: {facultyData.orcidId}</span>
+              </div>
+            ) : null}
 
             {/* DOB & Age */}
             <div className="flex items-center gap-3 text-sm">
@@ -2013,14 +2202,18 @@ export default function Profile() {
                 </div>
               ) : (
                 <div className="flex-1 flex items-center justify-between">
-                  <a
-                    href={facultyData.linkedinUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline font-medium truncate"
-                  >
-                    LinkedIn Profile
-                  </a>
+                  {facultyData.linkedinUrl ? (
+                    <a
+                      href={facultyData.linkedinUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline font-medium truncate"
+                    >
+                      LinkedIn Profile
+                    </a>
+                  ) : (
+                    <span className="text-muted-foreground">LinkedIn Profile</span>
+                  )}
                   <button
                     onClick={() => handleEditField('linkedin_url', facultyData.linkedinUrl)}
                     className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-muted rounded ml-2 flex-shrink-0"
@@ -2364,7 +2557,7 @@ export default function Profile() {
                         <label className="text-xs font-medium">Year</label>
                         <input
                           type="text"
-                          placeholder="e.g., 2023 or Pursuing"
+                          placeholder="e.g., 2023"
                           value={newEducation.year}
                           onChange={(e) => handleNewEducationChange('year', e.target.value)}
                           className="input input-bordered text-sm"
@@ -4137,39 +4330,54 @@ export default function Profile() {
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">PhD Status</p>
-                        <Badge variant={facultyData.phdStatus === "Completed" ? "default" : "secondary"} className="mt-1">
-                          {facultyData.phdStatus || "Pursuing"}
-                        </Badge>
+                        {facultyData.phdStatus ? (
+                          <Badge variant={facultyData.phdStatus === "Completed" ? "default" : "secondary"} className="mt-1">
+                            {facultyData.phdStatus}
+                          </Badge>
+                        ) : null}
                       </div>
                     </div>
                     <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-muted-foreground hover:text-secondary" onClick={handleEditPhd}>
                       <Edit2 className="w-4 h-4" />
                     </Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive" onClick={handleDeletePrimaryPhd}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                   </div>
 
-                  <div className="pt-2">
-                    <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">Thesis Title / Research Field</p>
-                    <p className="text-foreground font-medium italic">"{facultyData.thesisTitle || "Advanced Machine Learning Algorithms for Predictive Analytics"}"</p>
-                  </div>
+                    {facultyData.thesisTitle ? (
+                      <div className="pt-2">
+                        <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">Thesis Title / Research Field</p>
+                        <p className="text-foreground font-medium italic">{facultyData.thesisTitle}</p>
+                      </div>
+                    ) : null}
 
-                  <div className="grid grid-cols-2 gap-4 pt-2">
-                    <div>
-                      <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">Register No</p>
-                      <p className="text-foreground font-mono">{facultyData.registerNo || "PHD2023101"}</p>
+                  {(facultyData.registerNo || facultyData.guideName) ? (
+                    <div className="grid grid-cols-2 gap-4 pt-2">
+                      {facultyData.registerNo ? (
+                        <div>
+                          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">Register No</p>
+                          <p className="text-foreground font-mono">{facultyData.registerNo}</p>
+                        </div>
+                      ) : null}
+                      {facultyData.guideName ? (
+                        <div>
+                          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">Guide Name</p>
+                          <p className="text-foreground">{facultyData.guideName}</p>
+                        </div>
+                      ) : null}
                     </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">Guide Name</p>
-                      <p className="text-foreground">{facultyData.guideName || "Dr. S. Ramasamy"}</p>
-                    </div>
-                  </div>
+                  ) : null}
 
-                  <div className="pt-2">
-                    <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">ORCID ID</p>
-                    <div className="flex items-center gap-2 text-primary">
-                      <Globe className="w-4 h-4" />
-                      <span className="font-mono">{facultyData.orcidId || "0000-0001-5391-3610"}</span>
+                  {facultyData.orcidId ? (
+                    <div className="pt-2">
+                      <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">ORCID ID</p>
+                      <div className="flex items-center gap-2 text-primary">
+                        <Globe className="w-4 h-4" />
+                        <span className="font-mono">{facultyData.orcidId}</span>
+                      </div>
                     </div>
-                  </div>
+                  ) : null}
                 </motion.div>
               )}
 
@@ -4325,7 +4533,7 @@ export default function Profile() {
                           {phd.thesisTitle && (
                             <div className="pt-2">
                               <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">Thesis Title / Research Field</p>
-                              <p className="text-foreground font-medium italic">"{phd.thesisTitle}"</p>
+                              <p className="text-foreground font-medium italic">{phd.thesisTitle}</p>
                             </div>
                           )}
 
