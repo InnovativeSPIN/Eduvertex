@@ -88,4 +88,20 @@ router.route('/experience/industry/:id')
   .put(authorize('faculty'), updateIndustryExperience)
   .delete(authorize('faculty'), deleteIndustryExperience);
 
+// PhD records
+import {
+  getMyPhd,
+  addPhd,
+  updatePhd,
+  deletePhd
+} from '../../controllers/faculty/phd.controller.js';
+
+router.route('/phd')
+  .get(authorize('faculty'), getMyPhd)
+  .post(authorize('faculty'), addPhd);
+
+router.route('/phd/:id')
+  .put(authorize('faculty'), updatePhd)
+  .delete(authorize('faculty'), deletePhd);
+
 export default router;

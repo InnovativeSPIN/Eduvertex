@@ -27,6 +27,7 @@ import SubjectClassMapping from './SubjectClassMapping.model.js';
 import FacultyEduQualification from './FacultyEduQualification.model.js';
 import FacultyExperience from './FacultyExperience.model.js';
 import FacultyIndustryExperience from './FacultyIndustryExperience.model.js';
+import FacultyPhd from './FacultyPhd.model.js';
 
 // Initialize models
 const models = {
@@ -55,6 +56,7 @@ const models = {
   FacultyEduQualification: FacultyEduQualification(sequelize),
   FacultyExperience: FacultyExperience(sequelize),
   FacultyIndustryExperience: FacultyIndustryExperience(sequelize),
+  FacultyPhd: FacultyPhd(sequelize),
 };
 
 // Define associations
