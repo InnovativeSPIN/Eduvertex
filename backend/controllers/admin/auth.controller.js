@@ -273,6 +273,26 @@ export const login = asyncHandler(async (req, res, next) => {
       return next(new ErrorResponse('Your account has been deactivated', 401));
     }
 
+    // If this user is a department admin (role_id 7), validate using faculty_profiles
+    if (user.role && user.role.role_id === 7) {
+      const deptAdminFaculty = await Faculty.findOne({
+        where: { email },
+        attributes: { include: ['password'] },
+        include: [{ model: models.Department, as: 'department', attributes: ['short_name', 'full_name'] }]
+      });
+
+      if (!deptAdminFaculty) {
+        return next(new ErrorResponse('Invalid credentials', 401));
+      }
+
+      const isFacultyMatch = await deptAdminFaculty.matchPassword(password);
+      if (isFacultyMatch && deptAdminFaculty.status === 'active') {
+        return sendTokenResponse(deptAdminFaculty, 200, res);
+      }
+
+      return next(new ErrorResponse('Invalid credentials', 401));
+    }
+
     const isMatch = await user.matchPassword(password);
     if (isMatch) {
       userType = 'admin';

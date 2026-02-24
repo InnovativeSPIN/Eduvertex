@@ -29,11 +29,12 @@ const sendTokenResponse = (user, statusCode, res) => {
       avatar: user.photo || null
     };
   } else if (user.role === 'faculty' || user.role?.role_name === 'faculty' || user.Name) {
+    const isDeptAdmin = user.role_id === 7 || (user.role && user.role.role_id === 7);
     userData = {
-      id: user.id,
+      id: user.faculty_id || user.id,
       name: user.Name || user.name,
       email: user.email,
-      role: 'faculty',
+      role: isDeptAdmin ? 'department-admin' : 'faculty',
       designation: user.designation || null,
       department: user.department,
       avatar: user.profile_image_url || null,

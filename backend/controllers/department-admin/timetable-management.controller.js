@@ -6,10 +6,16 @@ import ErrorResponse from '../../utils/errorResponse.js';
  * Check if faculty is a timetable incharge for their department
  */
 export const checkTimetableIncharge = asyncHandler(async (req, res, next) => {
-  const { faculty_id, department_id } = req.user;
+  // normalize possible property names
+  const facultyId = req.user.faculty_id || req.user.id || req.user.facultyId;
+  const departmentId = req.user.department_id || req.user.departmentId || req.user.department?.id;
+
+  if (!facultyId || !departmentId) {
+    throw new ErrorResponse('Only timetable incharge can access this resource', 403);
+  }
 
   const faculty = await models.Faculty.findOne({
-    where: { id: faculty_id, department_id, is_timetable_incharge: true }
+    where: { faculty_id: facultyId, department_id: departmentId, is_timetable_incharge: true }
   });
 
   if (!faculty) {

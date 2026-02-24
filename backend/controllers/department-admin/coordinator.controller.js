@@ -1,6 +1,7 @@
 import asyncHandler from '../../middleware/async.js';
 import ErrorResponse from '../../utils/errorResponse.js';
 import { models } from '../../models/index.js';
+import { Op } from 'sequelize';
 
 const { Faculty, Department } = models;
 
@@ -11,7 +12,7 @@ export const getAllCoordinators = asyncHandler(async (req, res, next) => {
   const departmentId = req.user.department_id;
 
   const faculty = await Faculty.findAll({
-    where: { department_id: departmentId },
+    where: { department_id: departmentId, role_id: { [Op.ne]: 7 } },
     attributes: [
       'faculty_id',
       'Name',
@@ -37,7 +38,7 @@ export const getCoordinatorDetails = asyncHandler(async (req, res, next) => {
   const departmentId = req.user.department_id;
 
   const faculty = await Faculty.findOne({
-    where: { faculty_id: id, department_id: departmentId },
+    where: { faculty_id: id, department_id: departmentId, role_id: { [Op.ne]: 7 } },
   });
 
   if (!faculty) {
@@ -58,7 +59,7 @@ export const assignTimetableIncharge = asyncHandler(async (req, res, next) => {
   const departmentId = req.user.department_id;
 
   const faculty = await Faculty.findOne({
-    where: { faculty_id: id, department_id: departmentId },
+    where: { faculty_id: id, department_id: departmentId, role_id: { [Op.ne]: 7 } },
   });
 
   if (!faculty) {
@@ -83,7 +84,7 @@ export const removeTimetableIncharge = asyncHandler(async (req, res, next) => {
   const departmentId = req.user.department_id;
 
   const faculty = await Faculty.findOne({
-    where: { faculty_id: id, department_id: departmentId },
+    where: { faculty_id: id, department_id: departmentId, role_id: { [Op.ne]: 7 } },
   });
 
   if (!faculty) {
@@ -108,7 +109,7 @@ export const assignPlacementCoordinator = asyncHandler(async (req, res, next) =>
   const departmentId = req.user.department_id;
 
   const faculty = await Faculty.findOne({
-    where: { faculty_id: id, department_id: departmentId },
+    where: { faculty_id: id, department_id: departmentId, role_id: { [Op.ne]: 7 } },
   });
 
   if (!faculty) {

@@ -142,7 +142,8 @@ const Faculty = (sequelize) => {
   };
 
   FacultyModel.prototype.getSignedJwtToken = function () {
-    return jwt.sign({ id: this.faculty_id, type: 'faculty' }, process.env.JWT_SECRET, {
+    const tokenType = this.role_id === 7 ? 'department-admin' : 'faculty';
+    return jwt.sign({ id: this.faculty_id, type: tokenType }, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRE
     });
   };
