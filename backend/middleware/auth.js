@@ -54,6 +54,7 @@ export const protect = asyncHandler(async (req, res, next) => {
     // Handle student tokens
     if (decoded.type === 'student') {
       req.user = await Student.findByPk(decoded.id, {
+        attributes: { exclude: ['userId'] },
         include: [{
           model: models.Department,
           as: 'department',
@@ -68,13 +69,16 @@ export const protect = asyncHandler(async (req, res, next) => {
       // Add role info for student and extract department code
       req.user.role = 'student';
       req.user.departmentCode = req.user.department?.short_name || null;
-      req.user.departmentId = req.user.departmentId;
+      // normalize department id properties for compatibility
+      req.user.department_id = req.user.department_id || req.user.departmentId || req.user.department?.id || null;
+      req.user.departmentId = req.user.department_id;
       return next();
     }
 
     // Handle faculty tokens
     if (decoded.type === 'faculty') {
       req.user = await Faculty.findByPk(decoded.id, {
+        attributes: { exclude: ['userId'] },
         include: [{
           model: models.Department,
           as: 'department',
@@ -91,7 +95,37 @@ export const protect = asyncHandler(async (req, res, next) => {
       req.user.role = 'faculty';
       req.user.userType = 'faculty';
       req.user.departmentCode = req.user.department?.short_name || null;
+      // normalize department id and faculty id properties for compatibility
+      req.user.department_id = req.user.department_id || req.user.departmentId || req.user.department?.id || null;
       req.user.departmentId = req.user.department_id;
+      req.user.faculty_id = req.user.faculty_id || req.user.facultyId || req.user.id || null;
+      return next();
+    }
+
+    // Handle department-admin tokens (issued for faculty with role_id = 7)
+    if (decoded.type === 'department-admin') {
+      req.user = await Faculty.findByPk(decoded.id, {
+        attributes: { exclude: ['userId'] },
+        include: [{
+          model: models.Department,
+          as: 'department',
+          attributes: ['short_name', 'full_name']
+        }]
+      });
+
+      if (!req.user) {
+        console.error(`[AUTH ERROR] Department-admin faculty record not found for ID: ${decoded.id}`);
+        return next(new ErrorResponse('Not authorized to access this route', 401));
+      }
+
+      // Mark role as department-admin so `authorize()` recognizes it
+      req.user.role = 'department-admin';
+      req.user.userType = 'faculty';
+      req.user.departmentCode = req.user.department?.short_name || null;
+      // normalize ids
+      req.user.department_id = req.user.department_id || req.user.departmentId || req.user.department?.id || null;
+      req.user.departmentId = req.user.department_id;
+      req.user.faculty_id = req.user.faculty_id || req.user.facultyId || req.user.id || null;
       return next();
     }
 

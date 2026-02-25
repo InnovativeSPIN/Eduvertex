@@ -1,12 +1,16 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import { User, UserRole } from '@/types/auth';
 
 interface AuthContextType {
   user: User | null;
+  authToken: string | null; // JWT stored separately
   // identifier may be an email address or a student ID when role is student
   login: (identifier: string, password: string, role: UserRole) => Promise<boolean>;
   logout: () => void;
   updateUserData: (newData: Partial<User>) => void;
+  refreshUserData: () => Promise<void>;
+  loginError: string | null;
+  clearLoginError: () => void;
   isAuthenticated: boolean;
 }
 
@@ -22,6 +26,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return null;
     }
   });
+
+  const [loginError, setLoginError] = useState<string | null>(null);
+
+  const clearLoginError = () => setLoginError(null);
 
   const login = async (identifier: string, password: string, role: UserRole): Promise<boolean> => {
     const trimmedId = identifier.trim().toLowerCase();
@@ -41,12 +49,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       response = await fetch('/api/v1/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: trimmedId, password: trimmedPassword }),
+        body: JSON.stringify({ email: trimmedId, password: trimmedPassword, requestedRole: role }),
       });
 
       const result = await response.json();
 
       if (result.success && result.user) {
+        setLoginError(null);
           let departmentObj = result.user.department;
           // If department is a string, convert to object with short_name
           if (departmentObj && typeof departmentObj === 'string') {
@@ -63,20 +72,64 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             year: result.user.year,
             semester: result.user.semester,
             rollNo: result.user.rollNo,
+            is_timetable_incharge: result.user.is_timetable_incharge || false,
+            is_placement_coordinator: result.user.is_placement_coordinator || false,
             token: result.token
           };
-        
         console.log('Login successful:', userObj.name, userObj.role);
+        // If this user is a department-admin, prefer faculty profile details
+        if (userObj.role === 'department-admin') {
+          try {
+            const profileRes = await fetch('/api/v1/faculty/me/profile', {
+              headers: { 'Authorization': `Bearer ${result.token}` }
+            });
+            if (profileRes.ok) {
+              const ct = profileRes.headers.get('content-type') || '';
+              let profileJson: any = null;
+              if (ct.includes('application/json')) {
+                try {
+                  profileJson = await profileRes.json();
+                } catch (e) {
+                  console.warn('Failed to parse JSON profile response', e);
+                }
+              } else {
+                console.warn('Non-JSON profile response, content-type=', ct);
+              }
+              const prof = profileJson ? (profileJson.data || profileJson) : null;
+              // Merge selected faculty profile fields into userObj
+              if (prof) {
+                userObj.name = prof.Name || prof.name || userObj.name;
+                userObj.email = prof.email || userObj.email;
+                userObj.avatar = prof.avatar || prof.profile_image_url || userObj.avatar;
+                userObj.designation = prof.designation || userObj.designation;
+                // Normalize department to a short string to avoid rendering objects
+                if (prof.department) {
+                  userObj.department = typeof prof.department === 'object'
+                    ? (prof.department.short_name || prof.department.full_name)
+                    : prof.department;
+                }
+                userObj.is_timetable_incharge = prof.is_timetable_incharge || userObj.is_timetable_incharge;
+                userObj.is_placement_coordinator = prof.is_placement_coordinator || userObj.is_placement_coordinator;
+              }
+            }
+          } catch (err) {
+            console.error('Failed to fetch faculty profile for department-admin:', err);
+          }
+        }
+
         setUser(userObj);
         localStorage.setItem('eduvertex_user', JSON.stringify(userObj));
         localStorage.setItem('authToken', result.token);
         return true;
       }
 
-      console.log('Login failed:', result.error || 'Unknown error');
+      const errMsg = result.error || 'Invalid credentials';
+      setLoginError(errMsg);
+      console.log('Login failed:', errMsg);
       return false;
     } catch (error) {
       console.error('Login error:', error);
+      setLoginError('Invalid credentials');
       return false;
     }
   };
@@ -86,17 +139,94 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('eduvertex_user');
   };
 
+  const refreshUserData = useCallback(async () => {
+    // Get current user from localStorage to avoid dependency issues
+    const userDataStr = localStorage.getItem('eduvertex_user');
+    if (!userDataStr) return;
+    
+    try {
+      const userData = JSON.parse(userDataStr);
+      if (!userData || !userData.role) return;
+
+      const token = localStorage.getItem('authToken');
+      let response;
+      
+      // Fetch fresh user data based on role
+      if (userData.role === 'faculty') {
+        response = await fetch('/api/v1/faculty/me/profile', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      } else if (userData.role === 'student') {
+        response = await fetch('/api/v1/student/me/profile', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      } else {
+        // For admin users, prefer fetching faculty profile for department-admin role
+        if (userData.role === 'department-admin') {
+          response = await fetch('/api/v1/faculty/me/profile', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+        } else {
+          // For other admin users, use the standard getMe endpoint
+          response = await fetch('/api/v1/auth/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+        }
+      }
+
+      if (response.ok) {
+        const ct = response.headers.get('content-type') || '';
+        let result: any = null;
+        if (ct.includes('application/json')) {
+          try {
+            result = await response.json();
+          } catch (e) {
+            console.warn('Failed to parse refresh response JSON', e);
+          }
+        } else {
+          console.warn('Non-JSON refresh response, content-type=', ct);
+        }
+        if (result && result.success && result.data) {
+          const freshData = result.data;
+          setUser(prev => {
+            if (!prev) return null;
+            const updatedUser = {
+              ...prev,
+              name: freshData.name || freshData.Name || prev.name,
+              email: freshData.email || prev.email,
+              designation: freshData.designation || prev.designation,
+              avatar: freshData.avatar || freshData.profile_image_url || prev.avatar,
+              is_timetable_incharge: freshData.is_timetable_incharge || false,
+              is_placement_coordinator: freshData.is_placement_coordinator || false
+            };
+            localStorage.setItem('eduvertex_user', JSON.stringify(updatedUser));
+            return updatedUser;
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+    }
+  }, []);
+
   const updateUserData = (newData: Partial<User>) => {
     setUser(prev => {
       if (!prev) return null;
-      const updated = { ...prev, ...newData };
+      const normDept = (newData as any).department && typeof (newData as any).department === 'object'
+        ? ((newData as any).department.short_name || (newData as any).department.full_name)
+        : (newData as any).department;
+      const merged = { ...prev, ...newData, ...(normDept ? { department: normDept } : {}) };
+      const updated = merged;
       localStorage.setItem('eduvertex_user', JSON.stringify(updated));
       return updated;
     });
   };
 
+  // derive token from localStorage so it stays updated
+  const authToken = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateUserData, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, authToken, login, logout, updateUserData, refreshUserData, loginError, clearLoginError, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

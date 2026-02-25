@@ -6,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NotificationProvider, MentorProvider } from "@/pages/admin/department-admin/context";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
+import CoordinatorManagement from "./pages/CoordinatorManagement";
+import FacultyAllocation from "./pages/FacultyAllocation";
 import Timetable from "./pages/Timetable";
 import Attendance from "./pages/Attendance";
 import Academics from "./pages/Academics";
@@ -18,6 +20,7 @@ import NotFound from "./pages/NotFound";
 import { MentorDashboard } from "./pages/MentorDashboard";
 import { MenteesList } from "./pages/MenteesList";
 import { StudentProfileView } from "./pages/StudentProfileView";
+import TimetableEditor from "./pages/TimetableEditor";
 
 import './department-admin.css';
 
@@ -35,7 +38,9 @@ const DepartmentAdminRoutes = () => (
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="profile" element={<Profile />} />
-              <Route path="timetable" element={<Timetable />} />
+              <Route path="coordinators" element={<CoordinatorManagement />} />
+              <Route path="faculty-allocations" element={<FacultyAllocation />} />
+              <Route path="timetable" element={<TimetableEditor />} />
               <Route path="attendance" element={<Attendance />} />
               <Route path="academics" element={<Academics />} />
               <Route path="leave" element={<Leave />} />
