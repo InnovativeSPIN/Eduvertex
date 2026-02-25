@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 24, 2026 at 06:55 PM
+-- Generation Time: Feb 25, 2026 at 07:35 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -166,7 +166,11 @@ CREATE TABLE `faculty_experience` (
 --
 
 INSERT INTO `faculty_experience` (`exp_id`, `faculty_id`, `designation`, `institution_name`, `university`, `department`, `from_date`, `to_date`, `period`, `is_current`) VALUES
-(2, 406, 'Assistant Professor', 'Nadar Saraswathi College of Engineering and Technology', 'akka university', 'Electronics & Communication Engineering', '2026-02-24', '2026-02-24', '4M', 0);
+(2, 406, 'Assistant Professor', 'Nadar Saraswathi College of Engineering and Technology', 'akka university', 'Electronics & Communication Engineering', '2026-02-24', '2026-02-24', '4M', 0),
+(4, 101, 'Assistant Professor', 'Nadar Saraswathi College of Engineering and Technology', 'asdfasf', 'Internet of Things', '2026-02-25', '2026-02-17', '232', 0),
+(5, 101, 'Assistant Professor', 'Nadar Saraswathi College of Engineering and Technology', 'Anna University', 'Computer Science Engineering', '2020-01-01', '2023-12-31', '3 years', 0),
+(6, 101, 'Assistant Professor', 'Nadar Saraswathi College of Engineering and Technology', 'Anna University', 'Computer Science Engineering', '2020-01-01', '2023-12-31', '3 years', 0),
+(7, 101, 'Assistant Professor', 'Nadar Saraswathi College of Engineering and Technology', 'Anna University', 'Computer Science Engineering', '2020-01-01', '2023-12-31', '3 years', 0);
 
 -- --------------------------------------------------------
 
@@ -192,7 +196,8 @@ CREATE TABLE `faculty_industry_experience` (
 --
 
 INSERT INTO `faculty_industry_experience` (`exp_id`, `faculty_id`, `job_title`, `company`, `location`, `from_date`, `to_date`, `period`, `is_current`, `status`) VALUES
-(3, 406, 'Data Analyst', 'Ematix private Limited', 'Theni', '2026-02-24', '2026-03-14', '2m', 0, 'active');
+(3, 406, 'Data Analyst', 'Ematix private Limited', 'Theni', '2026-02-24', '2026-03-14', '2m', 0, 'active'),
+(5, 101, 'Project Manager', 'dsfgfhg', 'dfgf', '0000-00-00', '0000-00-00', '', 0, 'active');
 
 -- --------------------------------------------------------
 
@@ -373,7 +378,7 @@ INSERT INTO `faculty_profiles` (`faculty_id`, `faculty_college_code`, `coe_id`, 
 (428, 'EC14', NULL, NULL, NULL, 'BHARATHI KANNAN K', 'ec14@nscet.org', NULL, '$2a$10$IlcgP8INGp8gPWVOAEloreSUEPPWVYQ.q5II/KWESGDGIlmzrzv0e', 5, 3, NULL, NULL, 'No', NULL, NULL, NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, '2026-02-19 16:39:11', '2026-02-20 06:43:32', NULL, 0, 0),
 (429, 'NS40T27', NULL, NULL, NULL, 'RAJESHSHREE S', 'ns40t27@nscet.org', NULL, '$2a$10$IlcgP8INGp8gPWVOAEloreSUEPPWVYQ.q5II/KWESGDGIlmzrzv0e', 5, 3, NULL, NULL, 'No', NULL, NULL, NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, '2026-02-19 16:39:11', '2026-02-20 06:43:32', NULL, 0, 0),
 (430, 'NS20NT23', NULL, NULL, NULL, 'MUTHURAJ', 'ns20nt23@nscet.org', NULL, '$2a$10$IlcgP8INGp8gPWVOAEloreSUEPPWVYQ.q5II/KWESGDGIlmzrzv0e', 5, 2, NULL, NULL, 'No', NULL, NULL, NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, '2026-02-19 16:39:11', '2026-02-20 06:43:32', NULL, 0, 0),
-(431, 'NSTO124', NULL, NULL, NULL, 'Thanush Kumar', 'ThanushKumarematix@gmail.com', NULL, '$2a$10$IlcgP8INGp8gPWVOAEloreSUEPPWVYQ.q5II/KWESGDGIlmzrzv0e', 7, 7, NULL, NULL, 'No', NULL, NULL, NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, '2026-02-24 13:45:58', '2026-02-24 14:18:08', NULL, 0, 0);
+(431, 'NSTO124', NULL, NULL, NULL, 'Thanush Kumar', 'ThanushKumarematix@gmail.com', NULL, '$2a$10$IlcgP8INGp8gPWVOAEloreSUEPPWVYQ.q5II/KWESGDGIlmzrzv0e', 7, 7, 'Assitant Professor', NULL, 'No', NULL, NULL, NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, '2026-02-24 13:45:58', '2026-02-25 03:50:43', NULL, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -455,7 +460,11 @@ CREATE TABLE `faculy_edu_qualification` (
 --
 
 INSERT INTO `faculy_edu_qualification` (`faculty_id`, `degree`, `branch`, `college`, `university`, `year`, `percentage`, `membership_id`, `society_name`, `status`) VALUES
-(406, 'B.E.', 'Computer Science Engineering', 'Nadar Saraswathi College of Engineering and Technology', 'Akka University', '2022', '60', 2, 'IEEE', 'Inactive');
+(406, 'B.E.', 'Computer Science Engineering', 'Nadar Saraswathi College of Engineering and Technology', 'Akka University', '2022', '60', 2, 'IEEE', 'Inactive'),
+(101, 'B.E.', 'Cyber Security', 'Nadar Saraswathi College of Engineering and Technology', 'akka', '2023', '58', 5, '', 'Active'),
+(101, 'M.Tech', 'Electrical & Electronics Engineering', 'Nadar Saraswathi College of Engineering and Technology', 'akkaa', '2025', '10', 20, '', 'Active'),
+(101, 'Membership', 'Professional Membership', '', 'Professional Organization', NULL, NULL, 21, 'IEEE', 'Inactive'),
+(101, 'Membership', 'Professional Membership', '', 'Professional Organization', NULL, NULL, 22, 'dsd', 'Active');
 
 -- --------------------------------------------------------
 
@@ -1908,8 +1917,8 @@ ALTER TABLE `faculty_events`
 -- Indexes for table `faculty_experience`
 --
 ALTER TABLE `faculty_experience`
-  ADD PRIMARY KEY (`faculty_id`),
-  ADD UNIQUE KEY `exp_id` (`exp_id`);
+  ADD PRIMARY KEY (`exp_id`),
+  ADD KEY `idx_faculty_id` (`faculty_id`);
 
 --
 -- Indexes for table `faculty_industry_experience`
@@ -1971,8 +1980,8 @@ ALTER TABLE `faculty_subject_assignments`
 -- Indexes for table `faculy_edu_qualification`
 --
 ALTER TABLE `faculy_edu_qualification`
-  ADD PRIMARY KEY (`faculty_id`),
-  ADD UNIQUE KEY `membership_id` (`membership_id`);
+  ADD UNIQUE KEY `membership_id` (`membership_id`),
+  ADD KEY `idx_faculty_id` (`faculty_id`);
 
 --
 -- Indexes for table `roles`
@@ -2225,13 +2234,13 @@ ALTER TABLE `faculty_events`
 -- AUTO_INCREMENT for table `faculty_experience`
 --
 ALTER TABLE `faculty_experience`
-  MODIFY `exp_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `exp_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `faculty_industry_experience`
 --
 ALTER TABLE `faculty_industry_experience`
-  MODIFY `exp_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `exp_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `faculty_leaves`
@@ -2261,7 +2270,7 @@ ALTER TABLE `faculty_subject_assignments`
 -- AUTO_INCREMENT for table `faculy_edu_qualification`
 --
 ALTER TABLE `faculy_edu_qualification`
-  MODIFY `membership_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `membership_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `staff_attendance_entry`
@@ -2403,8 +2412,7 @@ ALTER TABLE `faculty_events`
 -- Constraints for table `faculty_experience`
 --
 ALTER TABLE `faculty_experience`
-  ADD CONSTRAINT `faculty_experience_ibfk_1` FOREIGN KEY (`faculty_id`) REFERENCES `faculty_profiles` (`faculty_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `faculty_experience_ibfk_2` FOREIGN KEY (`faculty_id`) REFERENCES `faculty_profiles` (`faculty_id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `faculty_experience_ibfk_1` FOREIGN KEY (`faculty_id`) REFERENCES `faculty_profiles` (`faculty_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `faculty_industry_experience`
