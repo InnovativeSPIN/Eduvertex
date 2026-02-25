@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 25, 2026 at 09:22 AM
+-- Generation Time: Feb 25, 2026 at 06:00 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -49,9 +49,7 @@ CREATE TABLE `announcements` (
 --
 
 INSERT INTO `announcements` (`id`, `title`, `message`, `type`, `priority`, `targetRole`, `department`, `attachments`, `isActive`, `createdById`, `creatorRole`, `expiresAt`, `createdAt`, `updatedAt`) VALUES
-(1, 'Welcome to Eduvertex ERP', 'Welcome to the new Eduvertex ERP system. This system will help manage all academic and administrative activities.', 'general', 'medium', '[\"all\"]', NULL, '[]', 1, 1, 'superadmin', NULL, '2024-01-01 00:00:00', '2024-01-01 00:00:00'),
-(2, 'Semester 6 Timetable Released', 'The timetable for Semester 6 has been released. Please check the timetable section for details.', 'academic', 'high', '[\"student\"]', NULL, '[]', 1, 1, 'superadmin', NULL, '2024-01-01 00:00:00', '2024-01-01 00:00:00'),
-(3, 'Faculty Meeting Tomorrow', 'All faculty members are requested to attend the meeting tomorrow at 10 AM in the conference hall.', 'general', 'medium', '[\"faculty\"]', NULL, '[]', 1, 1, 'superadmin', NULL, '2024-01-01 00:00:00', '2024-01-01 00:00:00');
+(5, 'Welcome to eduvertex', 'The Eduvertex is a real time ERP Enterpersise Resource Planning ', 'general', 'low', '[\"all\"]', NULL, '[]', 1, 109, 'super-admin', NULL, '2026-02-25 16:30:00', '2026-02-25 16:30:00');
 
 -- --------------------------------------------------------
 
@@ -1705,9 +1703,88 @@ CREATE TABLE `subjects` (
 --
 
 INSERT INTO `subjects` (`id`, `subject_code`, `subject_name`, `description`, `department_id`, `semester`, `sem_type`, `class_id`, `credits`, `type`, `is_elective`, `is_laboratory`, `min_hours_per_week`, `max_students`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
-(6, 'EC102', 'Electronics Lab', 'Practical electronics experiments', 2, 1, 'odd', NULL, 1.50, 'Practical', 0, 0, 3, NULL, 'active', 1, '2026-02-24 02:39:16', '2026-02-24 02:39:16'),
 (7, 'ME101', 'Engineering Mechanics', 'Statics and Dynamics', 3, 1, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-24 02:39:16', '2026-02-24 02:39:16'),
-(8, 'ME102', 'Thermodynamics', 'Laws of thermodynamics and applications', 3, 2, 'odd', NULL, 3.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-24 02:39:16', '2026-02-24 02:39:16');
+(8, 'ME102', 'Thermodynamics', 'Laws of thermodynamics and applications', 3, 2, 'odd', NULL, 3.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-24 02:39:16', '2026-02-24 02:39:16'),
+(9, 'cs9210', 'c proramming', '', 6, 1, 'odd', NULL, 4.00, 'Theory+Practical', 1, 0, 3, NULL, 'active', 109, '2026-02-25 09:22:53', '2026-02-25 09:22:53'),
+(10, 'CS9584', 'C PROGRAMMING', '', 1, 1, 'even', NULL, 4.00, 'Theory', 0, 1, 3, NULL, 'active', 109, '2026-02-25 09:24:39', '2026-02-25 16:28:12'),
+(11, 'CSE101', 'Introduction to Programming', NULL, 1, 1, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(12, 'CSE102', 'Data Structures', NULL, 1, 1, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(13, 'CSE103', 'Digital Logic Design', NULL, 1, 1, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(14, 'CSE104', 'Web Development Basics', NULL, 1, 2, 'even', NULL, 4.00, 'Theory+Practical', 0, 1, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(15, 'CSE105', 'Database Management Systems', NULL, 1, 2, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(16, 'CSE106', 'Operating Systems', NULL, 1, 3, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(17, 'CSE107', 'Computer Networks', NULL, 1, 3, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(18, 'CSE108', 'Software Engineering', NULL, 1, 4, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(19, 'CSE109', 'Algorithms and Complexity', NULL, 1, 4, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(20, 'CSE110', 'Artificial Intelligence', NULL, 1, 5, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(21, 'ECE101', 'Circuit Theory', NULL, 2, 1, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(22, 'ECE102', 'Electronic Devices and Circuits', NULL, 2, 1, 'odd', NULL, 4.00, 'Theory+Practical', 0, 1, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(23, 'ECE103', 'Digital Electronics', NULL, 2, 2, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(24, 'ECE104', 'Signals and Systems', NULL, 2, 2, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(25, 'ECE105', 'Electromagnetic Theory', NULL, 2, 3, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(26, 'ECE106', 'Microprocessors and Microcontrollers', NULL, 2, 3, 'odd', NULL, 4.00, 'Theory+Practical', 0, 1, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(27, 'ECE107', 'Communication Systems', NULL, 2, 4, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(28, 'ECE108', 'Control Systems', NULL, 2, 4, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(29, 'ECE109', 'Power Systems', NULL, 2, 5, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(30, 'ECE110', 'VLSI Design', NULL, 2, 5, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(31, 'ME103', 'Thermodynamics', NULL, 3, 2, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(32, 'ME104', 'Fluid Mechanics', NULL, 3, 2, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(33, 'ME105', 'Manufacturing Processes', NULL, 3, 3, 'odd', NULL, 4.00, 'Theory+Practical', 0, 1, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(34, 'ME106', 'Heat Transfer', NULL, 3, 3, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(35, 'ME107', 'Machine Design', NULL, 3, 4, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(36, 'ME108', 'Dynamics of Machinery', NULL, 3, 4, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(37, 'ME109', 'Power Plant Engineering', NULL, 3, 5, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(38, 'ME110', 'Automobile Engineering', NULL, 3, 5, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(39, 'CE101', 'Surveying', NULL, 4, 1, 'odd', NULL, 4.00, 'Theory+Practical', 0, 1, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(40, 'CE102', 'Engineering Geology', NULL, 4, 1, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(41, 'CE103', 'Structural Analysis', NULL, 4, 2, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(42, 'CE104', 'Hydraulics and Fluid Mechanics', NULL, 4, 2, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(43, 'CE105', 'Geotechnical Engineering', NULL, 4, 3, 'odd', NULL, 4.00, 'Theory+Practical', 0, 1, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(44, 'CE106', 'Water Resources Engineering', NULL, 4, 3, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(45, 'CE107', 'RCC Design', NULL, 4, 4, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(46, 'CE108', 'Steel Design', NULL, 4, 4, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(47, 'CE109', 'Transportation Engineering', NULL, 4, 5, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(48, 'CE110', 'Environmental Engineering', NULL, 4, 5, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(49, 'EEE101', 'Basic Electrical Engineering', NULL, 5, 1, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(50, 'EEE102', 'AC and DC Circuits', NULL, 5, 1, 'odd', NULL, 4.00, 'Theory+Practical', 0, 1, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(51, 'EEE103', 'Electromagnetic Induction', NULL, 5, 2, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(52, 'EEE104', 'Electrical Machines', NULL, 5, 2, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(53, 'EEE105', 'Power Systems', NULL, 5, 3, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(54, 'EEE106', 'Power Generation', NULL, 5, 3, 'odd', NULL, 4.00, 'Theory+Practical', 0, 1, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(55, 'EEE107', 'High Voltage Engineering', NULL, 5, 4, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(56, 'EEE108', 'Power Distribution', NULL, 5, 4, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(57, 'EEE109', 'Industrial Drives', NULL, 5, 5, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(58, 'EEE110', 'Smart Grid Technology', NULL, 5, 5, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(59, 'IT101', 'Introduction to IT', NULL, 6, 1, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(60, 'IT102', 'Programming Languages', NULL, 6, 1, 'odd', NULL, 4.00, 'Theory+Practical', 0, 1, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(61, 'IT103', 'Web Technologies', NULL, 6, 2, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(62, 'IT104', 'Database Systems', NULL, 6, 2, 'even', NULL, 4.00, 'Theory+Practical', 0, 1, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(63, 'IT105', 'Cloud Computing', NULL, 6, 3, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(64, 'IT106', 'Network Security', NULL, 6, 3, 'odd', NULL, 4.00, 'Theory+Practical', 0, 1, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(65, 'IT107', 'Data Analytics', NULL, 6, 4, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(66, 'IT108', 'Machine Learning', NULL, 6, 4, 'even', NULL, 4.00, 'Theory+Practical', 0, 1, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(67, 'IT109', 'Mobile Application Development', NULL, 6, 5, 'odd', NULL, 4.00, 'Theory+Practical', 0, 1, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(68, 'IT110', 'IT Project Management', NULL, 6, 5, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(69, 'CHE101', 'Physical Chemistry', NULL, 7, 1, 'odd', NULL, 4.00, 'Theory+Practical', 0, 1, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(70, 'CHE102', 'Organic Chemistry', NULL, 7, 1, 'odd', NULL, 4.00, 'Theory+Practical', 0, 1, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(71, 'CHE103', 'Inorganic Chemistry', NULL, 7, 2, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(72, 'CHE104', 'Analytical Chemistry', NULL, 7, 2, 'even', NULL, 4.00, 'Theory+Practical', 0, 1, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(73, 'CHE105', 'Chemical Engineering Fundamentals', NULL, 7, 3, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(74, 'CHE106', 'Process Engineering', NULL, 7, 3, 'odd', NULL, 4.00, 'Theory+Practical', 0, 1, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(75, 'CHE107', 'Industrial Chemistry', NULL, 7, 4, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(76, 'CHE108', 'Polymer Science', NULL, 7, 4, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(77, 'CHE109', 'Environmental Chemistry', NULL, 7, 5, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(78, 'CHE110', 'Biochemistry', NULL, 7, 5, 'odd', NULL, 4.00, 'Theory+Practical', 0, 1, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(79, 'PHY101', 'Classical Mechanics', NULL, 10, 1, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(80, 'PHY102', 'Thermodynamics', NULL, 10, 1, 'odd', NULL, 4.00, 'Theory+Practical', 0, 1, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(81, 'PHY103', 'Waves and Oscillations', NULL, 10, 2, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(82, 'PHY104', 'Optics', NULL, 10, 2, 'even', NULL, 4.00, 'Theory+Practical', 0, 1, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(83, 'PHY105', 'Electricity and Magnetism', NULL, 10, 3, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(84, 'PHY106', 'Modern Physics', NULL, 10, 3, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(85, 'PHY107', 'Quantum Mechanics', NULL, 10, 4, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(86, 'PHY108', 'Solid State Physics', NULL, 10, 4, 'even', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(87, 'PHY109', 'Astrophysics', NULL, 10, 5, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50'),
+(88, 'PHY110', 'Nuclear Physics', NULL, 10, 5, 'odd', NULL, 4.00, 'Theory', 0, 0, 3, NULL, 'active', 1, '2026-02-25 16:42:50', '2026-02-25 16:42:50');
 
 -- --------------------------------------------------------
 
@@ -2219,7 +2296,7 @@ ALTER TABLE `year_break_timings`
 -- AUTO_INCREMENT for table `announcements`
 --
 ALTER TABLE `announcements`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `faculty_events`
@@ -2363,7 +2440,7 @@ ALTER TABLE `student_sports`
 -- AUTO_INCREMENT for table `subjects`
 --
 ALTER TABLE `subjects`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=89;
 
 --
 -- AUTO_INCREMENT for table `subject_class_mappings`

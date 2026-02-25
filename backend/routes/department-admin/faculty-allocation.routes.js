@@ -17,25 +17,22 @@ const router = express.Router();
 // Protect all routes - only department admin can access
 router.use(protect, authorize('department-admin'));
 
-// Get dropdown data for allocation form
+// IMPORTANT: Define specific routes BEFORE generic routes with :id parameter
+// Get dropdown data for allocation form (specific routes)
 router.get('/subjects', getAllocationSubjects);
 router.get('/faculty', getAllocationFaculty);
 router.get('/classes', getAllocationClasses);
-
-// Get allocations
-router.get('/', getFacultyAllocations);
 router.get('/year/:academic_year/sem/:semester', getFacultyAllocationsBySemester);
 
-// Get single allocation
-router.get('/:id', getAllocationDetails);
+// Get allocations list
+router.get('/', getFacultyAllocations);
 
 // Create allocation
 router.post('/', allocateSubjectToFaculty);
 
-// Update allocation
+// Get single allocation, update, and delete (generic routes with :id AFTER specific routes)
+router.get('/:id', getAllocationDetails);
 router.put('/:id', updateAllocation);
-
-// Delete allocation
 router.delete('/:id', deleteAllocation);
 
 export default router;

@@ -6,7 +6,8 @@ import {
   updateSubject,
   deleteSubject,
   getSubjectsByDepartmentAndSemester,
-  getDepartmentsSemesters
+  getDepartmentsSemesters,
+  bulkUploadSubjects
 } from '../../controllers/admin/subject.controller.js';
 import { protect, authorize } from '../../middleware/auth.js';
 
@@ -17,6 +18,9 @@ router.use(protect, authorize('superadmin'));
 
 // Get all available semesters and departments
 router.get('/departments-semesters', getDepartmentsSemesters);
+
+// Bulk upload subjects
+router.post('/bulk', bulkUploadSubjects);
 
 // Get all subjects with optional filters
 router.get('/', getSubjects);
