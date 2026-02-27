@@ -25,6 +25,7 @@ import adminSubjectRoutes from './routes/admin/subject.routes.js';
 import facultyRoutes from './routes/faculty/faculty.routes.js';
 import studentRoutes from './routes/student/student.routes.js';
 import timetableRoutes from './routes/timetable/timetable.routes.js';
+import timetableManagementAdminRoutes from './routes/admin/timetable-management.routes.js';
 import leaveRoutes from './routes/leave-attendance/leave.routes.js';
 import attendanceRoutes from './routes/leave-attendance/attendance.routes.js';
 import announcementRoutes from './routes/admin/announcement.routes.js';
@@ -128,6 +129,7 @@ const startServer = () => {
   app.use('/api/v1/subjects', generalSubjectRoutes);
   app.use('/api/v1/classes', classRoutes);
   app.use('/api/v1/timetable', timetableRoutes);
+  app.use('/api/v1/timetable-management', timetableManagementAdminRoutes);
   app.use('/api/v1/leave', leaveRoutes);
   app.use('/api/v1/attendance', attendanceRoutes);
   app.use('/api/v1/announcements', announcementRoutes);

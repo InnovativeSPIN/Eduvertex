@@ -63,21 +63,47 @@ export const getSubjects = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/admin/subjects/:id
 // @access    Private/SuperAdmin
 export const getSubject = asyncHandler(async (req, res, next) => {
-  const subject = await Subject.findByPk(req.params.id, {
-    include: [
-      { model: Department, as: 'department', attributes: ['id', 'short_name', 'full_name'] },
-      { model: Class, as: 'class', attributes: ['id', 'name', 'section'] }
-    ]
-  });
+  try {
+    const subject = await Subject.findByPk(req.params.id, {
+      include: [
+        { model: Department, as: 'department', attributes: ['id', 'short_name', 'full_name'] },
+        { model: Class, as: 'class', attributes: ['id', 'name', 'section'] }
+      ]
+    });
 
-  if (!subject) {
-    return next(new ErrorResponse(`Subject not found with id of ${req.params.id}`, 404));
+    if (!subject) {
+      return next(new ErrorResponse(`Subject not found with id of ${req.params.id}`, 404));
+    }
+
+    // Format response with proper field names
+    const subjectData = subject.toJSON();
+    const result = {
+      id: subjectData.id,
+      code: subjectData.subject_code,
+      name: subjectData.subject_name,
+      description: subjectData.description,
+      department_id: subjectData.department_id,
+      department: subjectData.department,
+      semester: subjectData.semester,
+      sem_type: subjectData.sem_type,
+      credits: subjectData.credits,
+      type: subjectData.type,
+      is_elective: subjectData.is_elective,
+      is_laboratory: subjectData.is_laboratory,
+      status: subjectData.status,
+      created_at: subjectData.created_at,
+      updated_at: subjectData.updated_at,
+      class: subjectData.class
+    };
+
+    res.status(200).json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    console.error('Error in getSubject:', error);
+    return next(new ErrorResponse(error.message || 'Error fetching subject', 500));
   }
-
-  res.status(200).json({
-    success: true,
-    data: subject
-  });
 });
 
 // @desc      Create subject
@@ -198,8 +224,8 @@ export const updateSubject = asyncHandler(async (req, res, next) => {
   } = req.body;
 
   // If code is being changed, check for duplicates
-  if (code && code !== subject.code) {
-    const existingSubject = await Subject.findOne({ where: { code } });
+  if (code && code !== subject.subject_code) {
+    const existingSubject = await Subject.findOne({ where: { subject_code: code } });
     if (existingSubject) {
       return next(new ErrorResponse(`Subject code "${code}" already exists`, 400));
     }
@@ -215,34 +241,53 @@ export const updateSubject = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse('Semester type must be either "odd" or "even"', 400));
   }
 
-  // Update subject
+  // Update subject - use database column names
   subject = await subject.update({
-    code: code || subject.code,
-    name: name || subject.name,
+    subject_code: code || subject.subject_code,
+    subject_name: name || subject.subject_name,
     description: description !== undefined ? description : subject.description,
     semester: semester || subject.semester,
     sem_type: sem_type || subject.sem_type,
-    credits: credits !== undefined ? credits : subject.credits,
+    credits: credits !== undefined ? parseFloat(credits) : subject.credits,
     type: type || subject.type,
     is_elective: is_elective !== undefined ? is_elective : subject.is_elective,
     is_laboratory: is_laboratory !== undefined ? is_laboratory : subject.is_laboratory,
     class_id: class_id !== undefined ? class_id : subject.class_id,
-    min_hours_per_week: min_hours_per_week !== undefined ? min_hours_per_week : subject.min_hours_per_week,
-    max_students: max_students !== undefined ? max_students : subject.max_students,
+    min_hours_per_week: min_hours_per_week || subject.min_hours_per_week,
+    max_students: max_students || subject.max_students,
     status: status || subject.status
   });
 
   // Reload with associations
   const updatedSubject = await Subject.findByPk(subject.id, {
     include: [
-      { model: Department, as: 'department', attributes: ['id', 'short_name', 'full_name'] },
-      { model: Class, as: 'class', attributes: ['id', 'name', 'section'] }
+      { model: Department, as: 'department', attributes: ['id', 'short_name', 'full_name'] }
     ]
   });
 
+  // Format response with proper field names
+  const subjectData = updatedSubject.toJSON();
+  const result = {
+    id: subjectData.id,
+    code: subjectData.subject_code,
+    name: subjectData.subject_name,
+    description: subjectData.description,
+    department_id: subjectData.department_id,
+    department: subjectData.department,
+    semester: subjectData.semester,
+    sem_type: subjectData.sem_type,
+    credits: subjectData.credits,
+    type: subjectData.type,
+    is_elective: subjectData.is_elective,
+    is_laboratory: subjectData.is_laboratory,
+    status: subjectData.status,
+    created_at: subjectData.created_at,
+    updated_at: subjectData.updated_at
+  };
+
   res.status(200).json({
     success: true,
-    data: updatedSubject
+    data: result
   });
 });
 
@@ -316,6 +361,100 @@ export const getDepartmentsSemesters = asyncHandler(async (req, res, next) => {
   }
 });
 
+// @desc      Bulk upload subjects
+// @route     POST /api/v1/admin/subjects/bulk
+// @access    Private/SuperAdmin
+export const bulkUploadSubjects = asyncHandler(async (req, res, next) => {
+  try {
+    const { subjects } = req.body;
+
+    if (!subjects || !Array.isArray(subjects) || subjects.length === 0) {
+      return next(new ErrorResponse('Please provide an array of subjects to upload', 400));
+    }
+
+    const results = {
+      successful: [],
+      failed: [],
+      total: subjects.length
+    };
+
+    for (let i = 0; i < subjects.length; i++) {
+      const subjectData = subjects[i];
+      const rowNumber = i + 1; // For error reporting
+
+      try {
+        // Validate required fields
+        const { code, name, description, department_id, semester, sem_type, credits, type, is_elective, is_laboratory, status } = subjectData;
+
+        if (!code || !name || !department_id || !semester) {
+          throw new Error('Missing required fields: code, name, department_id, semester');
+        }
+
+        // Check if code already exists
+        const existingSubject = await Subject.findOne({ where: { subject_code: code } });
+        if (existingSubject) {
+          throw new Error(`Subject code "${code}" already exists`);
+        }
+
+        // Validate semester
+        const semesterNum = parseInt(semester);
+        if (isNaN(semesterNum) || semesterNum < 1 || semesterNum > 8) {
+          throw new Error('Semester must be a number between 1 and 8');
+        }
+
+        // Validate sem_type
+        if (sem_type && !['odd', 'even'].includes(String(sem_type).toLowerCase())) {
+          throw new Error('Semester type must be either "odd" or "even"');
+        }
+
+        // Create subject
+        const newSubject = await Subject.create({
+          subject_code: code,
+          subject_name: name,
+          description: description || null,
+          department_id: parseInt(department_id),
+          semester: semesterNum,
+          sem_type: String(sem_type || 'odd').toLowerCase(),
+          credits: credits ? parseFloat(credits) : 4.0,
+          type: type || 'Theory',
+          is_elective: is_elective ? true : false,
+          is_laboratory: is_laboratory ? true : false,
+          status: status || 'active',
+          created_by: req.user?.id || 1
+        });
+
+        // Reload with associations
+        const createdSubject = await Subject.findByPk(newSubject.id, {
+          include: [
+            { model: Department, as: 'department', attributes: ['id', 'short_name', 'full_name'] }
+          ]
+        });
+
+        results.successful.push({
+          row: rowNumber,
+          code: code,
+          name: name,
+          message: 'Subject created successfully'
+        });
+      } catch (error) {
+        results.failed.push({
+          row: rowNumber,
+          code: subjectData.code || 'N/A',
+          error: error.message
+        });
+      }
+    }
+
+    res.status(207).json({
+      success: true,
+      message: `Bulk upload completed. ${results.successful.length} successful, ${results.failed.length} failed`,
+      data: results
+    });
+  } catch (error) {
+    return next(new ErrorResponse(error.message || 'Error in bulk upload', 500));
+  }
+});
+
 export default {
   getSubjects,
   getSubject,
@@ -323,5 +462,6 @@ export default {
   updateSubject,
   deleteSubject,
   getSubjectsByDepartmentAndSemester,
-  getDepartmentsSemesters
+  getDepartmentsSemesters,
+  bulkUploadSubjects
 };

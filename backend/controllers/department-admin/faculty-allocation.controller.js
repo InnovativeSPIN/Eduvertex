@@ -87,7 +87,7 @@ export const allocateSubjectToFaculty = asyncHandler(async (req, res, next) => {
   const createdAllocation = await FacultySubjectAssignment.findByPk(allocation.id, {
     include: [
       { model: Faculty, as: 'faculty', attributes: ['faculty_id', 'Name', 'email', 'designation'] },
-      { model: Subject, as: 'subject', attributes: ['id', 'code', 'name', 'semester', 'sem_type', 'type', 'credits'] },
+      { model: Subject, as: 'subject', attributes: ['id', 'subject_code', 'subject_name', 'semester', 'sem_type', 'type', 'credits'] },
       { model: Class, as: 'class', attributes: ['id', 'name', 'section'] }
     ]
   });
@@ -104,7 +104,9 @@ export const allocateSubjectToFaculty = asyncHandler(async (req, res, next) => {
 export const getFacultyAllocations = asyncHandler(async (req, res, next) => {
   try {
     const { academic_year, semester, faculty_id, class_id, status } = req.query;
-    const departmentId = req.user.department_id;
+    const departmentId = req.user?.department_id;
+
+    console.log('[GET ALLOCATIONS] departmentId:', departmentId, 'filters:', { academic_year, semester, faculty_id, class_id, status });
 
     if (!departmentId) {
       return next(new ErrorResponse('Department ID not found in user', 400));
@@ -124,6 +126,8 @@ export const getFacultyAllocations = asyncHandler(async (req, res, next) => {
     });
 
     const subjectIds = subjects.map(s => s.id);
+    console.log('[GET ALLOCATIONS] Found subjects:', subjectIds);
+
     if (subjectIds.length > 0) {
       where.subject_id = { [Op.in]: subjectIds };
     }
@@ -132,11 +136,13 @@ export const getFacultyAllocations = asyncHandler(async (req, res, next) => {
       where,
       include: [
         { model: Faculty, as: 'faculty', attributes: ['faculty_id', 'Name', 'email', 'designation'] },
-        { model: Subject, as: 'subject', attributes: ['id', 'code', 'name', 'semester', 'sem_type', 'type'] },
+        { model: Subject, as: 'subject', attributes: ['id', 'subject_code', 'subject_name', 'semester', 'sem_type', 'type'] },
         { model: Class, as: 'class', attributes: ['id', 'name', 'section', 'semester', 'batch'] }
       ],
       order: [['academic_year', 'DESC'], ['semester', 'ASC'], ['faculty_id', 'ASC']]
     });
+
+    console.log('[GET ALLOCATIONS] Found allocations:', allocations.length);
 
     res.status(200).json({
       success: true,
@@ -144,8 +150,8 @@ export const getFacultyAllocations = asyncHandler(async (req, res, next) => {
       data: allocations
     });
   } catch (error) {
-    console.error('Error fetching faculty allocations:', error);
-    return next(new ErrorResponse(error.message || 'Error fetching allocations', 500));
+    console.error('[GET ALLOCATIONS] Error:', error);
+    return next(error);
   }
 });
 
@@ -156,7 +162,7 @@ export const getAllocationDetails = asyncHandler(async (req, res, next) => {
   const allocation = await FacultySubjectAssignment.findByPk(req.params.id, {
     include: [
       { model: Faculty, as: 'faculty', attributes: ['faculty_id', 'Name', 'email', 'designation', 'department_id'] },
-      { model: Subject, as: 'subject', attributes: ['id', 'code', 'name', 'semester', 'sem_type', 'type', 'credits'] },
+      { model: Subject, as: 'subject', attributes: ['id', 'subject_code', 'subject_name', 'semester', 'sem_type', 'type', 'credits'] },
       { model: Class, as: 'class', attributes: ['id', 'name', 'section', 'semester', 'batch', 'capacity'] }
     ]
   });
@@ -217,7 +223,7 @@ export const updateAllocation = asyncHandler(async (req, res, next) => {
   const updatedAllocation = await FacultySubjectAssignment.findByPk(allocation.id, {
     include: [
       { model: Faculty, as: 'faculty', attributes: ['faculty_id', 'Name', 'email', 'designation'] },
-      { model: Subject, as: 'subject', attributes: ['id', 'code', 'name', 'semester', 'sem_type', 'type', 'credits'] },
+      { model: Subject, as: 'subject', attributes: ['id', 'subject_code', 'subject_name', 'semester', 'sem_type', 'type', 'credits'] },
       { model: Class, as: 'class', attributes: ['id', 'name', 'section'] }
     ]
   });
@@ -258,7 +264,9 @@ export const deleteAllocation = asyncHandler(async (req, res, next) => {
 export const getAllocationSubjects = asyncHandler(async (req, res, next) => {
   try {
     const { semester, sem_type } = req.query;
-    const departmentId = req.user.department_id;
+    const departmentId = req.user?.department_id;
+
+    console.log('[GET SUBJECTS] departmentId:', departmentId, 'filters:', { semester, sem_type });
 
     if (!departmentId) {
       return next(new ErrorResponse('Department ID not found in user', 400));
@@ -270,9 +278,11 @@ export const getAllocationSubjects = asyncHandler(async (req, res, next) => {
 
     const subjects = await Subject.findAll({
       where,
-      attributes: ['id', 'code', 'name', 'semester', 'sem_type', 'type', 'credits'],
-      order: [['semester', 'ASC'], ['code', 'ASC']]
+      attributes: ['id', 'subject_code', 'subject_name', 'semester', 'sem_type', 'type', 'credits'],
+      order: [['semester', 'ASC'], ['subject_code', 'ASC']]
     });
+
+    console.log('[GET SUBJECTS] Found subjects:', subjects.length);
 
     res.status(200).json({
       success: true,
@@ -280,8 +290,8 @@ export const getAllocationSubjects = asyncHandler(async (req, res, next) => {
       data: subjects
     });
   } catch (error) {
-    console.error('Error fetching allocation subjects:', error);
-    return next(new ErrorResponse(error.message || 'Error fetching subjects', 500));
+    console.error('[GET SUBJECTS] Error:', error);
+    return next(error);
   }
 });
 
@@ -290,7 +300,9 @@ export const getAllocationSubjects = asyncHandler(async (req, res, next) => {
 // @access    Private/DepartmentAdmin
 export const getAllocationFaculty = asyncHandler(async (req, res, next) => {
   try {
-    const departmentId = req.user.department_id;
+    const departmentId = req.user?.department_id;
+
+    console.log('[GET FACULTY] departmentId:', departmentId);
 
     if (!departmentId) {
       return next(new ErrorResponse('Department ID not found in user', 400));
@@ -298,9 +310,11 @@ export const getAllocationFaculty = asyncHandler(async (req, res, next) => {
 
     const faculty = await Faculty.findAll({
       where: { department_id: departmentId, status: 'active' },
-      attributes: ['faculty_id', 'Name', 'email', 'designation', 'qualification'],
+      attributes: ['faculty_id', 'Name', 'email', 'designation', 'educational_qualification'],
       order: [['Name', 'ASC']]
     });
+
+    console.log('[GET FACULTY] Found faculty:', faculty.length);
 
     res.status(200).json({
       success: true,
@@ -308,8 +322,8 @@ export const getAllocationFaculty = asyncHandler(async (req, res, next) => {
       data: faculty
     });
   } catch (error) {
-    console.error('Error fetching allocation faculty:', error);
-    return next(new ErrorResponse(error.message || 'Error fetching faculty', 500));
+    console.error('[GET FACULTY] Error:', error);
+    return next(error);
   }
 });
 
@@ -319,7 +333,9 @@ export const getAllocationFaculty = asyncHandler(async (req, res, next) => {
 export const getAllocationClasses = asyncHandler(async (req, res, next) => {
   try {
     const { semester } = req.query;
-    const departmentId = req.user.department_id;
+    const departmentId = req.user?.department_id;
+
+    console.log('[GET CLASSES] departmentId:', departmentId, 'filters:', { semester });
 
     if (!departmentId) {
       return next(new ErrorResponse('Department ID not found in user', 400));
@@ -334,14 +350,16 @@ export const getAllocationClasses = asyncHandler(async (req, res, next) => {
       order: [['semester', 'ASC'], ['name', 'ASC']]
     });
 
+    console.log('[GET CLASSES] Found classes:', classes.length);
+
     res.status(200).json({
       success: true,
       count: classes.length,
       data: classes
     });
   } catch (error) {
-    console.error('Error fetching allocation classes:', error);
-    return next(new ErrorResponse(error.message || 'Error fetching classes', 500));
+    console.error('[GET CLASSES] Error:', error);
+    return next(error);
   }
 });
 
@@ -368,7 +386,7 @@ export const getFacultyAllocationsBySemester = asyncHandler(async (req, res, nex
     },
     include: [
       { model: Faculty, as: 'faculty', attributes: ['faculty_id', 'Name', 'email', 'designation'] },
-      { model: Subject, as: 'subject', attributes: ['id', 'code', 'name', 'type', 'sem_type'] },
+      { model: Subject, as: 'subject', attributes: ['id', 'subject_code', 'subject_name', 'type', 'sem_type'] },
       { model: Class, as: 'class', attributes: ['id', 'name', 'section', 'batch'] }
     ],
     order: [['faculty_id', 'ASC']]
