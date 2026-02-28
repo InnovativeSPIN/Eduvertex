@@ -282,12 +282,23 @@ export const getAllocationSubjects = asyncHandler(async (req, res, next) => {
       order: [['semester', 'ASC'], ['subject_code', 'ASC']]
     });
 
-    console.log('[GET SUBJECTS] Found subjects:', subjects.length);
+    // Map database field names to expected frontend field names
+    const mappedSubjects = subjects.map(subject => ({
+      id: subject.id,
+      code: subject.subject_code,
+      name: subject.subject_name,
+      semester: subject.semester,
+      sem_type: subject.sem_type,
+      type: subject.type,
+      credits: subject.credits
+    }));
+
+    console.log('[GET SUBJECTS] Found subjects:', mappedSubjects.length);
 
     res.status(200).json({
       success: true,
-      count: subjects.length,
-      data: subjects
+      count: mappedSubjects.length,
+      data: mappedSubjects
     });
   } catch (error) {
     console.error('[GET SUBJECTS] Error:', error);
