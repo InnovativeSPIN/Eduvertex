@@ -17,6 +17,8 @@ import Communication from "./pages/Communication";
 import Counseling from "./pages/Counseling";
 import Reports from "./pages/Reports";
 import NotFound from "./pages/NotFound";
+import AnnouncementDetail from "./pages/AnnouncementDetail";
+import Announcements from "./pages/Announcements";
 import { MentorDashboard } from "./pages/MentorDashboard";
 import { MenteesList } from "./pages/MenteesList";
 import { StudentProfileView } from "./pages/StudentProfileView";
@@ -37,6 +39,8 @@ const DepartmentAdminRoutes = () => (
             <Routes>
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
+              <Route path="announcements" element={<Announcements />} />
+              <Route path="announcements/:id" element={<AnnouncementDetail />} />
               <Route path="profile" element={<Profile />} />
               <Route path="coordinators" element={<CoordinatorManagement />} />
               <Route path="faculty-allocations" element={<FacultyAllocation />} />

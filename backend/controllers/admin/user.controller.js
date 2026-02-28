@@ -364,8 +364,23 @@ export const activateUser = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/roles
 // @access    Private/Admin (superadmin can fetch too)
 export const getRoles = asyncHandler(async (req, res, next) => {
-  const roles = await Role.findAll({ attributes: ['role_id', 'role_name'] });
-  res.status(200).json({ success: true, data: roles });
+  let roles = await Role.findAll({ attributes: ['role_id', 'role_name'] });
+  // filter out roles that should not be assignable via the UI
+  roles = roles.filter(r => {
+    const name = r.role_name.toLowerCase();
+    return name !== 'faculty' && name !== 'student';
+  });
+
+  // deduplicate by role_name (defensive in case of accidental duplicates)
+  const unique = [];
+  roles.forEach(r => {
+    const name = r.role_name.toLowerCase();
+    if (!unique.some(u => u.role_name.toLowerCase() === name)) {
+      unique.push(r);
+    }
+  });
+
+  res.status(200).json({ success: true, data: unique });
 });
 
 // @desc      Get users by role

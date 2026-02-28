@@ -3,7 +3,7 @@ import PageHeader from '@/pages/student/components/layout/PageHeader';
 import SectionCard from '@/pages/student/components/common/SectionCard';
 import ProfileNavBar from '@/pages/student/components/layout/ProfileNavBar';
 import { User, Phone, Briefcase, Users, Edit, Clock } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/pages/student/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/pages/student/components/ui/dialog';
 import { useToast } from '@/pages/student/hooks/use-toast';
 
 const parentData = {
@@ -468,6 +468,9 @@ export default function ParentInfo() {
                       ? "Edit Mother's Information"
                       : "Edit Guardian's Information"}
               </DialogTitle>
+              <DialogDescription>
+                Please fill out or update the parent/guardian details below. Fields with an asterisk (*) are required.
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>

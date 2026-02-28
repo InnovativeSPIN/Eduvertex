@@ -28,8 +28,8 @@ import {
 
 const adminRoles = [
     { value: 'superadmin', label: 'Super Admin' },
-    { value: 'executive', label: 'Executive Admin' },
-    { value: 'academic', label: 'Academic Admin' },
+    { value: 'executiveadmin', label: 'Executive Admin' },
+    { value: 'academicadmin', label: 'Academic Admin' },
     { value: 'exam_cell_admin', label: 'Exam Cell Admin' },
     { value: 'placement_cell_admin', label: 'Placement Cell Admin' },
     { value: 'research_development_admin', label: 'Research & Development Admin' },
@@ -39,14 +39,11 @@ const roleRoutes: Partial<Record<UserRole, string>> = {
     superadmin: '/admin/superadmin',
     'super-admin': '/admin/superadmin',
     'department-admin': '/admin/department-admin',
-    executive: '/admin/executive',
     executiveadmin: '/admin/executive',
-    academic: '/admin/academic',
     academicadmin: '/admin/academic',
     exam_cell_admin: '/admin/superadmin', // Default to superadmin or specific dashboard if available
     placement_cell_admin: '/admin/superadmin',
     research_development_admin: '/admin/superadmin',
-    
 };
 
 export default function AdminLogin() {
@@ -73,7 +70,9 @@ export default function AdminLogin() {
             setIsFetchingNames(true);
             try {
                 // Real API call if backend is running
-                const response = await fetch(`/api/v1/auth/admins/${role === 'executive' ? 'executiveadmin' : role === 'academic' ? 'academicadmin' : role}`);
+                // role values now correspond directly to backend role names (no special
+        // mapping required)
+        const response = await fetch(`/api/v1/auth/admins/${role}`);
                 const result = await response.json();
                 if (result.success && result.data.length > 0) {
                     setAvailableAdmins(result.data);

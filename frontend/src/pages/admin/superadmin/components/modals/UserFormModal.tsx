@@ -72,7 +72,16 @@ export function UserFormModal({ open, onClose, onSave, type, initialData, mode }
         const response = await fetch('/api/v1/users/roles');
         const result = await response.json();
         if (result.success) {
-          setRoles(result.data);
+          // remove any unexpected roles such as faculty/student and deduplicate
+          const clean: Role[] = [];
+          result.data.forEach((r: Role) => {
+            const name = r.role_name.toLowerCase();
+            if (name === 'faculty' || name === 'student') return;
+            if (!clean.some(c => c.role_name.toLowerCase() === name)) {
+              clean.push(r);
+            }
+          });
+          setRoles(clean);
         }
       } catch (error) {
         console.error('Error fetching roles:', error);

@@ -194,6 +194,11 @@ export default function Events() {
             <DialogTitle>
               {editingId ? 'Edit Event' : 'Add New Event'}
             </DialogTitle>
+            <DialogDescription>
+              {editingId
+                ? 'Modify the details of the selected extracurricular event.'
+                : 'Enter information about a new event to add to your record.'}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>

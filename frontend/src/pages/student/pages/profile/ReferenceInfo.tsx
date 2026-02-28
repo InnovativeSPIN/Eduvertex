@@ -329,6 +329,11 @@ export default function ReferenceInfo() {
               <DialogTitle>
                 {editingId ? 'Edit Reference' : `Add New ${addType === 'reference' ? 'Reference' : 'Relative'}`}
               </DialogTitle>
+              <DialogDescription>
+                {editingId
+                  ? 'Update the information for this reference/relative using the form below.'
+                  : 'Provide the details of a new reference or relative; all fields marked * are required.'}
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>

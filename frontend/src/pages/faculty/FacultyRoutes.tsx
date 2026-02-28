@@ -21,6 +21,8 @@ import NotFound from "./pages/NotFound";
 import { MentorDashboard } from "./pages/MentorDashboard";
 import { MenteesList } from "./pages/MenteesList";
 import { StudentProfileView } from "./pages/StudentProfileView";
+import AnnouncementDetail from "./pages/AnnouncementDetail";
+import Announcements from "./pages/Announcements";
 
 import './faculty.css';
 
@@ -49,6 +51,8 @@ const FacultyRoutes = () => (
               <Route path="communication" element={<Communication />} />
               <Route path="counseling" element={<Counseling />} />
               <Route path="reports" element={<Reports />} />
+              <Route path="announcements" element={<Announcements />} />
+              <Route path="announcements/:id" element={<AnnouncementDetail />} />
               <Route path="mentor" element={<MentorDashboard />} />
               <Route path="mentor/:year" element={<MenteesList />} />
               <Route path="mentor/student/:studentId" element={<StudentProfileView />} />

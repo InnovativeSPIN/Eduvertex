@@ -560,16 +560,21 @@ export default function FacultyAllocationPage() {
                     <SelectValue placeholder="Select Subject" />
                   </SelectTrigger>
                   <SelectContent>
-                    {formData.semester && subjects
-                      .filter(s => {
-                        const subjectSem = parseInt(formData.semester);
-                        return s.semester === subjectSem || s.semester === subjectSem + 1;
-                      })
-                      .map(s => (
-                        <SelectItem key={s.id} value={s.id.toString()}>
-                          {s.code} - {s.name}
-                        </SelectItem>
-                      ))}
+                    {subjects.length > 0 ? (
+                      subjects
+                        .filter(s => {
+                          if (!formData.semester) return true; // Show all if no semester selected
+                          const subjectSem = parseInt(formData.semester);
+                          return s.semester === subjectSem || s.semester === subjectSem + 1;
+                        })
+                        .map(s => (
+                          <SelectItem key={s.id} value={s.id.toString()}>
+                            {s.code} - {s.name}
+                          </SelectItem>
+                        ))
+                    ) : (
+                      <div className="p-2 text-sm text-gray-500">No subjects available</div>
+                    )}
                   </SelectContent>
                 </Select>
 
@@ -604,22 +609,32 @@ export default function FacultyAllocationPage() {
                 </div>
 
                 {/* Total Hours */}
-                <Input
-                  label="Total Hours"
-                  type="number"
-                  value={formData.total_hours}
-                  onChange={(e) => setFormData({ ...formData, total_hours: e.target.value })}
-                  placeholder="e.g., 45"
-                />
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Total Hours
+                  </label>
+                  <Input
+                    type="number"
+                    value={formData.total_hours}
+                    onChange={(e) => setFormData({ ...formData, total_hours: e.target.value })}
+                    placeholder="e.g., 45"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Total hours allocated for this subject in the semester</p>
+                </div>
 
                 {/* Number of Periods */}
-                <Input
-                  label="Number of Periods (per week)"
-                  type="number"
-                  value={formData.no_of_periods}
-                  onChange={(e) => setFormData({ ...formData, no_of_periods: e.target.value })}
-                  placeholder="e.g., 3"
-                />
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Number of Periods Per Week
+                  </label>
+                  <Input
+                    type="number"
+                    value={formData.no_of_periods}
+                    onChange={(e) => setFormData({ ...formData, no_of_periods: e.target.value })}
+                    placeholder="e.g., 3"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">How many class periods per week for this subject</p>
+                </div>
 
                 {/* Subject Info Display (Auto-fetch) */}
                 {formData.subject_id && (

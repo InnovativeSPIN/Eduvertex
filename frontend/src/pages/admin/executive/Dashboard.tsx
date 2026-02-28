@@ -5,6 +5,8 @@ import { AdminLayout } from '@/pages/admin/executive/components/layout/AdminLayo
 import { cn } from '@/pages/admin/executive/lib/utils';
 import { StatsCard } from '@/pages/admin/executive/components/dashboard/StatsCard';
 import { dashboardStats, mockStudents, mockFaculty } from '@/data/mockData';
+import { useAnnouncementNotification } from '@/hooks/useAnnouncementNotification';
+import { AnnouncementNotificationModal } from '@/components/common/AnnouncementNotificationModal';
 import {
   Users,
   GraduationCap,
@@ -80,6 +82,7 @@ const yearlyStudentData = [
 
 export default function ExecutiveAdminDashboard() {
   const navigate = useNavigate();
+  const { announcement, showNotification, setShowNotification } = useAnnouncementNotification();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [activeAnalysisView, setActiveAnalysisView] = useState<'faculty' | 'student'>('student');
   const [selectedDeptForGender, setSelectedDeptForGender] = useState<string | null>(null);
@@ -109,6 +112,17 @@ export default function ExecutiveAdminDashboard() {
 
   return (
     <AdminLayout>
+      {announcement && (
+        <AnnouncementNotificationModal
+          isOpen={showNotification}
+          onClose={() => setShowNotification(false)}
+          title={announcement.title}
+          message={announcement.message}
+          creatorRole={announcement.creatorRole}
+          createdAt={announcement.createdAt}
+          updatedAt={announcement.updatedAt}
+        />
+      )}
       <div className="space-y-6">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-2 border-b border-border/10 mb-8">
           <div>
@@ -484,10 +498,17 @@ export default function ExecutiveAdminDashboard() {
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary font-black shadow-sm">
-                        {`${student.firstName} ${student.lastName}`.split(' ').map((n: string) => n[0]).join('')}
+                        {(
+                          (student.firstName && student.lastName)
+                            ? `${student.firstName} ${student.lastName}`
+                            : ''
+                        )
+                          .split(' ')
+                          .map((n: string) => n[0])
+                          .join('')}
                       </div>
                       <div>
-                        <p className="font-bold text-foreground leading-tight">{`${student.firstName} ${student.lastName}`}</p>
+                        <p className="font-bold text-foreground leading-tight">{`${student.firstName || ''} ${student.lastName || ''}`}</p>
                         <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{student.departmentId}</p>
                       </div>
                     </div>
@@ -523,11 +544,14 @@ export default function ExecutiveAdminDashboard() {
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary/10 text-secondary font-black shadow-sm">
-                        {faculty.Name.split(' ').map((n: string) => n[0]).join('')}
+                        {(faculty.Name || faculty.name || '')
+                          .split(' ')
+                          .map((n: string) => n[0])
+                          .join('')}
                       </div>
                       <div>
-                        <p className="font-bold text-foreground leading-tight">{faculty.Name}</p>
-                        <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{faculty.designation}</p>
+                        <p className="font-bold text-foreground leading-tight">{faculty.Name || faculty.name || 'Faculty'}</p>
+                        <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{faculty.designation || 'N/A'}</p>
                       </div>
                     </div>
                     <span className="text-xs font-semibold bg-muted px-2 py-1 rounded text-muted-foreground border border-border/50">
@@ -555,10 +579,16 @@ export default function ExecutiveAdminDashboard() {
                 <div key={student.id} className="flex items-center justify-between p-4 bg-muted/20 rounded-xl border border-border/50 hover:bg-muted/40 transition-all group">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center text-primary font-bold">
-                      {`${student.firstName} ${student.lastName}`[0]}
+                      {(
+                        student.firstName && student.lastName
+                          ? `${student.firstName} ${student.lastName}`
+                          : ''
+                      )[0]}
                     </div>
                     <div>
-                      <p className="font-bold text-foreground group-hover:text-primary transition-colors">{`${student.firstName} ${student.lastName}`}</p>
+                      <p className="font-bold text-foreground group-hover:text-primary transition-colors">
+                        {`${student.firstName || ''} ${student.lastName || ''}`}
+                      </p>
                       <p className="text-xs text-muted-foreground">{student.departmentId} | Batch {student.batch}</p>
                     </div>
                   </div>

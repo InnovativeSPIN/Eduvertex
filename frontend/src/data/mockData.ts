@@ -12,7 +12,7 @@ export const dashboardStats = {
 };
 
 // legacy mock data used by some admin modules; superadmin now fetches real data from the API
-export const mockStudents: Student[] = [
+const rawStudents: Student[] = [
   { id: "1", name: "Alice Johnson", email: "alice@example.com", phone: "1234567890", department: "CSE", enrollmentYear: 2023, semester: 3, status: "active" },
   { id: "2", name: "Bob Smith", email: "bob@example.com", phone: "1234567890", department: "Mechanical Engineering", enrollmentYear: 2022, semester: 5, status: "active" },
   { id: "3", name: "Carol Lee", email: "carol@example.com", phone: "1234567890", department: "ECE", enrollmentYear: 2024, semester: 1, status: "completed" },
@@ -24,6 +24,13 @@ export const mockStudents: Student[] = [
   { id: "9", name: "Isla Martinez", email: "isla@example.com", phone: "1234567890", department: "CSE", enrollmentYear: 2020, semester: 7, status: "completed" },
 ];
 
+// ensure firstName/lastName fields exist for legacy components
+export const mockStudents: Student[] = rawStudents.map(s => {
+  const [first = '', ...rest] = (s.name || '').split(' ');
+  const last = rest.join(' ');
+  return { ...s, firstName: first, lastName: last } as Student;
+});
+
 // legacy faculty mock list (kept for offline examples)
 export const mockFaculty: Faculty[] = [
   { id: "1", employeeId: "FAC001", name: "Prof. Xavier", email: "xavier@edu.com", phone: "9876543210", designation: "Professor", department: "CSE", joinDate: "2015-06-01", status: "active" },
@@ -34,8 +41,8 @@ export const mockFaculty: Faculty[] = [
 ];
 
 export const mockAdmins: Admin[] = [
-  { id: "1", name: "Executive Chief", email: "executive@edu.com", role: "executive", status: "active" },
-  { id: "2", name: "Academic Dean", email: "academic@edu.com", role: "academic", department: "CSE", status: "active" },
+  { id: "1", name: "Executive Chief", email: "executive@edu.com", role: "executiveadmin", status: "active" },
+  { id: "2", name: "Academic Dean", email: "academic@edu.com", role: "academicadmin", department: "CSE", status: "active" },
   { id: "3", name: "Exam Controller", email: "exam@edu.com", role: "exam_cell_admin", status: "active" },
   { id: "4", name: "Placement Officer", email: "placement@edu.com", role: "placement_cell_admin", status: "active" },
   { id: "5", name: "R&D Director", email: "rnd@edu.com", role: "research_development_admin", status: "active" },

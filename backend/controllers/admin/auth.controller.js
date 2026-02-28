@@ -637,7 +637,15 @@ export const getAdminsByRole = asyncHandler(async (req, res, next) => {
   // 'department_admin' or 'department admin', so fetch all roles and
   // normalize in JS to match requested role robustly.
   const allRoles = await Role.findAll({ attributes: ['role_id', 'role_name'] });
-  const normalize = (s) => (s || '').toString().trim().toLowerCase().replace(/[_\s]+/g, '-');
+  // normalise by removing all non-alphanumeric separators so
+  // 'executive-admin', 'executive admin' and 'executiveadmin' all become
+  // 'executiveadmin' and will match whichever form the client sends.
+  const normalize = (s) =>
+    (s || '')
+      .toString()
+      .trim()
+      .toLowerCase()
+      .replace(/[-_\s]+/g, '');
   const targetNorms = roleNames.map(r => normalize(r));
   const roles = allRoles.filter(r => targetNorms.includes(normalize(r.role_name)));
   const roleIds = roles.map(r => r.role_id);
