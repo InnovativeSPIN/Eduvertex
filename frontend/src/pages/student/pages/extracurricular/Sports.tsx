@@ -187,6 +187,11 @@ export default function Sports() {
             <DialogTitle>
               {editingId ? 'Edit Sport' : 'Add New Sport'}
             </DialogTitle>
+            <DialogDescription>
+              {editingId
+                ? 'Modify the sport information below.'
+                : 'Enter the name and details for a new extracurricular sport.'}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>

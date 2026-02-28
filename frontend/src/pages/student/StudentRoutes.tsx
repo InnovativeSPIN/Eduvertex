@@ -30,6 +30,7 @@ import Notifications from './pages/notifications/Notifications';
 
 // Announcements
 import Announcements from './pages/announcements/Announcements';
+import AnnouncementDetail from './pages/announcements/AnnouncementDetail';
 
 // Errors
 import Unauthorized from './pages/errors/Unauthorized';
@@ -81,6 +82,7 @@ const StudentRoutes = () => {
 
           {/* Announcements */}
           <Route path="announcements" element={<Announcements />} />
+          <Route path="announcements/:id" element={<AnnouncementDetail />} />
         </Route>
 
         {/* Catch-all */}

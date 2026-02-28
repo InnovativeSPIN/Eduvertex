@@ -206,7 +206,11 @@ export default function SuperAdminAdmins() {
                     }
                 }
 
-                toast.success(`Admin ${formModal.mode === 'add' ? 'added' : 'updated'} successfully`);
+                if (formModal.mode === 'add') {
+                    toast.success('Admin added successfully (default password is 123, please ask the user to change it)');
+                } else {
+                    toast.success('Admin updated successfully');
+                }
                 setFormModal({ open: false, mode: 'add' });
                 fetchAdmins();
             } else {

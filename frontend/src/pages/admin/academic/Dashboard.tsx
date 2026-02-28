@@ -1,3 +1,5 @@
+import { useAnnouncementNotification } from '@/hooks/useAnnouncementNotification';
+import { AnnouncementNotificationModal } from '@/components/common/AnnouncementNotificationModal';
 import { AdminLayout } from '@/pages/admin/academic/components/layout/AdminLayout';
 import { StatsCard } from '@/pages/admin/academic/components/dashboard/StatsCard';
 import { dashboardStats, mockStudents, mockFaculty } from '@/data/mockData';
@@ -6,11 +8,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/pages/admin/academic
 import { Badge } from '@/pages/admin/academic/components/ui/badge';
 
 export default function AcademicAdminDashboard() {
+  const { announcement, showNotification, setShowNotification } = useAnnouncementNotification();
   const recentStudents = mockStudents.slice(0, 4);
   const recentFaculty = mockFaculty.slice(0, 4);
 
   return (
     <AdminLayout>
+      {announcement && (
+        <AnnouncementNotificationModal
+          isOpen={showNotification}
+          onClose={() => setShowNotification(false)}
+          title={announcement.title}
+          message={announcement.message}
+          creatorRole={announcement.creatorRole}
+          createdAt={announcement.createdAt}
+          updatedAt={announcement.updatedAt}
+        />
+      )}
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Academic Dashboard</h1>
@@ -95,11 +109,14 @@ export default function AcademicAdminDashboard() {
                   <div key={student.id} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-medium">
-                        {student.name.split(' ').map((n) => n[0]).join('')}
+                        {(`${student.firstName || ''} ${student.lastName || ''}`)
+                          .split(' ')
+                          .map((n: string) => n[0])
+                          .join('')}
                       </div>
                       <div>
-                        <p className="font-medium text-foreground">{student.name}</p>
-                        <p className="text-sm text-muted-foreground">{student.department}</p>
+                        <p className="font-medium text-foreground">{`${student.firstName || ''} ${student.lastName || 'Student'}`}</p>
+                        <p className="text-sm text-muted-foreground">{student.departmentId}</p>
                       </div>
                     </div>
                     <Badge
@@ -124,11 +141,14 @@ export default function AcademicAdminDashboard() {
                   <div key={faculty.id} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/10 text-secondary font-medium">
-                        {faculty.name.split(' ').map((n) => n[0]).join('')}
+                        {(faculty.name || faculty.Name || '')
+                          .split(' ')
+                          .map((n) => n[0])
+                          .join('')}
                       </div>
                       <div>
-                        <p className="font-medium text-foreground">{faculty.name}</p>
-                        <p className="text-sm text-muted-foreground">{faculty.designation}</p>
+                        <p className="font-medium text-foreground">{faculty.name || faculty.Name || 'Faculty'}</p>
+                        <p className="text-sm text-muted-foreground">{faculty.designation || 'N/A'}</p>
                       </div>
                     </div>
                     <span className="text-sm text-muted-foreground">{faculty.department}</span>

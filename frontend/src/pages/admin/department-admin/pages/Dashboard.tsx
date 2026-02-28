@@ -4,6 +4,8 @@ import { NextClassCard } from "@/pages/admin/department-admin/components/dashboa
 import { PendingTasksList } from "@/pages/admin/department-admin/components/dashboard/PendingTasksList";
 import { LeaveSnapshot } from "@/pages/admin/department-admin/components/dashboard/LeaveSnapshot";
 import { IntegratedNotificationBell } from "@/components/common/IntegratedNotificationBell";
+import { useAnnouncementNotification } from "@/hooks/useAnnouncementNotification";
+import { AnnouncementNotificationModal } from "@/components/common/AnnouncementNotificationModal";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import {
@@ -46,6 +48,7 @@ const leaveBalance = [
 ];
 
 export default function Dashboard() {
+  const { announcement, showNotification, setShowNotification } = useAnnouncementNotification();
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -63,6 +66,17 @@ export default function Dashboard() {
 
   return (
     <MainLayout>
+      {announcement && (
+        <AnnouncementNotificationModal
+          isOpen={showNotification}
+          onClose={() => setShowNotification(false)}
+          title={announcement.title}
+          message={announcement.message}
+          creatorRole={announcement.creatorRole}
+          createdAt={announcement.createdAt}
+          updatedAt={announcement.updatedAt}
+        />
+      )}
       {/* Page Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}

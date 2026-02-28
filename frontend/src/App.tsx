@@ -1,6 +1,6 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from '@/components/ui/toaster';
+import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/contexts/AuthContext';
 
 // Admin Pages
@@ -15,6 +15,7 @@ import SuperAdminTimeTable from './pages/admin/superadmin/TimeTable';
 import SuperAdminFacultyProfile from './pages/admin/superadmin/FacultyProfile';
 import SuperAdminStudentProfile from './pages/admin/superadmin/StudentProfile';
 import SuperAdminAnnouncements from './pages/admin/superadmin/Announcements';
+import SuperAdminAnnouncementDetail from './pages/admin/superadmin/AnnouncementDetail';
 import SuperAdminSubjectManagement from './pages/admin/superadmin/SubjectManagement';
 //executive admin pages
 import ExecutiveAdminDashboard from '@/pages/admin/executive/Dashboard';
@@ -25,6 +26,8 @@ import ExecutiveLeaveRequests from '@/pages/admin/executive/LeaveRequests';
 import AcademicPerformance from '@/pages/admin/executive/AcademicPerformance';
 import ExecutiveStudentProfile from '@/pages/admin/executive/StudentProfile';
 import ExecutiveFacultyProfile from '@/pages/admin/executive/FacultyProfile';
+import ExecutiveAnnouncementDetail from '@/pages/admin/executive/AnnouncementDetail';
+import ExecutiveAnnouncements from '@/pages/admin/executive/Announcements';
 
 // academic admin pages
 import AcademicAdminDashboard from './pages/admin/academic/Dashboard';
@@ -32,6 +35,8 @@ import AcademicStudents from './pages/admin/academic/Students';
 import AcademicFaculty from './pages/admin/academic/Faculty';
 import AcademicDepartments from './pages/admin/academic/Departments';
 import AcademicReports from './pages/admin/academic/Reports';
+import AcademicAnnouncements from './pages/admin/academic/Announcements';
+import AcademicAnnouncementDetail from './pages/admin/academic/AnnouncementDetail';
  // authentications   
 import Login from './pages/auth/Login';
 import AdminLogin from './pages/auth/AdminLogin';
@@ -60,7 +65,6 @@ const App = () => {
       <TooltipProvider>
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Toaster />
-          <Sonner />
           <AuthProvider>
             <Routes>
               {/* Root redirect */}
@@ -83,6 +87,7 @@ const App = () => {
               <Route path="/admin/superadmin/reports" element={<SuperAdminReports />} />
               <Route path="/admin/superadmin/backup" element={<SuperAdminBackup />} />
               <Route path="/admin/superadmin/announcements" element={<SuperAdminAnnouncements />} />
+              <Route path="/admin/superadmin/announcements/:id" element={<SuperAdminAnnouncementDetail />} />
               <Route path="/admin/superadmin/subjects" element={<SuperAdminSubjectManagement />} />
 
               {/* Executive Admin Routes */}
@@ -94,7 +99,8 @@ const App = () => {
               <Route path="/admin/executive/leave-requests" element={<ExecutiveLeaveRequests />} />
               <Route path="/admin/executive/academic-performance" element={<AcademicPerformance />} />
               <Route path="/admin/executive/reports" element={<ExecutiveReports />} />
-              <Route path="/admin/executive/announcements" element={<SuperAdminAnnouncements />} />
+              <Route path="/admin/executive/announcements" element={<ExecutiveAnnouncements />} />
+              <Route path="/admin/executive/announcements/:id" element={<ExecutiveAnnouncementDetail />} />
 
               {/* Academic Admin Routes */}
               <Route path="/admin/academic" element={<AcademicAdminDashboard />} />
@@ -102,7 +108,8 @@ const App = () => {
               <Route path="/admin/academic/faculty" element={<AcademicFaculty />} />
               <Route path="/admin/academic/departments" element={<AcademicDepartments />} />
               <Route path="/admin/academic/reports" element={<AcademicReports />} />
-              <Route path="/admin/academic/announcements" element={<SuperAdminAnnouncements />} />
+              <Route path="/admin/academic/announcements" element={<AcademicAnnouncements />} />
+              <Route path="/admin/academic/announcements/:id" element={<AcademicAnnouncementDetail />} />
 
               {/* Department Admin Routes */}
               <Route path="/admin/department-admin/*" element={<DepartmentAdminRoutes />} />

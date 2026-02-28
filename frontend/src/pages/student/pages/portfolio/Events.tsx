@@ -227,6 +227,11 @@ export default function Events({ onPendingChange }: EventsProps) {
               <DialogTitle>
                 {editingId ? 'Edit Event' : 'Add New Event'}
               </DialogTitle>
+              <DialogDescription>
+                {editingId
+                  ? 'Update the portfolio event information below.'
+                  : 'Provide details for a new portfolio event.'}
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>

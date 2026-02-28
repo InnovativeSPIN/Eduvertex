@@ -1,4 +1,6 @@
 ﻿import { useAuth } from '@/contexts/AuthContext';
+import { useAnnouncementNotification } from '@/hooks/useAnnouncementNotification';
+import { AnnouncementNotificationModal } from '@/components/common/AnnouncementNotificationModal';
 import PageHeader from '@/pages/student/components/layout/PageHeader';
 import InfoCard from '@/pages/student/components/common/InfoCard';
 import SectionCard from '@/pages/student/components/common/SectionCard';
@@ -67,9 +69,21 @@ const dashboardData = {
 
 export default function StudentDashboard() {
   const { user } = useAuth();
+  const { announcement, showNotification, setShowNotification } = useAnnouncementNotification();
 
   return (
     <div className="animate-fade-in">
+      {announcement && (
+        <AnnouncementNotificationModal
+          isOpen={showNotification}
+          onClose={() => setShowNotification(false)}
+          title={announcement.title}
+          message={announcement.message}
+          creatorRole={announcement.creatorRole}
+          createdAt={announcement.createdAt}
+          updatedAt={announcement.updatedAt}
+        />
+      )}
       <PageHeader
         title={`Welcome back, ${user?.name?.split(' ')[0]}!`}
         subtitle="Here's an overview of your academic progress"

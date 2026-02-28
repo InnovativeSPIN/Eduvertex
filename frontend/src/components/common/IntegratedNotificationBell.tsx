@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, X, Megaphone, Clock, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,13 @@ interface Announcement {
     createdAt: string;
 }
 
-export function IntegratedNotificationBell() {
+interface IntegratedNotificationBellProps {
+    // No props needed - uses location context for routing
+}
+
+export function IntegratedNotificationBell({}: IntegratedNotificationBellProps) {
+    const navigate = useNavigate();
+    const location = useLocation();
     const [isOpen, setIsOpen] = useState(false);
     const [announcements, setAnnouncements] = useState<Announcement[]>([]);
     const [loading, setLoading] = useState(true);
@@ -36,6 +43,63 @@ export function IntegratedNotificationBell() {
         } finally {
             setLoading(false);
         }
+    };
+
+    // Determine the route dynamically based on current location
+    const getAnnouncementUrl = (announcementId: number) => {
+        const pathname = location.pathname;
+        
+        if (pathname.includes('/admin/superadmin')) {
+            return `/admin/superadmin/announcements/${announcementId}`;
+        }
+        if (pathname.includes('/admin/executive')) {
+            return `/admin/executive/announcements/${announcementId}`;
+        }
+        if (pathname.includes('/admin/academic')) {
+            return `/admin/academic/announcements/${announcementId}`;
+        }
+        if (pathname.includes('/admin/department-admin')) {
+            return `/admin/department-admin/announcements/${announcementId}`;
+        }
+        if (pathname.includes('/faculty')) {
+            return `/faculty/announcements/${announcementId}`;
+        }
+        if (pathname.includes('/student')) {
+            return `/student/announcements/${announcementId}`;
+        }
+        
+        return `/announcements/${announcementId}`;
+    };
+
+    const getAnnouncementsListUrl = () => {
+        const pathname = location.pathname;
+        
+        if (pathname.includes('/admin/superadmin')) {
+            return `/admin/superadmin/announcements`;
+        }
+        if (pathname.includes('/admin/executive')) {
+            return `/admin/executive/announcements`;
+        }
+        if (pathname.includes('/admin/academic')) {
+            return `/admin/academic/announcements`;
+        }
+        if (pathname.includes('/admin/department-admin')) {
+            return `/admin/department-admin/announcements`;
+        }
+        if (pathname.includes('/faculty')) {
+            return `/faculty/announcements`;
+        }
+        if (pathname.includes('/student')) {
+            return `/student/announcements`;
+        }
+        
+        return `/announcements`;
+    };
+
+    const handleAnnouncementClick = (announcement: Announcement) => {
+        const url = getAnnouncementUrl(announcement.id);
+        setIsOpen(false);
+        navigate(url);
     };
 
     useEffect(() => {
@@ -129,6 +193,7 @@ export function IntegratedNotificationBell() {
                                     {announcements.map((ann) => (
                                         <div
                                             key={ann.id}
+                                            onClick={() => handleAnnouncementClick(ann)}
                                             className="p-4 hover:bg-muted/30 transition-colors cursor-pointer group"
                                         >
                                             <div className="flex gap-3">
@@ -172,7 +237,10 @@ export function IntegratedNotificationBell() {
                                 variant="ghost"
                                 size="sm"
                                 className="w-full text-xs font-bold gap-2 text-primary hover:bg-primary/5"
-                                onClick={() => setIsOpen(false)}
+                                onClick={() => {
+                                    setIsOpen(false);
+                                    navigate(getAnnouncementsListUrl());
+                                }}
                             >
                                 View all notifications
                             </Button>
