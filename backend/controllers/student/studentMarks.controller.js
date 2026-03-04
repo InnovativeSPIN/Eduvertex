@@ -1,15 +1,16 @@
+import { Op } from 'sequelize';
 import asyncHandler from '../../middleware/async.js';
 import ErrorResponse from '../../utils/errorResponse.js';
 import { models } from '../../models/index.js';
 const { StudentMarks, StudentInternalMark, Subject, Student } = models;
 
 // ─── Helper ────────────────────────────────────────────────────────────────
-const getStudentRecord = async (userOrId, next) => {
-    // if already a student instance, just return it
-    if (userOrId && userOrId.id && userOrId.studentId) {
-        return userOrId;
+// req.user is the Student model instance fetched from DB in auth middleware.
+// Its primary key (id) is the studentId we need for all queries.
+const getStudentDbId = (user, next) => {
+    if (user && user.id) {
+        return user.id;
     }
-    // userId column doesn't exist; can't look up students this way
     next(new ErrorResponse('Student profile not accessible', 404));
     return null;
 };
@@ -18,16 +19,16 @@ const getStudentRecord = async (userOrId, next) => {
 // @route  GET /api/student/marks?semester=&academicYear=
 // @access Private/Student
 export const getMyMarks = asyncHandler(async (req, res, next) => {
-    const student = await getStudentRecord(req.user.id, next);
-    if (!student) return;
+    const studentId = getStudentDbId(req.user, next);
+    if (!studentId) return;
 
-    const where = { studentId: student.id };
+    const where = { studentId };
     if (req.query.semester) where.semester = parseInt(req.query.semester);
     if (req.query.academicYear) where.academicYear = req.query.academicYear;
 
     const marks = await StudentMarks.findAll({
         where,
-        include: [{ model: Subject, as: 'subject', attributes: ['name', 'code', 'credits'] }],
+        include: [{ model: Subject, as: 'subject', attributes: ['subject_name', 'subject_code', 'credits'] }],
         order: [['semester', 'ASC']]
     });
 
@@ -38,17 +39,17 @@ export const getMyMarks = asyncHandler(async (req, res, next) => {
 // @route  GET /api/student/marks/internal?semester=&internalNumber=
 // @access Private/Student
 export const getMyInternalMarks = asyncHandler(async (req, res, next) => {
-    const student = await getStudentRecord(req.user.id, next);
-    if (!student) return;
+    const studentId = getStudentDbId(req.user, next);
+    if (!studentId) return;
 
-    const where = { studentId: student.id };
+    const where = { studentId };
     if (req.query.semester) where.semester = parseInt(req.query.semester);
     if (req.query.internalNumber) where.internalNumber = parseInt(req.query.internalNumber);
     if (req.query.academicYear) where.academicYear = req.query.academicYear;
 
     const internalMarks = await StudentInternalMark.findAll({
         where,
-        include: [{ model: Subject, as: 'subject', attributes: ['name', 'code'] }],
+        include: [{ model: Subject, as: 'subject', attributes: ['subject_name', 'subject_code'] }],
         order: [['semester', 'ASC'], ['internalNumber', 'ASC']]
     });
 
@@ -95,12 +96,12 @@ export const upsertInternalMark = asyncHandler(async (req, res, next) => {
 // @route  GET /api/student/marks/summary
 // @access Private/Student
 export const getMarksSummary = asyncHandler(async (req, res, next) => {
-    const student = await getStudentRecord(req.user.id, next);
-    if (!student) return;
+    const studentId = getStudentDbId(req.user, next);
+    if (!studentId) return;
 
     const marks = await StudentMarks.findAll({
-        where: { studentId: student.id, status: { $in: ['pass', 'fail'] } },
-        include: [{ model: Subject, as: 'subject', attributes: ['name', 'code', 'credits'] }],
+        where: { studentId, status: { [Op.in]: ['pass', 'fail'] } },
+        include: [{ model: Subject, as: 'subject', attributes: ['subject_name', 'subject_code', 'credits'] }],
         order: [['semester', 'ASC']]
     });
 

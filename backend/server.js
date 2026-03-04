@@ -38,6 +38,11 @@ import coordinatorRoutes from './routes/department-admin/coordinator.routes.js';
 import subjectRoutes from './routes/department-admin/subject.routes.js';
 import generalSubjectRoutes from './routes/subject.routes.js';
 import classRoutes from './routes/class.routes.js';
+import studentMarksRoutes from './routes/student/studentMarks.routes.js';
+import studentProjectRoutes from './routes/student/studentProject.routes.js';
+import studentCertificationRoutes from './routes/student/studentCertification.routes.js';
+import studentExtracurricularRoutes from './routes/student/studentExtracurricular.routes.js';
+import studentNotificationRoutes from './routes/student/studentNotification.routes.js';
 
 // Load env vars
 dotenv.config();
@@ -154,6 +159,11 @@ const startServer = () => {
   app.use('/api/v1/department-admin/coordinators', coordinatorRoutes);
   app.use('/api/v1/department-admin/subjects', subjectRoutes);
   app.use('/api/v1/faculty/notifications', timetableNotificationRoutes);
+  app.use('/api/v1/student/marks', studentMarksRoutes);
+  app.use('/api/v1/student/projects', studentProjectRoutes);
+  app.use('/api/v1/student/certifications', studentCertificationRoutes);
+  app.use('/api/v1/student/extracurricular', studentExtracurricularRoutes);
+  app.use('/api/v1/student/notifications', studentNotificationRoutes);
 
   // Health check
   app.get('/api/v1/health', (req, res) => {

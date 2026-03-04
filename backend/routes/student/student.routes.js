@@ -10,6 +10,7 @@ import {
   updateStudentStatus,
   promoteStudents,
   getMyProfile,
+  updateMyProfile,
   getStudentStats
 } from '../../controllers/student/student.controller.js';
 
@@ -21,7 +22,9 @@ const router = express.Router();
 router.use(protect);
 
 // Student can access their own profile
-router.get('/me/profile', authorize('student'), getMyProfile);
+router.route('/me/profile')
+  .get(authorize('student'), getMyProfile)
+  .put(authorize('student'), updateMyProfile);
 
 // Stats route
 router.get('/stats', authorize('superadmin', 'super-admin', 'executiveadmin', 'academicadmin'), getStudentStats);

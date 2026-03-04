@@ -34,6 +34,14 @@ import FacultyIndustryExperience from './FacultyIndustryExperience.model.js';
 import FacultyPhd from './FacultyPhd.model.js';
 import FacultyEvents from './FacultyEvents.model.js';
 import FacultyResearch from './FacultyResearch.model.js';
+import StudentMarks from './StudentMarks.model.js';
+import StudentInternalMark from './StudentInternalMark.model.js';
+import StudentProject from './StudentProject.model.js';
+import StudentCertification from './StudentCertification.model.js';
+import StudentSport from './StudentSport.model.js';
+import StudentEvent from './StudentEvent.model.js';
+import StudentNotification from './StudentNotification.model.js';
+import StudentBio from './StudentBio.model.js';
 
 // Initialize models
 const models = {
@@ -69,6 +77,14 @@ const models = {
   FacultyPhd: FacultyPhd(sequelize),
   FacultyEvents: FacultyEvents(sequelize),
   FacultyResearch: FacultyResearch(sequelize),
+  StudentMarks: StudentMarks(sequelize),
+  StudentInternalMark: StudentInternalMark(sequelize),
+  StudentProject: StudentProject(sequelize),
+  StudentCertification: StudentCertification(sequelize),
+  StudentSport: StudentSport(sequelize),
+  StudentEvent: StudentEvent(sequelize),
+  StudentNotification: StudentNotification(sequelize),
+  StudentBio: StudentBio(sequelize),
 };
 
 // Define associations
@@ -78,7 +94,7 @@ Object.keys(models).forEach((modelName) => {
   }
 });
 
-const initModels = () => ({...models, sequelize});
+const initModels = () => ({ ...models, sequelize });
 
 export default initModels;
 export { models, sequelize };

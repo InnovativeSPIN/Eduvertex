@@ -22,6 +22,10 @@ const Student = (sequelize) => {
       type: DataTypes.STRING(30),
       allowNull: false,
     },
+    admissionNo: {
+      type: DataTypes.STRING(30),
+      allowNull: true,
+    },
     firstName: {
       type: DataTypes.STRING(100),
       allowNull: false,
@@ -142,6 +146,12 @@ const Student = (sequelize) => {
     StudentModel.belongsTo(models.User, {
       foreignKey: 'userId',
       as: 'user',
+    });
+
+    // One-to-one relationship with extended bio profile
+    StudentModel.hasOne(models.StudentBio, {
+      foreignKey: 'studentId',
+      as: 'bio',
     });
   };
 

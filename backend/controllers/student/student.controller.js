@@ -1,7 +1,7 @@
 import ErrorResponse from '../../utils/errorResponse.js';
 import asyncHandler from '../../middleware/async.js';
 import { models } from '../../models/index.js';
-const { Student, Department, Class: ClassModel, Subject } = models;
+const { Student, Department, Class: ClassModel, Subject, StudentBio } = models;
 import { Op, Sequelize } from 'sequelize';
 
 // @desc      Get all students
@@ -118,8 +118,7 @@ export const getStudent = asyncHandler(async (req, res, next) => {
     attributes: { exclude: ['userId'] },
     include: [
       { model: Department, as: 'department', attributes: ['short_name', 'full_name'] },
-      { model: ClassModel, as: 'class', attributes: ['name', 'section', 'room'] },
-      { model: Subject, as: 'subjects', attributes: ['name', 'code', 'credits'] }
+      { model: ClassModel, as: 'class', attributes: ['name', 'section', 'room'] }
     ]
   });
 
@@ -265,7 +264,7 @@ export const updateStudentStatus = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse(`Student not found with id of ${req.params.id}`, 404));
   }
 
-  
+
 
   res.status(200).json({
     success: true,
@@ -301,9 +300,9 @@ export const getMyProfile = asyncHandler(async (req, res, next) => {
     where: { id: req.user.id },
     attributes: { exclude: ['userId'] },
     include: [
-      { model: Department, as: 'department', attributes: ['name', 'code'] },
+      { model: Department, as: 'department', attributes: ['short_name', 'full_name'] },
       { model: ClassModel, as: 'class', attributes: ['name', 'section', 'room'] },
-      { model: Subject, as: 'subjects', attributes: ['name', 'code', 'credits'] }
+      { model: StudentBio, as: 'bio' }
     ]
   });
 
@@ -314,6 +313,48 @@ export const getMyProfile = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     data: student
+  });
+});
+
+// @desc      Update student profile details (for logged in student)
+// @route     PUT /api/v1/students/me/profile
+// @access    Private/Student
+export const updateMyProfile = asyncHandler(async (req, res, next) => {
+  const { email, phone, linkedinUrl, alternatePhone, address, city, state, pincode } = req.body;
+  const student = await Student.findOne({ where: { id: req.user.id } });
+
+  if (!student) {
+    return next(new ErrorResponse('Student profile not found', 404));
+  }
+
+  // Update Student Core details
+  if (email) student.email = email;
+  if (phone) student.phone = phone;
+  await student.save();
+
+  // Find or Create StudentBio
+  let bio = await StudentBio.findOne({ where: { studentId: req.user.id } });
+  if (!bio) {
+    bio = await StudentBio.create({ studentId: req.user.id });
+  }
+
+  // Update Bio fields
+  if (linkedinUrl !== undefined) bio.linkedinUrl = linkedinUrl;
+  if (alternatePhone !== undefined) bio.alternatePhone = alternatePhone;
+
+  // Manage address JSON
+  let addrObj = bio.address || {};
+  if (address) addrObj.street = address;
+  if (city) addrObj.city = city;
+  if (state) addrObj.state = state;
+  if (pincode) addrObj.pincode = pincode;
+  bio.address = addrObj;
+
+  await bio.save();
+
+  res.status(200).json({
+    success: true,
+    data: { student, bio }
   });
 });
 

@@ -1,68 +1,10 @@
-﻿import { useState } from 'react';
+﻿import { useState, useEffect } from 'react';
 import PageHeader from '@/pages/student/components/layout/PageHeader';
 import SectionCard from '@/pages/student/components/common/SectionCard';
 import Badge from '@/pages/student/components/common/Badge';
 import { SEMESTERS } from '@/pages/student/utils/constants';
-import { Award, TrendingUp, BookOpen } from 'lucide-react';
-
-const marksData = {
-  5: {
-    cgpa: 8.65,
-    totalCredits: 24,
-    internal1: [
-      { code: 'CS501', subject: 'Data Structures', internal: 36, assessment: 24, total: 60 },
-      { code: 'CS502', subject: 'Database Systems', internal: 34, assessment: 26, total: 60 },
-      { code: 'CS503', subject: 'Operating Systems', internal: 30, assessment: 28, total: 58 },
-      { code: 'CS504', subject: 'Computer Networks', internal: 38, assessment: 22, total: 60 },
-      { code: 'CS505', subject: 'Software Engineering', internal: 32, assessment: 26, total: 58 },
-      { code: 'CS506', subject: 'Lab Practice', internal: 40, assessment: 20, total: 60 },
-    ],
-    internal2: [
-      { code: 'CS501', subject: 'Data Structures', internal: 35, assessment: 23, total: 58 },
-      { code: 'CS502', subject: 'Database Systems', internal: 32, assessment: 26, total: 58 },
-      { code: 'CS503', subject: 'Operating Systems', internal: 32, assessment: 28, total: 60 },
-      { code: 'CS504', subject: 'Computer Networks', internal: 36, assessment: 24, total: 60 },
-      { code: 'CS505', subject: 'Software Engineering', internal: 30, assessment: 26, total: 56 },
-      { code: 'CS506', subject: 'Lab Practice', internal: 32, assessment: 25, total: 57 },
-    ],
-    subjects: [
-      { code: 'CS501', name: 'Data Structures', credits: 4, internal: 42, external: 58, total: 100, grade: 'A+' },
-      { code: 'CS502', name: 'Database Systems', credits: 4, internal: 38, external: 52, total: 90, grade: 'A' },
-      { code: 'CS503', name: 'Operating Systems', credits: 4, internal: 35, external: 48, total: 83, grade: 'B+' },
-      { code: 'CS504', name: 'Computer Networks', credits: 4, internal: 40, external: 55, total: 95, grade: 'A+' },
-      { code: 'CS505', name: 'Software Engineering', credits: 4, internal: 36, external: 50, total: 86, grade: 'A' },
-      { code: 'CS506', name: 'Lab Practice', credits: 4, internal: 45, external: 48, total: 93, grade: 'A+' },
-    ],
-  },
-  4: {
-    cgpa: 8.45,
-    totalCredits: 24,
-    internal1: [
-      { code: 'CS401', subject: 'Discrete Mathematics', internal: 36, assessment: 24, total: 60 },
-      { code: 'CS402', subject: 'Digital Logic', internal: 30, assessment: 28, total: 58 },
-      { code: 'CS403', subject: 'Object Oriented Programming', internal: 34, assessment: 26, total: 60 },
-      { code: 'CS404', subject: 'Computer Architecture', internal: 32, assessment: 26, total: 58 },
-      { code: 'CS405', subject: 'Data Communication', internal: 30, assessment: 26, total: 56 },
-      { code: 'CS406', subject: 'Lab Practice', internal: 36, assessment: 24, total: 60 },
-    ],
-    internal2: [
-      { code: 'CS401', subject: 'Discrete Mathematics', internal: 34, assessment: 26, total: 60 },
-      { code: 'CS402', subject: 'Digital Logic', internal: 32, assessment: 28, total: 60 },
-      { code: 'CS403', subject: 'Object Oriented Programming', internal: 32, assessment: 26, total: 58 },
-      { code: 'CS404', subject: 'Computer Architecture', internal: 32, assessment: 26, total: 58 },
-      { code: 'CS405', subject: 'Data Communication', internal: 32, assessment: 24, total: 56 },
-      { code: 'CS406', subject: 'Lab Practice', internal: 34, assessment: 26, total: 60 },
-    ],
-    subjects: [
-      { code: 'CS401', name: 'Discrete Mathematics', credits: 4, internal: 40, external: 52, total: 92, grade: 'A+' },
-      { code: 'CS402', name: 'Digital Logic', credits: 4, internal: 35, external: 45, total: 80, grade: 'B+' },
-      { code: 'CS403', name: 'Object Oriented Programming', credits: 4, internal: 38, external: 50, total: 88, grade: 'A' },
-      { code: 'CS404', name: 'Computer Architecture', credits: 4, internal: 36, external: 48, total: 84, grade: 'A' },
-      { code: 'CS405', name: 'Data Communication', credits: 4, internal: 34, external: 46, total: 80, grade: 'B+' },
-      { code: 'CS406', name: 'Lab Practice', credits: 4, internal: 42, external: 50, total: 92, grade: 'A+' },
-    ],
-  },
-};
+import { Award, TrendingUp, BookOpen, Loader2 } from 'lucide-react';
+import { getMyMarks, getMyInternalMarks, getMarksSummary } from '@/pages/student/services/studentApi';
 
 const gradePoints: Record<string, number> = {
   'A+': 10, 'A': 9, 'A-': 8.5, 'B+': 8, 'B': 7, 'B-': 6.5,
@@ -70,23 +12,57 @@ const gradePoints: Record<string, number> = {
 };
 
 function getGradeVariant(grade: string): 'success' | 'warning' | 'danger' | 'info' {
-  if (grade.startsWith('A')) return 'success';
-  if (grade.startsWith('B')) return 'info';
-  if (grade.startsWith('C')) return 'warning';
+  if (grade?.startsWith('A')) return 'success';
+  if (grade?.startsWith('B')) return 'info';
+  if (grade?.startsWith('C')) return 'warning';
   return 'danger';
 }
 
 export default function Marks() {
   const [selectedSemester, setSelectedSemester] = useState<number>(5);
-  const data = marksData[selectedSemester as keyof typeof marksData] || marksData[5];
+  const [loading, setLoading] = useState(true);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [internal1, setInternal1] = useState<any[]>([]);
+  const [internal2, setInternal2] = useState<any[]>([]);
+  const [cgpa, setCgpa] = useState<number>(0);
+  const [semGpa, setSemGpa] = useState<number>(0);
 
-  const totalMarks = data.subjects.reduce((sum, s) => sum + s.total, 0);
-  const maxMarks = data.subjects.length * 100;
-  const overallPercentage = ((totalMarks / maxMarks) * 100).toFixed(1);
-  const semesterGpa = data.subjects.reduce(
-    (sum, subject) => sum + gradePoints[subject.grade] * subject.credits,
-    0,
-  ) / data.totalCredits;
+  useEffect(() => {
+    setLoading(true);
+    Promise.allSettled([
+      getMyMarks({ semester: selectedSemester }),
+      getMyInternalMarks({ semester: selectedSemester, internalNumber: 1 }),
+      getMyInternalMarks({ semester: selectedSemester, internalNumber: 2 }),
+      getMarksSummary(),
+    ]).then(([marksRes, int1Res, int2Res, summaryRes]) => {
+      if (marksRes.status === 'fulfilled') {
+        const data = (marksRes.value as any).data || [];
+        setSubjects(data);
+        const totalCredits = data.reduce((s: number, m: any) => s + (m.credits || 4), 0);
+        const weightedGP = data.reduce((s: number, m: any) => s + (gradePoints[m.grade] || 0) * (m.credits || 4), 0);
+        setSemGpa(totalCredits > 0 ? weightedGP / totalCredits : 0);
+      }
+      if (int1Res.status === 'fulfilled') setInternal1((int1Res.value as any).data || []);
+      if (int2Res.status === 'fulfilled') setInternal2((int2Res.value as any).data || []);
+      if (summaryRes.status === 'fulfilled') setCgpa((summaryRes.value as any).data?.cgpa || 0);
+    }).finally(() => setLoading(false));
+  }, [selectedSemester]);
+
+  const totalMarks = subjects.reduce((sum: number, s: any) => sum + (s.totalMarks || 0), 0);
+  const totalCredits = subjects.reduce((sum: number, s: any) => sum + (s.credits || 4), 0);
+
+  const EmptyState = () => (
+    <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+      <BookOpen className="w-12 h-12 mb-3 opacity-30" />
+      <p className="text-sm">No marks recorded for Semester {selectedSemester}</p>
+    </div>
+  );
+
+  const LoadingState = () => (
+    <div className="flex items-center justify-center py-12">
+      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+    </div>
+  );
 
   return (
     <div className="animate-fade-in">
@@ -108,7 +84,9 @@ export default function Marks() {
             </div>
             <div>
               <p className="text-sm opacity-80">CGPA</p>
-              <p className="text-2xl font-bold font-display">{data.cgpa.toFixed(2)}</p>
+              <p className="text-2xl font-bold font-display">
+                {loading ? '...' : cgpa.toFixed(2)}
+              </p>
             </div>
           </div>
         </div>
@@ -120,144 +98,132 @@ export default function Marks() {
             </div>
             <div>
               <p className="text-sm opacity-80">Semester {selectedSemester} GPA</p>
-              <p className="text-2xl font-bold font-display">{semesterGpa.toFixed(2)}</p>
+              <p className="text-2xl font-bold font-display">
+                {loading ? '...' : semGpa.toFixed(2)}
+              </p>
             </div>
           </div>
         </div>
 
         <div className="stat-card">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-              <BookOpen className="w-6 h-6 text-primary" />
+            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
+              <BookOpen className="w-6 h-6 text-foreground" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Credits</p>
-              <p className="text-2xl font-bold font-display">{data.totalCredits}</p>
+              <p className="text-sm text-muted-foreground">Total Marks / Credits</p>
+              <p className="text-2xl font-bold font-display">
+                {loading ? '...' : `${totalMarks} / ${totalCredits} cr`}
+              </p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Semester Selector */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-foreground mb-2">
-          Select Semester
-        </label>
-        <select
-          value={selectedSemester}
-          onChange={(e) => setSelectedSemester(Number(e.target.value))}
-          className="input-field py-2 pr-8 w-full sm:w-auto"
-        >
-          {SEMESTERS.slice(0, 5).reverse().map((sem) => (
-            <option key={sem} value={sem}>Semester {sem}</option>
-          ))}
-        </select>
+      <div className="flex gap-2 mb-6 flex-wrap">
+        {SEMESTERS.map((sem) => (
+          <button
+            key={sem}
+            onClick={() => setSelectedSemester(sem)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedSemester === sem
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              }`}
+          >
+            Sem {sem}
+          </button>
+        ))}
       </div>
 
-      {/* Internal 1 Container */}
-      <SectionCard title={`Semester ${selectedSemester} - Internal 1`} subtitle="Assessment breakdown">
-        <div className="table-container">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Code</th>
-                <th>Subject</th>
-                <th className="text-center">Internal (60)</th>
-                <th className="text-center">Assessment (40)</th>
-                <th className="text-center">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.internal1.map((item) => (
-                <tr key={`${item.code}-internal1`}>
-                  <td className="font-mono text-sm">{item.code}</td>
-                  <td className="font-medium">{item.subject}</td>
-                  <td className="text-center">{item.internal}</td>
-                  <td className="text-center">{item.assessment}</td>
-                  <td className="text-center font-semibold">{item.total}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </SectionCard>
-
-      {/* Internal 2 Container */}
-      <SectionCard title={`Semester ${selectedSemester} - Internal 2`} subtitle="Assessment breakdown">
-        <div className="table-container">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Code</th>
-                <th>Subject</th>
-                <th className="text-center">Internal (60)</th>
-                <th className="text-center">Assessment (40)</th>
-                <th className="text-center">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.internal2.map((item) => (
-                <tr key={`${item.code}-internal2`}>
-                  <td className="font-mono text-sm">{item.code}</td>
-                  <td className="font-medium">{item.subject}</td>
-                  <td className="text-center">{item.internal}</td>
-                  <td className="text-center">{item.assessment}</td>
-                  <td className="text-center font-semibold">{item.total}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </SectionCard>
-
-      {/* Marks Table */}
-      <SectionCard title={`Semester ${selectedSemester} Results`} subtitle="Internal + External marks breakdown">
-        <div className="table-container">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Code</th>
-                <th>Subject</th>
-                <th className="text-center">Credits</th>
-                <th className="text-center">Internal (50)</th>
-                <th className="text-center">External (50)</th>
-                <th className="text-center">Total (100)</th>
-                <th className="text-center">Grade</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.subjects.map((subject) => (
-                <tr key={subject.code}>
-                  <td className="font-mono text-sm">{subject.code}</td>
-                  <td className="font-medium">{subject.name}</td>
-                  <td className="text-center">{subject.credits}</td>
-                  <td className="text-center">{subject.internal}</td>
-                  <td className="text-center">{subject.external}</td>
-                  <td className="text-center font-semibold">{subject.total}</td>
-                  <td className="text-center">
-                    <Badge variant={getGradeVariant(subject.grade)}>{subject.grade}</Badge>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </SectionCard>
-
-      {/* Grade Legend */}
-      <div className="mt-6 p-4 rounded-lg bg-muted/30">
-        <h4 className="text-sm font-medium mb-3">Grade Scale</h4>
-        <div className="flex flex-wrap gap-4 text-sm">
-          {Object.entries(gradePoints).map(([grade, points]) => (
-            <div key={grade} className="flex items-center gap-2">
-              <Badge variant={getGradeVariant(grade)}>{grade}</Badge>
-              <span className="text-muted-foreground">= 0 points</span>
+      <div className="space-y-6">
+        {/* Semester Marks Table */}
+        <SectionCard title={`Semester ${selectedSemester} Results`} subtitle="Subject-wise performance">
+          {loading ? (
+            <LoadingState />
+          ) : subjects.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-3 px-3 font-semibold">Subject</th>
+                    <th className="text-center py-3 px-3 font-semibold">Code</th>
+                    <th className="text-center py-3 px-3 font-semibold">Credits</th>
+                    <th className="text-center py-3 px-3 font-semibold">Internal (60)</th>
+                    <th className="text-center py-3 px-3 font-semibold">External (40)</th>
+                    <th className="text-center py-3 px-3 font-semibold">Total</th>
+                    <th className="text-center py-3 px-3 font-semibold">Grade</th>
+                    <th className="text-center py-3 px-3 font-semibold">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {subjects.map((subject: any, index: number) => (
+                    <tr key={subject.id || index} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                      <td className="py-3 px-3 font-medium">{subject.subject?.subject_name || subject.subjectId}</td>
+                      <td className="text-center py-3 px-3 text-muted-foreground font-mono text-xs">{subject.subject?.subject_code || '—'}</td>
+                      <td className="text-center py-3 px-3">{subject.credits || 4}</td>
+                      <td className="text-center py-3 px-3">{subject.internalMarks}</td>
+                      <td className="text-center py-3 px-3">{subject.externalMarks}</td>
+                      <td className="text-center py-3 px-3 font-semibold">{subject.totalMarks}</td>
+                      <td className="text-center py-3 px-3">
+                        {subject.grade ? (
+                          <Badge variant={getGradeVariant(subject.grade)}>{subject.grade}</Badge>
+                        ) : '—'}
+                      </td>
+                      <td className="text-center py-3 px-3">
+                        <Badge variant={subject.status === 'pass' ? 'success' : subject.status === 'fail' ? 'danger' : 'info'}>
+                          {subject.status || 'pending'}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
+          )}
+        </SectionCard>
+
+        {/* Internal Marks */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {[
+            { label: 'Internal 1', data: internal1 },
+            { label: 'Internal 2', data: internal2 },
+          ].map(({ label, data }) => (
+            <SectionCard key={label} title={label} subtitle="Test scores">
+              {loading ? (
+                <LoadingState />
+              ) : data.length === 0 ? (
+                <EmptyState />
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left py-2 px-3 font-semibold">Subject</th>
+                        <th className="text-center py-2 px-3 font-semibold">Test (60)</th>
+                        <th className="text-center py-2 px-3 font-semibold">Assessment</th>
+                        <th className="text-center py-2 px-3 font-semibold">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.map((row: any, i: number) => (
+                        <tr key={row.id || i} className="border-b border-border last:border-0">
+                          <td className="py-2 px-3">{row.subject?.subject_name || row.subjectId}</td>
+                          <td className="text-center py-2 px-3">{row.internalScore}</td>
+                          <td className="text-center py-2 px-3">{row.assessmentScore}</td>
+                          <td className="text-center py-2 px-3 font-semibold">{row.totalScore}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </SectionCard>
           ))}
         </div>
       </div>
     </div>
   );
 }
-
-

@@ -911,6 +911,7 @@ CREATE TABLE `student_profile` (
   `role_id` int(11) NOT NULL,
   `studentId` varchar(30) NOT NULL,
   `rollNumber` varchar(30) NOT NULL,
+  `admissionNo` varchar(30) DEFAULT NULL COMMENT 'Admission number',
   `firstName` varchar(100) NOT NULL,
   `lastName` varchar(100) NOT NULL,
   `email` varchar(150) NOT NULL,

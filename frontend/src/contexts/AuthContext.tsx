@@ -35,16 +35,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const trimmedId = identifier.trim().toLowerCase();
     const trimmedPassword = password.trim();
 
-    console.log('Login attempt:', {
-      identifier: trimmedId,
-      password: trimmedPassword,
-      passwordLength: trimmedPassword.length,
-      role
-    });
 
     try {
       let response;
-      
+
       // regardless of role, backend login endpoint now understands either studentId or email
       response = await fetch('/api/v1/auth/login', {
         method: 'POST',
@@ -56,26 +50,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (result.success && result.user) {
         setLoginError(null);
-          let departmentObj = result.user.department;
-          // If department is a string, convert to object with short_name
-          if (departmentObj && typeof departmentObj === 'string') {
-            departmentObj = { short_name: departmentObj, full_name: departmentObj };
-          }
-          const userObj = {
-            id: result.user.id,
-            email: result.user.email,
-            name: result.user.name,
-            role: result.user.role as UserRole,
-            avatar: result.user.avatar || '',
-            department: departmentObj || null,
-            designation: result.user.designation || '',
-            year: result.user.year,
-            semester: result.user.semester,
-            rollNo: result.user.rollNo,
-            is_timetable_incharge: result.user.is_timetable_incharge || false,
-            is_placement_coordinator: result.user.is_placement_coordinator || false,
-            token: result.token
-          };
+        let departmentObj = result.user.department;
+        // If department is a string, convert to object with short_name
+        if (departmentObj && typeof departmentObj === 'string') {
+          departmentObj = { short_name: departmentObj, full_name: departmentObj };
+        }
+        const userObj = {
+          id: result.user.id,
+          email: result.user.email,
+          name: result.user.name,
+          role: result.user.role as UserRole,
+          avatar: result.user.avatar || '',
+          department: departmentObj || null,
+          designation: result.user.designation || '',
+          year: result.user.year,
+          semester: result.user.semester,
+          rollNo: result.user.rollNo,
+          is_timetable_incharge: result.user.is_timetable_incharge || false,
+          is_placement_coordinator: result.user.is_placement_coordinator || false,
+          token: result.token
+        };
         console.log('Login successful:', userObj.name, userObj.role);
         // If this user is a department-admin, prefer faculty profile details
         if (userObj.role === 'department-admin') {
@@ -137,20 +131,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('eduvertex_user');
+    localStorage.removeItem('authToken');
   };
 
   const refreshUserData = useCallback(async () => {
     // Get current user from localStorage to avoid dependency issues
     const userDataStr = localStorage.getItem('eduvertex_user');
     if (!userDataStr) return;
-    
+
     try {
       const userData = JSON.parse(userDataStr);
       if (!userData || !userData.role) return;
 
       const token = localStorage.getItem('authToken');
       let response;
-      
+
       // Fetch fresh user data based on role
       if (userData.role === 'faculty') {
         response = await fetch('/api/v1/faculty/me/profile', {

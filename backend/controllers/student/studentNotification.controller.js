@@ -4,8 +4,8 @@ import { models } from '../../models/index.js';
 const { StudentNotification, Student } = models;
 import { Op } from 'sequelize';
 
-const getStudentId = async (userOrId, next) => {
-    if (userOrId && typeof userOrId === 'object' && userOrId.studentId) {
+const getStudentId = (userOrId, next) => {
+    if (userOrId && userOrId.id) {
         return userOrId.id;
     }
     next(new ErrorResponse('Student profile not accessible', 404));
@@ -42,10 +42,13 @@ export const getMyNotifications = asyncHandler(async (req, res, next) => {
 // @route  PUT /api/student/notifications/:id/read
 // @access Private/Student
 export const markAsRead = asyncHandler(async (req, res, next) => {
-    const studentId = await getStudentId(req.user, next);
+    const studentId = getStudentId(req.user, next);
     if (!studentId) return;
 
-    await StudentNotification.markAsRead(req.params.id, studentId);
+    await StudentNotification.update(
+        { isRead: true, readAt: new Date() },
+        { where: { id: req.params.id, studentId } }
+    );
     res.status(200).json({ success: true, message: 'Notification marked as read' });
 });
 
@@ -53,10 +56,13 @@ export const markAsRead = asyncHandler(async (req, res, next) => {
 // @route  PUT /api/student/notifications/read-all
 // @access Private/Student
 export const markAllAsRead = asyncHandler(async (req, res, next) => {
-    const studentId = await getStudentId(req.user, next);
+    const studentId = getStudentId(req.user, next);
     if (!studentId) return;
 
-    await StudentNotification.markAllAsRead(studentId);
+    await StudentNotification.update(
+        { isRead: true, readAt: new Date() },
+        { where: { studentId, isRead: false } }
+    );
     res.status(200).json({ success: true, message: 'All notifications marked as read' });
 });
 
@@ -64,7 +70,7 @@ export const markAllAsRead = asyncHandler(async (req, res, next) => {
 // @route  DELETE /api/student/notifications/:id
 // @access Private/Student
 export const deleteNotification = asyncHandler(async (req, res, next) => {
-    const studentId = await getStudentId(req.user, next);
+    const studentId = getStudentId(req.user, next);
     if (!studentId) return;
 
     const notification = await StudentNotification.findOne({ where: { id: req.params.id, studentId } });
