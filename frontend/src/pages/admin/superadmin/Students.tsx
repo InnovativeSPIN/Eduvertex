@@ -31,6 +31,8 @@ export default function SuperAdminStudents() {
   const [departments, setDepartments] = useState<any[]>([]);
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [yearFilter, setYearFilter] = useState<string>('all');
+  const [academicYearFilter, setAcademicYearFilter] = useState<string>('all');
+  const [academicYears, setAcademicYears] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
   // helper to load students & departments
@@ -46,23 +48,37 @@ export default function SuperAdminStudents() {
         // send studyYear to backend so it can filter by batch prefix
         params.append('studyYear', yearFilter);
       }
+      if (academicYearFilter && academicYearFilter !== 'all') {
+        // batch value is the academic year string stored on student
+        params.append('batch', academicYearFilter);
+      }
       // always ask for unlimited results
       params.append('limit', '0');
       const url = '/api/v1/students' + (params.toString() ? `?${params.toString()}` : '');
       const res = await fetch(url, { credentials: 'include', cache: 'no-store' });
       const json = await res.json();
       if (json.success) {
-        setStudents(
-          json.data.map((s: any) => ({
+        const mapped = json.data.map((s: any) => ({
             ...s,
             // ensure UI-friendly fields
             name: `${s.firstName || ''} ${s.lastName || ''}`.trim(),
             department: s.department ? s.department.name : '',
             departmentId: s.departmentId ? Number(s.departmentId) : s.department && s.department.id ? Number(s.department.id) : null,
             enrollmentYear: s.batch ? parseInt(s.batch.split('-')[0], 10) : undefined,
-            studyYear: s.batch ? (new Date().getFullYear() - parseInt(s.batch.split('-')[0], 10) + 1) : undefined,
-          }))
-        );
+            // batch is effectively the academic year; expose explicitly
+            academicYear: s.batch,
+            // match backend logic: year of study = currentYear - batchStart
+            studyYear: s.batch ? ((): number => {
+              const start = parseInt(s.batch.split('-')[0], 10);
+              const diff = new Date().getFullYear() - start;
+              // guard against 0 or negative, treat as first year
+              return diff > 0 ? diff : 1;
+            })() : undefined,
+        }));
+        setStudents(mapped);
+        // update dropdown choices based on whatever records we just loaded
+        const years = Array.from(new Set(mapped.map((s) => s.batch))).filter(Boolean).sort((a, b) => b.localeCompare(a));
+        setAcademicYears(years);
       }
 
       const deptRes = await fetch('/api/v1/departments', { credentials: 'include' });
@@ -90,7 +106,7 @@ export default function SuperAdminStudents() {
   // reload when filters change
   useEffect(() => {
     loadData();
-  }, [departmentFilter, yearFilter]);
+  }, [departmentFilter, yearFilter, academicYearFilter]);
 
   // open edit modal when url contains ?edit=<id>
   const location = useLocation();
@@ -124,15 +140,21 @@ export default function SuperAdminStudents() {
       if (yearFilter && yearFilter !== 'all') {
         matchesYear = s.studyYear === parseInt(yearFilter, 10);
       }
-      return matchesDept && matchesYear;
+      let matchesBatch = true;
+      if (academicYearFilter && academicYearFilter !== 'all') {
+        matchesBatch = s.batch === academicYearFilter;
+      }
+      return matchesDept && matchesYear && matchesBatch;
     });
-  }, [students, departmentFilter, yearFilter]);
+  }, [students, departmentFilter, yearFilter, academicYearFilter]);
 
   const columns = [
     { key: 'name', label: 'Name' },
     { key: 'email', label: 'Email' },
     { key: 'department', label: 'Department' },
-    { key: 'enrollmentYear', label: 'Year' },
+    { key: 'batch', label: 'Academic Year' },
+    // display study year so it matches the "Year" filter above
+    { key: 'studyYear', label: 'Year' },
     {
       key: 'status',
       label: 'Status',
@@ -242,6 +264,19 @@ export default function SuperAdminStudents() {
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4 p-4 bg-card rounded-lg border border-border shadow-sm">
+          <div className="flex-1">
+            <Select value={academicYearFilter} onValueChange={setAcademicYearFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="All Academic Years" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Academic Years</SelectItem>
+                {academicYears.map((ay) => (
+                  <SelectItem key={ay} value={ay}>{ay}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex-1">
             <Select value={yearFilter} onValueChange={setYearFilter}>
               <SelectTrigger>

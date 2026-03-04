@@ -20,23 +20,31 @@ export default function SuperAdminStudentProfile() {
             try {
                 setLoading(true);
                 const res = await fetch(`/api/v1/students/${id}`, { credentials: 'include' });
+                if (!res.ok) {
+                    throw new Error(`Server responded with ${res.status}`);
+                }
                 const json = await res.json();
-                if (json.success) {
+                if (json.success && json.data) {
                     const s = json.data;
-                    // derive name field
+                    // derive name field (some student records may not split first/last)
                     s.name = `${s.firstName || ''} ${s.lastName || ''}`.trim();
                     // compute enrollmentYear from batch if available
                     s.enrollmentYear = s.batch ? parseInt(s.batch.split('-')[0], 10) : undefined;
                     // unify photo/avatar
                     s.avatar = s.photo || s.avatar;
-                    // department normalized already by backend
+                    // make department always a string for UI convenience
+                    if (s.department && typeof s.department === 'object') {
+                        s.departmentName = s.department.name || s.department.short_name || s.department.full_name || '';
+                    } else {
+                        s.departmentName = s.department || '';
+                    }
                     setStudent(s);
                 } else {
                     setError(json.message || 'Student not found');
                 }
-            } catch (err) {
+            } catch (err: any) {
                 console.error('Error loading student profile', err);
-                setError('Unable to load student');
+                setError(err.message || 'Unable to load student');
             } finally {
                 setLoading(false);
             }
@@ -94,7 +102,9 @@ export default function SuperAdminStudentProfile() {
                                 </div>
                                 <div className="pb-2">
                                     <h1 className="text-2xl font-bold text-foreground">{student.name}</h1>
-                                    <p className="text-muted-foreground">{student.department} • Batch {student.enrollmentYear || 'N/A'}</p>
+                                    <p className="text-muted-foreground">
+                                      {student.departmentName || student.department || ''} • Batch {student.academicYear || student.enrollmentYear || 'N/A'}
+                                    </p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
@@ -139,7 +149,7 @@ export default function SuperAdminStudentProfile() {
                                         <div className="space-y-3">
                                             <div className="flex items-center gap-3 text-sm">
                                                 <Building2 className="h-4 w-4 text-primary" />
-                                                <span>{student.department}</span>
+                                                <span>{student.departmentName || student.department || 'N/A'}</span>
                                             </div>
                                             <div className="flex items-center gap-3 text-sm">
                                                 <GraduationCap className="h-4 w-4 text-primary" />

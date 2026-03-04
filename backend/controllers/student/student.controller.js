@@ -38,18 +38,30 @@ export const getAllStudents = asyncHandler(async (req, res, next) => {
     where.semester = parseInt(req.query.semester);
   }
 
-  // Filter by batch
+  // Filter by batch (academic year) – this takes precedence over studyYear
   if (req.query.batch) {
     where.batch = req.query.batch;
   }
 
   // support filtering by study year (1..4) based on current year and batch prefix
-  if (req.query.studyYear) {
+  // only apply when batch filter is not present, otherwise the frontend already
+  // guaranteed the correct subset.
+  if (!req.query.batch && req.query.studyYear) {
     const sy = parseInt(req.query.studyYear, 10);
     if (!isNaN(sy)) {
       const currentYear = new Date().getFullYear();
-      const startYear = currentYear - sy + 1;
-      where.batch = { [Op.like]: `${startYear}%` };
+      if (sy === 1) {
+        // include batches starting this year or last year so brand new and just-admitted
+        where.batch = {
+          [Op.or]: [
+            { [Op.like]: `${currentYear - 1}%` },
+            { [Op.like]: `${currentYear}%` },
+          ],
+        };
+      } else {
+        const startYear = currentYear - sy;
+        where.batch = { [Op.like]: `${startYear}%` };
+      }
     }
   }
 
@@ -114,6 +126,11 @@ export const getAllStudents = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/students/:id
 // @access    Private
 export const getStudent = asyncHandler(async (req, res, next) => {
+  // fetch the student along with department and class; subjects association
+  // was previously included but there is no defined relation, causing a
+  // runtime error and resulting in 500 responses when viewing profiles.
+  // for now we drop the subjects include; add a proper association later
+  // if subject information is actually required.
   const student = await Student.findByPk(req.params.id, {
     attributes: { exclude: ['userId'] },
     include: [
@@ -296,6 +313,7 @@ export const promoteStudents = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/students/me/profile
 // @access    Private/Student
 export const getMyProfile = asyncHandler(async (req, res, next) => {
+  // also avoid joining subjects due to missing association
   const student = await Student.findOne({
     where: { id: req.user.id },
     attributes: { exclude: ['userId'] },
