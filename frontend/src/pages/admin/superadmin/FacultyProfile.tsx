@@ -31,16 +31,24 @@ export default function SuperAdminFacultyProfile() {
 
     useEffect(() => {
       const fetchFaculty = async () => {
+        if (!id) return;
         try {
           setLoading(true);
           const res = await fetch(`/api/v1/faculty/${id}`);
+          if (!res.ok) throw new Error(`server returned ${res.status}`);
           const json = await res.json();
-          if (json.success) {
-            setFaculty(json.data);
+          if (json.success && json.data) {
+            const f = json.data;
+            // derive a name field to mirror student profile logic
+            f.name = f.Name || '';
+            f.avatar = f.profile_image_url || f.avatar;
+            setFaculty(f);
+          } else {
+            toast.error(json.message || 'Faculty not found');
           }
-        } catch (err) {
+        } catch (err: any) {
           console.error('Failed to load faculty', err);
-          toast.error('Failed to load faculty details');
+          toast.error(err.message || 'Failed to load faculty details');
         } finally {
           setLoading(false);
         }
@@ -142,25 +150,27 @@ export default function SuperAdminFacultyProfile() {
                     Back to Faculty List
                 </Button>
 
-                {/* Profile Card */}
+                {/* Profile Card (matched to student profile layout) */}
                 <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-                    {/* Banner */}
-                    <div className="h-32 bg-gradient-to-r from-primary/20 to-primary/5" />
+                    {/* Banner uses same flat color as students for consistency */}
+                    <div className="h-32 bg-primary/10" />
                     
                     <div className="px-8 pb-8">
                         {/* Profile Header */}
-                        <div className="flex items-end justify-between -mt-12 mb-8">
+                        <div className="relative flex items-end justify-between -mt-12 mb-6">
                             <div className="flex items-end gap-6">
-                                <div className="h-24 w-24 rounded-xl bg-background border-4 border-card shadow-md flex items-center justify-center overflow-hidden">
+                                <div className="h-24 w-24 rounded-2xl bg-background border-4 border-card shadow-md flex items-center justify-center overflow-hidden">
                                     <img
-                                        src={faculty.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(faculty.Name)}&background=random&size=128`}
-                                        alt={faculty.Name}
+                                        src={faculty.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(faculty.name || '')}&background=random&size=128`}
+                                        alt={faculty.name}
                                         className="w-full h-full object-cover"
                                     />
                                 </div>
                                 <div className="pb-2">
-                                    <h1 className="text-3xl font-bold text-foreground">{faculty.Name}</h1>
-                                    <p className="text-lg text-muted-foreground">{faculty.designation || 'Faculty Member'}</p>
+                                    <h1 className="text-2xl font-bold text-foreground">{faculty.name}</h1>
+                                    <p className="text-muted-foreground">
+                                      {faculty.designation || 'Faculty'} • {getDepartmentName(faculty.department_id)}
+                                    </p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
