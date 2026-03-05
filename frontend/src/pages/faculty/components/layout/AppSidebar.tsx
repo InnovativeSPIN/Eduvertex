@@ -108,11 +108,11 @@ export function AppSidebar() {
                     {user?.designation || 'Faculty'}
                   </span>
                   <span className="text-[10px] text-white/50 uppercase tracking-wider">
-                    {typeof user?.department === 'object'
-                      ? user.department.short_name || user.department.full_name
-                      : typeof user?.department === 'string'
-                        ? user.department
-                        : 'Department'}
+                    {user?.department
+                      ? (typeof user.department === 'object'
+                        ? user.department.short_name || user.department.full_name
+                        : user.department)
+                      : 'Department'}
                   </span>
                 </div>
               </motion.div>

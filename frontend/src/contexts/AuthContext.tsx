@@ -185,12 +185,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const freshData = result.data;
           setUser(prev => {
             if (!prev) return null;
+
+            let freshDept = freshData.department;
+            if (freshDept && typeof freshDept === 'string') {
+              freshDept = { short_name: freshDept, full_name: freshDept };
+            }
+
             const updatedUser = {
               ...prev,
               name: freshData.name || freshData.Name || prev.name,
               email: freshData.email || prev.email,
               designation: freshData.designation || prev.designation,
               avatar: freshData.avatar || freshData.profile_image_url || prev.avatar,
+              department: freshDept || prev.department,
               is_timetable_incharge: freshData.is_timetable_incharge || false,
               is_placement_coordinator: freshData.is_placement_coordinator || false
             };
