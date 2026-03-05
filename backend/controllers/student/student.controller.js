@@ -43,26 +43,9 @@ export const getAllStudents = asyncHandler(async (req, res, next) => {
     where.batch = req.query.batch;
   }
 
-  // support filtering by study year (1..4) based on current year and batch prefix
-  // only apply when batch filter is not present, otherwise the frontend already
-  // guaranteed the correct subset.
+  // support filtering by study year (1..4) from the database column
   if (!req.query.batch && req.query.studyYear) {
-    const sy = parseInt(req.query.studyYear, 10);
-    if (!isNaN(sy)) {
-      const currentYear = new Date().getFullYear();
-      if (sy === 1) {
-        // include batches starting this year or last year so brand new and just-admitted
-        where.batch = {
-          [Op.or]: [
-            { [Op.like]: `${currentYear - 1}%` },
-            { [Op.like]: `${currentYear}%` },
-          ],
-        };
-      } else {
-        const startYear = currentYear - sy;
-        where.batch = { [Op.like]: `${startYear}%` };
-      }
-    }
+    where.year = req.query.studyYear;
   }
 
   // Filter by status

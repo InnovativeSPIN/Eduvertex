@@ -6,7 +6,6 @@ import { UserFormModal } from '@/pages/admin/superadmin/components/modals/UserFo
 import { Student } from '@/types/auth';
 import { Badge } from '@/pages/admin/superadmin/components/ui/badge';
 import { toast } from '@/components/ui/sonner';
-import { Input } from '@/pages/admin/superadmin/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -33,19 +32,17 @@ export default function SuperAdminStudents() {
   const [yearFilter, setYearFilter] = useState<string>('all');
   const [academicYearFilter, setAcademicYearFilter] = useState<string>('all');
   const [academicYears, setAcademicYears] = useState<string[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
 
   // helper to load students & departments
   const loadData = async () => {
     try {
-      setLoading(true);
       // build query string from current filters
       const params = new URLSearchParams();
       if (departmentFilter && departmentFilter !== 'all') {
         params.append('department', departmentFilter);
       }
       if (yearFilter && yearFilter !== 'all') {
-        // send studyYear to backend so it can filter by batch prefix
+        // send studyYear to backend so it can filter by the database year column
         params.append('studyYear', yearFilter);
       }
       if (academicYearFilter && academicYearFilter !== 'all') {
@@ -58,27 +55,29 @@ export default function SuperAdminStudents() {
       const res = await fetch(url, { credentials: 'include', cache: 'no-store' });
       const json = await res.json();
       if (json.success) {
-        const mapped = json.data.map((s: any) => ({
-            ...s,
-            // ensure UI-friendly fields
-            name: `${s.firstName || ''} ${s.lastName || ''}`.trim(),
-            department: s.department ? s.department.name : '',
-            departmentId: s.departmentId ? Number(s.departmentId) : s.department && s.department.id ? Number(s.department.id) : null,
-            enrollmentYear: s.batch ? parseInt(s.batch.split('-')[0], 10) : undefined,
-            // batch is effectively the academic year; expose explicitly
-            academicYear: s.batch,
-            // match backend logic: year of study = currentYear - batchStart
-            studyYear: s.batch ? ((): number => {
-              const start = parseInt(s.batch.split('-')[0], 10);
-              const diff = new Date().getFullYear() - start;
-              // guard against 0 or negative, treat as first year
-              return diff > 0 ? diff : 1;
-            })() : undefined,
+        const mapped: Student[] = json.data.map((s: any) => ({
+          ...s,
+          // ensure UI-friendly fields
+          name: `${s.firstName || ''} ${s.lastName || ''}`.trim(),
+          department: s.department ? s.department.name : '',
+          departmentId: s.departmentId ? Number(s.departmentId) : s.department && s.department.id ? Number(s.department.id) : null,
+          enrollmentYear: s.batch ? parseInt(s.batch.split('-')[0], 10) : undefined,
+          // batch is effectively the academic year; expose explicitly
+          academicYear: s.batch,
+          // map the year correctly to the respected student_profile table
+          studyYear: s.year ? parseInt(s.year, 10) : (s.batch ? ((): number => {
+            const start = parseInt(s.batch.split('-')[0], 10);
+            const diff = new Date().getFullYear() - start;
+            // guard against 0 or negative, treat as first year
+            return diff > 0 ? diff : 1;
+          })() : undefined),
         }));
         setStudents(mapped);
         // update dropdown choices based on whatever records we just loaded
-        const years = Array.from(new Set(mapped.map((s) => s.batch))).filter(Boolean).sort((a, b) => b.localeCompare(a));
-        setAcademicYears(years);
+        // mapping academic years (batches) as requested
+        const defaultYears = ['2025-2029', '2024-2028', '2023-2027'];
+        const years = Array.from(new Set([...defaultYears, ...mapped.map((s: Student) => s.batch)])).filter(Boolean).sort((a: any, b: any) => b.localeCompare(a));
+        setAcademicYears(years as string[]);
       }
 
       const deptRes = await fetch('/api/v1/departments', { credentials: 'include' });
@@ -94,8 +93,6 @@ export default function SuperAdminStudents() {
     } catch (err) {
       console.error('Failed to load students or departments', err);
       toast.error('Unable to load data');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -163,7 +160,7 @@ export default function SuperAdminStudents() {
           variant={student.status === 'active' ? 'default' : 'secondary'}
           className={
             student.status === 'active' ? 'bg-success' :
-            student.status === 'completed' ? 'bg-secondary' : ''
+              student.status === 'completed' ? 'bg-secondary' : ''
           }
         >
           {student.status}
@@ -271,8 +268,8 @@ export default function SuperAdminStudents() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Academic Years</SelectItem>
-                {academicYears.map((ay) => (
-                  <SelectItem key={ay} value={ay}>{ay}</SelectItem>
+                {academicYears.map(year => (
+                  <SelectItem key={year} value={year}>{year.replace('-', ' - ')}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

@@ -54,6 +54,7 @@ export interface Student {
 	admissionType?: 'regular' | 'lateral' | 'management';
 	feeStatus?: 'paid' | 'pending' | 'partial';
 	status?: 'active' | 'completed' | 'inactive';
+	year?: string;
 	// computed by frontend from batch
 	enrollmentYear?: number;
 	// derived client-side: 1–4 representing academic year

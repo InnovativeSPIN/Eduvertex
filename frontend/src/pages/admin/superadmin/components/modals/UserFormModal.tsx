@@ -296,14 +296,20 @@ export function UserFormModal({ open, onClose, onSave, type, initialData, mode }
             {type === 'student' && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="enrollmentYear">Enrollment Year</Label>
-                  <Input
-                    id="enrollmentYear"
-                    type="number"
+                  <Label htmlFor="academicYear">Academic Year (Batch)</Label>
+                  <Select
                     value={(formData as Student).batch || ''}
-                    onChange={(e) => updateField('batch', e.target.value)}
-                    required
-                  />
+                    onValueChange={(value) => updateField('batch', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select academic year" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover">
+                      <SelectItem value="2025-2029">2025 - 2029</SelectItem>
+                      <SelectItem value="2024-2028">2024 - 2028</SelectItem>
+                      <SelectItem value="2023-2027">2023 - 2027</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
@@ -318,6 +324,23 @@ export function UserFormModal({ open, onClose, onSave, type, initialData, mode }
                       <SelectItem value="active">Active</SelectItem>
                       <SelectItem value="completed">Completed</SelectItem>
                       <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="year">Study Year</Label>
+                  <Select
+                    value={(formData as Student).year || ''}
+                    onValueChange={(value) => updateField('year', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select year" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover">
+                      <SelectItem value="1">Year 1</SelectItem>
+                      <SelectItem value="2">Year 2</SelectItem>
+                      <SelectItem value="3">Year 3</SelectItem>
+                      <SelectItem value="4">Year 4</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
