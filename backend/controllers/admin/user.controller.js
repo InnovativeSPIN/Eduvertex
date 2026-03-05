@@ -9,27 +9,35 @@ import { Op } from 'sequelize';
 // @route     PUT /api/v1/users/:id/photo
 // @access    Private/Admin
 export const uploadUserPhoto = asyncHandler(async (req, res, next) => {
-  const user = await User.findByPk(req.params.id);
-
-  if (!user) {
-    return next(
-      new ErrorResponse(`User not found with id of ${req.params.id}`, 404)
-    );
-  }
-
   if (!req.file) {
     return next(new ErrorResponse('Please upload a file', 400));
   }
 
-  // Update user avatar
   const photoPath = req.file.path.replace(/\\/g, '/');
-  await User.update({ avatar: photoPath }, { where: { id: req.params.id } });
 
-  res.status(200).json({
-    success: true,
-    message: 'Photo uploaded successfully',
-    data: photoPath
-  });
+  // check users table
+  let user = await User.findByPk(req.params.id);
+  if (user) {
+    await User.update({ avatar: photoPath }, { where: { id: req.params.id } });
+    return res.status(200).json({
+      success: true,
+      message: 'Photo uploaded successfully',
+      data: photoPath
+    });
+  }
+
+  // check faculty table
+  const faculty = await Faculty.findByPk(req.params.id);
+  if (faculty && parseInt(faculty.role_id, 10) === 7) {
+    await Faculty.update({ profile_image_url: photoPath }, { where: { faculty_id: req.params.id } });
+    return res.status(200).json({
+      success: true,
+      message: 'Photo uploaded successfully',
+      data: photoPath
+    });
+  }
+
+  return next(new ErrorResponse(`User not found with id of ${req.params.id}`, 404));
 });
 
 // helper to normalize role string to database name
@@ -127,25 +135,42 @@ export const getUsers = asyncHandler(async (req, res, next) => {
 // @access    Private/Admin
 export const getUser = asyncHandler(async (req, res, next) => {
   const user = await User.findByPk(req.params.id, {
-    include: [{ model: Role, as: 'role', attributes: ['role_name'] }],
+    include: [
+      { model: Role, as: 'role', attributes: ['role_name'] },
+      { model: Department, as: 'department', attributes: ['short_name', 'full_name'] }
+    ],
     attributes: { exclude: ['password', 'pwd', 'resetPasswordToken', 'resetPasswordExpire'] }
   });
 
   if (user) {
     const pu = user.toJSON();
     pu.role = pu.role?.role_name || null;
+    if (pu.department && typeof pu.department === 'object') {
+      pu.department = pu.department.short_name || pu.department.full_name || null;
+    }
     res.status(200).json({ success: true, data: pu });
     return;
   }
 
-  if (!user) {
-    return next(new ErrorResponse(`User not found with id of ${req.params.id}`, 404));
+  // Check faculty table for department admins
+  const faculty = await Faculty.findByPk(req.params.id, {
+    include: [{ model: Department, as: 'department', attributes: ['short_name', 'full_name'] }]
+  });
+
+  if (faculty && parseInt(faculty.role_id, 10) === 7) {
+    const fpu = faculty.toJSON();
+    fpu.id = fpu.faculty_id;
+    fpu.name = fpu.Name || fpu.name;
+    fpu.role = 'department-admin';
+    fpu.avatar = fpu.profile_image_url;
+    if (fpu.department && typeof fpu.department === 'object') {
+      fpu.department = fpu.department.short_name || fpu.department.full_name || null;
+    }
+    res.status(200).json({ success: true, data: fpu });
+    return;
   }
 
-  res.status(200).json({
-    success: true,
-    data: user
-  });
+  return next(new ErrorResponse(`User not found with id of ${req.params.id}`, 404));
 });
 
 // @desc      Create user
@@ -235,12 +260,10 @@ export const createUser = asyncHandler(async (req, res, next) => {
 // @route     PUT /api/v1/users/:id
 // @access    Private/Admin
 export const updateUser = asyncHandler(async (req, res, next) => {
-  // Prevent password update through this route
   if (req.body.password) {
     delete req.body.password;
   }
 
-  // resolve role if provided
   if (req.body.role) {
     const normalized = normalizeRoleName(req.body.role);
     const roleRecord = await Role.findOne({ where: { role_name: normalized } });
@@ -248,31 +271,54 @@ export const updateUser = asyncHandler(async (req, res, next) => {
       req.body.role_id = roleRecord.role_id;
     }
     delete req.body.role;
-    // if a string role was given but we didn't find a matching id, it's invalid
     if (!req.body.role_id) {
       return next(new ErrorResponse('Invalid role specified', 400));
     }
   }
 
-  // skip HOD uniqueness check since departmentCode isn't stored in users table
-
-  await User.update(req.body, { where: { id: req.params.id } });
-  const user = await User.findByPk(req.params.id, {
-    include: [{ model: Role, as: 'role', attributes: ['role_name'] }],
-    attributes: { exclude: ['password', 'pwd', 'resetPasswordToken', 'resetPasswordExpire'] }
-  });
-
-  if (!user) {
-    return next(new ErrorResponse(`User not found with id of ${req.params.id}`, 404));
+  // Update user if exists
+  let user = await User.findByPk(req.params.id);
+  if (user) {
+    await User.update(req.body, { where: { id: req.params.id } });
+    user = await User.findByPk(req.params.id, {
+      include: [{ model: Role, as: 'role', attributes: ['role_name'] }],
+      attributes: { exclude: ['password', 'pwd', 'resetPasswordToken', 'resetPasswordExpire'] }
+    });
+    const pu = user.toJSON();
+    pu.role = pu.role?.role_name || null;
+    return res.status(200).json({ success: true, data: pu });
   }
 
-  const pu = user.toJSON();
-  pu.role = pu.role?.role_name || null;
+  // Update faculty if role is department-admin
+  let faculty = await Faculty.findByPk(req.params.id);
+  if (faculty && parseInt(faculty.role_id, 10) === 7) {
+    // Map user fields to faculty fields
+    const facultyUpdate = {
+      Name: req.body.name || req.body.Name || faculty.Name,
+      email: req.body.email || faculty.email,
+      status: req.body.isActive === false ? 'inactive' : 'active'
+    };
 
-  res.status(200).json({
-    success: true,
-    data: pu
-  });
+    if (req.body.department) {
+      const dep = !isNaN(parseInt(req.body.department, 10))
+        ? await Department.findByPk(req.body.department)
+        : await Department.findOne({ where: { short_name: req.body.department } });
+      if (dep) facultyUpdate.department_id = dep.id;
+    }
+
+    await Faculty.update(facultyUpdate, { where: { faculty_id: req.params.id } });
+    faculty = await Faculty.findByPk(req.params.id, {
+      include: [{ model: Department, as: 'department', attributes: ['short_name', 'full_name'] }]
+    });
+
+    const fpu = faculty.toJSON();
+    fpu.id = fpu.faculty_id;
+    fpu.name = fpu.Name;
+    fpu.role = 'department-admin';
+    return res.status(200).json({ success: true, data: fpu });
+  }
+
+  return next(new ErrorResponse(`User not found with id of ${req.params.id}`, 404));
 });
 
 
@@ -282,54 +328,66 @@ export const updateUser = asyncHandler(async (req, res, next) => {
 export const deleteUser = asyncHandler(async (req, res, next) => {
   const user = await User.findByPk(req.params.id);
 
-  if (!user) {
-    return next(new ErrorResponse(`User not found with id of ${req.params.id}`, 404));
+  if (user) {
+    await user.destroy();
+    return res.status(200).json({ success: true, data: {} });
   }
 
-  await user.destroy();
+  const faculty = await Faculty.findByPk(req.params.id);
+  if (faculty && parseInt(faculty.role_id, 10) === 7) {
+    await faculty.destroy();
+    return res.status(200).json({ success: true, data: {} });
+  }
 
-  res.status(200).json({
-    success: true,
-    data: {}
-  });
+  return next(new ErrorResponse(`User not found with id of ${req.params.id}`, 404));
 });
 
 // @desc      Deactivate user
 // @route     PUT /api/v1/users/:id/deactivate
 // @access    Private/Admin
 export const deactivateUser = asyncHandler(async (req, res, next) => {
-  await User.update({ isActive: false }, { where: { id: req.params.id } });
-  const user = await User.findByPk(req.params.id, {
-    attributes: { exclude: ['password', 'pwd', 'resetPasswordToken', 'resetPasswordExpire'] }
-  });
-
-  if (!user) {
-    return next(new ErrorResponse(`User not found with id of ${req.params.id}`, 404));
+  // check users
+  let user = await User.findByPk(req.params.id);
+  if (user) {
+    await User.update({ isActive: false }, { where: { id: req.params.id } });
+    user = await User.findByPk(req.params.id, {
+      attributes: { exclude: ['password', 'pwd', 'resetPasswordToken', 'resetPasswordExpire'] }
+    });
+    return res.status(200).json({ success: true, data: user });
   }
 
-  res.status(200).json({
-    success: true,
-    data: user
-  });
+  // check faculty
+  const faculty = await Faculty.findByPk(req.params.id);
+  if (faculty && parseInt(faculty.role_id, 10) === 7) {
+    await Faculty.update({ status: 'inactive' }, { where: { faculty_id: req.params.id } });
+    return res.status(200).json({ success: true, data: faculty });
+  }
+
+  return next(new ErrorResponse(`User not found with id of ${req.params.id}`, 404));
 });
 
 // @desc      Activate user
 // @route     PUT /api/v1/users/:id/activate
 // @access    Private/Admin
 export const activateUser = asyncHandler(async (req, res, next) => {
-  await User.update({ isActive: true }, { where: { id: req.params.id } });
-  const user = await User.findByPk(req.params.id, {
-    attributes: { exclude: ['password', 'pwd', 'resetPasswordToken', 'resetPasswordExpire'] }
-  });
-
-  if (!user) {
-    return next(new ErrorResponse(`User not found with id of ${req.params.id}`, 404));
+  // check users
+  let user = await User.findByPk(req.params.id);
+  if (user) {
+    await User.update({ isActive: true }, { where: { id: req.params.id } });
+    user = await User.findByPk(req.params.id, {
+      attributes: { exclude: ['password', 'pwd', 'resetPasswordToken', 'resetPasswordExpire'] }
+    });
+    return res.status(200).json({ success: true, data: user });
   }
 
-  res.status(200).json({
-    success: true,
-    data: user
-  });
+  // check faculty
+  const faculty = await Faculty.findByPk(req.params.id);
+  if (faculty && parseInt(faculty.role_id, 10) === 7) {
+    await Faculty.update({ status: 'active' }, { where: { faculty_id: req.params.id } });
+    return res.status(200).json({ success: true, data: faculty });
+  }
+
+  return next(new ErrorResponse(`User not found with id of ${req.params.id}`, 404));
 });
 
 // @desc      Get available roles
