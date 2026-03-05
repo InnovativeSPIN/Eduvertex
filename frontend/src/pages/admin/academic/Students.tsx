@@ -1,16 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AdminLayout } from '@/pages/admin/academic/components/layout/AdminLayout';
 import { DataTable } from '@/pages/admin/academic/components/dashboard/DataTable';
 import { UserFormModal } from '@/pages/admin/academic/components/modals/UserFormModal';
 import { ProfileModal } from '@/pages/admin/academic/components/modals/ProfileModal';
-import { mockStudents as initialStudents } from '@/data/mockData';
 import { Student } from '@/types/auth';
 import { Badge } from '@/pages/admin/academic/components/ui/badge';
 import { toast } from '@/components/ui/sonner';
 
 // Academic Admin has semi-CRUD (can add and edit, but not delete)
 export default function AcademicStudents() {
-  const [students, setStudents] = useState<Student[]>(initialStudents);
+  const [students, setStudents] = useState<Student[]>([]);
   const [formModal, setFormModal] = useState<{ open: boolean; mode: 'add' | 'edit'; data?: Student }>({
     open: false,
     mode: 'add',
@@ -74,6 +73,30 @@ export default function AcademicStudents() {
       toast.success('Student updated successfully');
     }
   };
+
+
+  // load real student data from backend when component mounts
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const res = await fetch('/api/v1/students?limit=0', { credentials: 'include' });
+        const json = await res.json();
+        if (json.success) {
+          const mapped = json.data.map((s: any) => ({
+            ...s,
+            name: `${s.firstName || ''} ${s.lastName || ''}`.trim(),
+            department: s.department ? s.department.name || s.department : '',
+            enrollmentYear: s.batch ? parseInt(s.batch.split('-')[0], 10) : undefined,
+            status: s.status || 'active',
+          })) as Student[];
+          setStudents(mapped);
+        }
+      } catch (err) {
+        console.error('Failed to load students', err);
+      }
+    };
+    fetchStudents();
+  }, []);
 
   return (
     <AdminLayout>

@@ -1,14 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AdminLayout } from '@/pages/admin/academic/components/layout/AdminLayout';
 import { DataTable } from '@/pages/admin/academic/components/dashboard/DataTable';
 import { DepartmentFormModal } from '@/pages/admin/academic/components/modals/DepartmentFormModal';
-import { mockDepartments as initialDepartments } from '@/data/mockData';
 import { Department } from '@/types/auth';
 import { toast } from '@/components/ui/sonner';
 
 // Academic Admin can create departments but not delete
 export default function AcademicDepartments() {
-  const [departments, setDepartments] = useState<Department[]>(initialDepartments);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [formModal, setFormModal] = useState<{ open: boolean; mode: 'add' | 'edit'; data?: Department }>({
     open: false,
     mode: 'add',
@@ -49,6 +48,23 @@ export default function AcademicDepartments() {
       toast.success('Department updated successfully');
     }
   };
+
+
+  // fetch department list from backend
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch('/api/v1/departments', { credentials: 'include' });
+        const json = await res.json();
+        if (json.success) {
+          setDepartments(json.data);
+        }
+      } catch (err) {
+        console.error('Failed to load departments', err);
+      }
+    };
+    load();
+  }, []);
 
   return (
     <AdminLayout>

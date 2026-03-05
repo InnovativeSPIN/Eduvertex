@@ -1,16 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AdminLayout } from '@/pages/admin/academic/components/layout/AdminLayout';
 import { DataTable } from '@/pages/admin/academic/components/dashboard/DataTable';
 import { UserFormModal } from '@/pages/admin/academic/components/modals/UserFormModal';
 import { ProfileModal } from '@/pages/admin/academic/components/modals/ProfileModal';
-import { mockFaculty as initialFaculty } from '@/data/mockData';
 import { Faculty } from '@/types/auth';
 import { Badge } from '@/pages/admin/academic/components/ui/badge';
 import { toast } from '@/components/ui/sonner';
 
 // Academic Admin has semi-CRUD (can add and edit, but not delete)
 export default function AcademicFaculty() {
-  const [faculty, setFaculty] = useState<Faculty[]>(initialFaculty);
+  const [faculty, setFaculty] = useState<Faculty[]>([]);
   const [formModal, setFormModal] = useState<{ open: boolean; mode: 'add' | 'edit'; data?: Faculty }>({
     open: false,
     mode: 'add',
@@ -72,6 +71,23 @@ export default function AcademicFaculty() {
       toast.success('Faculty member updated successfully');
     }
   };
+
+
+  // load faculty from backend
+  useEffect(() => {
+    const fetchFaculty = async () => {
+      try {
+        const res = await fetch('/api/v1/faculty?limit=0', { credentials: 'include' });
+        const json = await res.json();
+        if (json.success) {
+          setFaculty(json.data);
+        }
+      } catch (err) {
+        console.error('Failed to load faculty', err);
+      }
+    };
+    fetchFaculty();
+  }, []);
 
   return (
     <AdminLayout>
