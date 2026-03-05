@@ -126,7 +126,7 @@ export const createFaculty = asyncHandler(async (req, res, next) => {
     faculty_college_code: req.body.faculty_college_code || req.body.facultyCollegeCode,
     Name: req.body.Name || req.body.name || req.body.firstName,
     email: req.body.email,
-    password: req.body.password || 'default123',  // Default password
+    password: req.body.password || 'ns9210',  // Default password
     phone_number: req.body.phone_number || req.body.phoneNumber,
     role_id: req.body.role_id || req.body.roleId || 5,  // Default to faculty role
     department_id: req.body.department_id || req.body.departmentId || req.body.department,
@@ -709,5 +709,87 @@ export const getFacultyPhoto = asyncHandler(async (req, res, next) => {
   } catch (error) {
     console.error('[GET PHOTO] Error:', error);
     return next(new ErrorResponse('Failed to fetch photo', 500));
+  }
+});
+
+// @desc      Get my class incharge details and students
+// @route     GET /api/v1/faculty/me/class-incharge
+// @access    Private/Faculty
+export const getMyClassIncharge = asyncHandler(async (req, res, next) => {
+  const { ClassIncharge, Student } = models;
+  const facultyId = req.user.faculty_id;
+
+  if (!facultyId) {
+    return next(new ErrorResponse('Faculty ID not found', 400));
+  }
+
+  // Find active class incharge record for this faculty
+  const incharge = await ClassIncharge.findOne({
+    where: { faculty_id: facultyId, status: 'active' },
+    include: [
+      {
+        model: ClassModel,
+        as: 'class',
+        attributes: ['id', 'name', 'section', 'semester', 'batch', 'capacity', 'department_id'],
+        include: [
+          { model: Department, as: 'department', attributes: ['short_name', 'full_name'] }
+        ]
+      }
+    ]
+  });
+
+  if (!incharge) {
+    return res.status(200).json({
+      success: true,
+      data: null,
+      message: 'No active class incharge assignment found'
+    });
+  }
+
+  // Fetch students in the assigned class
+  const students = await Student.findAll({
+    where: { classId: incharge.class_id },
+    attributes: ['id', 'studentId', 'firstName', 'lastName', 'email', 'phone', 'status', 'sector', 'semester'],
+    order: [['studentId', 'ASC']]
+  });
+
+  res.status(200).json({
+    success: true,
+    data: {
+      incharge: {
+        id: incharge.id,
+        academic_year: incharge.academic_year,
+        class: incharge.class
+      },
+      students,
+      totalStudents: students.length
+    }
+  });
+});
+// @desc      Get faculty colleagues in same department (for leave reassign)
+// @route     GET /api/v1/faculty/me/department-colleagues
+// @access    Private/Faculty
+export const getDepartmentColleagues = asyncHandler(async (req, res, next) => {
+  const departmentId = req.user.departmentId || req.user.department_id;
+  if (!departmentId) {
+    return res.status(200).json({ success: true, data: [] });
+  }
+
+  try {
+    const colleagues = await Faculty.findAll({
+      where: {
+        department_id: departmentId,
+        status: 'active',
+        faculty_id: { [Op.ne]: req.user.id },
+      },
+      attributes: ['faculty_id', 'Name', 'designation', 'email', 'faculty_college_code'],
+      order: [['Name', 'ASC']],
+      raw: true,
+    });
+
+    res.status(200).json({ success: true, data: colleagues });
+  } catch (error) {
+    console.error('[GetColleagues] Error:', error.message);
+    return next(new ErrorResponse(`Error fetching colleagues: ${error.message}`, 500));
   }
 });

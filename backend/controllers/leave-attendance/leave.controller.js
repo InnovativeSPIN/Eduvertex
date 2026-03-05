@@ -1,7 +1,7 @@
 import ErrorResponse from '../../utils/errorResponse.js';
 import asyncHandler from '../../middleware/async.js';
 import { models } from '../../models/index.js';
-const { Leave, LeaveBalance, User, Department } = models;
+const { Leave, LeaveBalance, User, Department, Faculty, LeaveNotification } = models;
 import { Op } from 'sequelize';
 
 // @desc      Get all leave applications
@@ -115,29 +115,51 @@ export const createLeave = asyncHandler(async (req, res, next) => {
     req.body.departmentId = req.user.departmentId;
   }
 
+  // Store reassign faculty
+  if (req.body.reassignFacultyId) {
+    req.body.reassign_faculty_id = req.body.reassignFacultyId;
+  }
+
   // Calculate total days
   const start = new Date(req.body.startDate);
   const end = new Date(req.body.endDate);
   const diffTime = Math.abs(end - start);
   req.body.totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
-  // Check leave balance
-  const currentYear = new Date().getFullYear().toString();
-  const leaveBalance = await LeaveBalance.findOne({
-    where: {
-      userId: req.user.id,
-      academicYear: currentYear
-    }
-  });
-
-  if (leaveBalance) {
-    const leaveType = req.body.leaveType;
-    if (leaveBalance[leaveType] && leaveBalance[leaveType].balance < req.body.totalDays) {
-      return next(new ErrorResponse(`Insufficient ${leaveType} leave balance`, 400));
-    }
-  }
-
   const leave = await Leave.create(req.body);
+
+  // Notify department admin
+  try {
+    if (leave.departmentId) {
+      const deptAdmin = await Faculty.findOne({
+        where: { department_id: leave.departmentId, role_id: 7, status: 'active' },
+        attributes: ['faculty_id'],
+      });
+
+      const senderName = req.user.Name || req.user.name || 'Faculty';
+      const startStr = new Date(req.body.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+      const endStr = new Date(req.body.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+      await LeaveNotification.create({
+        recipientId: deptAdmin?.faculty_id || null,
+        recipientType: 'department-admin',
+        departmentId: leave.departmentId,
+        senderId: req.user.id,
+        senderName,
+        leaveId: leave.id,
+        facultyName: senderName,
+        leaveType: req.body.leaveType,
+        startDate: req.body.startDate,
+        endDate: req.body.endDate,
+        type: 'leave_submitted',
+        title: `Leave Request from ${senderName}`,
+        message: `${senderName} has applied for ${req.body.leaveType} leave from ${startStr} to ${endStr}`,
+        isRead: false,
+      });
+    }
+  } catch (notifErr) {
+    console.error('[Leave] Notification error (non-fatal):', notifErr.message);
+  }
 
   res.status(201).json({
     success: true,
@@ -221,6 +243,57 @@ export const updateLeaveStatus = asyncHandler(async (req, res, next) => {
     }
   }
 
+  // Create notifications (non-fatal)
+  try {
+    const approverName = req.user.Name || req.user.name || 'Department Admin';
+    const isApproved = req.body.status === 'approved';
+    const statusLabel = isApproved ? 'Approved' : 'Rejected';
+
+    // Find the faculty applicant for their name
+    const applicantFaculty = await Faculty.findByPk(leave.applicantId, { attributes: ['faculty_id', 'Name', 'department_id'] });
+    const applicantName = applicantFaculty?.Name || 'Faculty';
+
+    // 1. Notify the faculty who applied
+    await LeaveNotification.create({
+      recipientId: leave.applicantId,
+      recipientType: 'faculty',
+      departmentId: leave.departmentId,
+      senderId: req.user.id,
+      senderName: approverName,
+      leaveId: leave.id,
+      facultyName: applicantName,
+      leaveType: leave.leaveType,
+      startDate: leave.startDate,
+      endDate: leave.endDate,
+      type: isApproved ? 'leave_approved' : 'leave_rejected',
+      title: `Leave ${statusLabel}`,
+      message: `Your ${leave.leaveType} leave request has been ${req.body.status} by the Department Admin.${req.body.remarks ? ` Remarks: ${req.body.remarks}` : ''}`,
+      isRead: false,
+    });
+
+    // 2. If approved, notify all executive admins
+    if (isApproved) {
+      await LeaveNotification.create({
+        recipientId: null,
+        recipientType: 'executiveadmin',
+        departmentId: leave.departmentId,
+        senderId: req.user.id,
+        senderName: approverName,
+        leaveId: leave.id,
+        facultyName: applicantName,
+        leaveType: leave.leaveType,
+        startDate: leave.startDate,
+        endDate: leave.endDate,
+        type: 'leave_approved',
+        title: `Leave Approved: ${applicantName}`,
+        message: `${applicantName}'s ${leave.leaveType} leave has been approved by ${approverName}.`,
+        isRead: false,
+      });
+    }
+  } catch (notifErr) {
+    console.error('[LeaveStatus] Notification error (non-fatal):', notifErr.message);
+  }
+
   res.status(200).json({
     success: true,
     data: leave
@@ -273,12 +346,23 @@ export const cancelLeave = asyncHandler(async (req, res, next) => {
 
 // @desc      Delete leave application
 // @route     DELETE /api/v1/leave/:id
-// @access    Private/Admin
+// @access    Private (admin: any; faculty: own pending only)
 export const deleteLeave = asyncHandler(async (req, res, next) => {
   const leave = await Leave.findByPk(req.params.id);
 
   if (!leave) {
     return next(new ErrorResponse(`Leave application not found with id of ${req.params.id}`, 404));
+  }
+
+  const isAdmin = ['superadmin', 'super-admin', 'executiveadmin', 'academicadmin', 'department-admin'].includes(req.user.role);
+
+  if (!isAdmin) {
+    if (leave.applicantId !== Number(req.user.id)) {
+      return next(new ErrorResponse('Not authorized to delete this leave application', 403));
+    }
+    if (leave.status !== 'pending') {
+      return next(new ErrorResponse('Only pending leave applications can be deleted', 400));
+    }
   }
 
   await leave.destroy();
@@ -399,14 +483,35 @@ export const getPendingLeaves = asyncHandler(async (req, res, next) => {
     const total = await Leave.count({ where });
     console.log('[PendingLeaves] Total count:', total);
 
-    // Query without includes to avoid issues
-    const leaves = await Leave.findAll({
+    const rawLeaves = await Leave.findAll({
       where,
       offset: startIndex,
       limit,
       order: [['createdAt', 'DESC']],
       raw: true
     });
+
+    // Enrich with applicant name from faculty table
+    const applicantIds = [...new Set(rawLeaves.map(l => l.applicantId))];
+    const facultyList = applicantIds.length
+      ? await Faculty.findAll({
+          where: { faculty_id: applicantIds },
+          attributes: ['faculty_id', 'Name', 'email', 'designation'],
+          raw: true,
+        })
+      : [];
+    const facultyMap = Object.fromEntries(facultyList.map(f => [f.faculty_id, f]));
+
+    const leaves = rawLeaves.map(l => ({
+      ...l,
+      applicant: facultyMap[l.applicantId]
+        ? {
+            name: facultyMap[l.applicantId].Name,
+            email: facultyMap[l.applicantId].email,
+            role: facultyMap[l.applicantId].designation || 'Faculty',
+          }
+        : { name: 'Unknown', email: '', role: 'Faculty' },
+    }));
 
     console.log('[PendingLeaves] Found', leaves.length, 'leaves');
 
@@ -424,5 +529,104 @@ export const getPendingLeaves = asyncHandler(async (req, res, next) => {
   } catch (error) {
     console.error('[PendingLeaves] Error:', error.message, error.stack);
     return next(new ErrorResponse(`Error fetching pending leaves: ${error.message}`, 500));
+  }
+});
+
+// @desc      Get leave notifications for current user
+// @route     GET /api/v1/leave/notifications
+// @access    Private
+export const getLeaveNotifications = asyncHandler(async (req, res, next) => {
+  try {
+    const where = {};
+
+    if (req.user.role === 'faculty') {
+      where.recipientType = 'faculty';
+      where.recipientId = req.user.id;
+    } else if (req.user.role === 'department-admin') {
+      where.recipientType = 'department-admin';
+      where.departmentId = req.user.departmentId;
+    } else if (['executiveadmin', 'superadmin', 'super-admin', 'academicadmin'].includes(req.user.role)) {
+      where.recipientType = 'executiveadmin';
+    } else {
+      return res.status(200).json({ success: true, count: 0, data: [] });
+    }
+
+    const notifications = await LeaveNotification.findAll({
+      where,
+      order: [['createdAt', 'DESC']],
+      limit: 30,
+      raw: true,
+    });
+
+    res.status(200).json({ success: true, count: notifications.length, data: notifications });
+  } catch (error) {
+    console.error('[LeaveNotifications] Error:', error.message);
+    return next(new ErrorResponse(`Error fetching notifications: ${error.message}`, 500));
+  }
+});
+
+// @desc      Get unread leave notification count
+// @route     GET /api/v1/leave/notifications/unread-count
+// @access    Private
+export const getLeaveNotificationCount = asyncHandler(async (req, res, next) => {
+  try {
+    const where = { isRead: false };
+
+    if (req.user.role === 'faculty') {
+      where.recipientType = 'faculty';
+      where.recipientId = req.user.id;
+    } else if (req.user.role === 'department-admin') {
+      where.recipientType = 'department-admin';
+      where.departmentId = req.user.departmentId;
+    } else if (['executiveadmin', 'superadmin', 'super-admin', 'academicadmin'].includes(req.user.role)) {
+      where.recipientType = 'executiveadmin';
+    } else {
+      return res.status(200).json({ success: true, data: { count: 0 } });
+    }
+
+    const count = await LeaveNotification.count({ where });
+    res.status(200).json({ success: true, data: { count } });
+  } catch (error) {
+    console.error('[LeaveNotifCount] Error:', error.message);
+    return next(new ErrorResponse(`Error fetching count: ${error.message}`, 500));
+  }
+});
+
+// @desc      Mark leave notification as read
+// @route     PUT /api/v1/leave/notifications/:id/read
+// @access    Private
+export const markLeaveNotificationRead = asyncHandler(async (req, res, next) => {
+  try {
+    await LeaveNotification.update(
+      { isRead: true },
+      { where: { id: req.params.id } }
+    );
+    res.status(200).json({ success: true });
+  } catch (error) {
+    return next(new ErrorResponse(`Error marking notification as read: ${error.message}`, 500));
+  }
+});
+
+// @desc      Mark all leave notifications as read for current user
+// @route     PUT /api/v1/leave/notifications/mark-all-read
+// @access    Private
+export const markAllLeaveNotificationsRead = asyncHandler(async (req, res, next) => {
+  try {
+    const where = {};
+
+    if (req.user.role === 'faculty') {
+      where.recipientType = 'faculty';
+      where.recipientId = req.user.id;
+    } else if (req.user.role === 'department-admin') {
+      where.recipientType = 'department-admin';
+      where.departmentId = req.user.departmentId;
+    } else if (['executiveadmin', 'superadmin'].includes(req.user.role)) {
+      where.recipientType = 'executiveadmin';
+    }
+
+    await LeaveNotification.update({ isRead: true }, { where });
+    res.status(200).json({ success: true });
+  } catch (error) {
+    return next(new ErrorResponse(`Error marking notifications as read: ${error.message}`, 500));
   }
 });

@@ -180,15 +180,33 @@ export function UserFormModal({ open, onClose, onSave, type, initialData, mode }
               </div>
             )}
             {type !== 'admin' && (
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
-                <Input
-                  id="phone"
-                  value={type === 'student' ? (formData as Student).phone || '' : (formData as Faculty).phone_number || ''}
-                  onChange={(e) => updateField(type === 'student' ? 'phone' : 'phone_number', e.target.value)}
-                  required
-                />
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    value={type === 'student' ? (formData as Student).phone || '' : (formData as Faculty).phone_number || ''}
+                    onChange={(e) => updateField(type === 'student' ? 'phone' : 'phone_number', e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="gender">Gender</Label>
+                  <Select
+                    value={(formData as any).gender || ''}
+                    onValueChange={(value) => updateField('gender', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover">
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
             )}
 
             {type === 'faculty' && (
