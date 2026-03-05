@@ -936,27 +936,6 @@ CREATE TABLE `student_internal_marks` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
-
---
--- Table structure for table `student_leaves`
---
-
-CREATE TABLE `student_leaves` (
-  `id` int(11) NOT NULL,
-  `studentId` int(11) NOT NULL COMMENT 'FK → students.id',
-  `leaveType` enum('Medical','Casual','On-Duty','Special','Other') NOT NULL DEFAULT 'Casual',
-  `startDate` date NOT NULL,
-  `endDate` date NOT NULL,
-  `totalDays` decimal(4,1) NOT NULL,
-  `reason` text NOT NULL,
-  `status` enum('pending','approved','rejected','cancelled') NOT NULL DEFAULT 'pending',
-  `approvedById` int(11) DEFAULT NULL COMMENT 'FK → users.id',
-  `approvalRemarks` varchar(500) DEFAULT NULL,
-  `approvalDate` datetime DEFAULT NULL,
-  `createdAt` datetime NOT NULL DEFAULT current_timestamp(),
-  `updatedAt` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 -- --------------------------------------------------------
 
 --
