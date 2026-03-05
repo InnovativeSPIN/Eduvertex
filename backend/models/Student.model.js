@@ -155,6 +155,15 @@ const Student = (sequelize) => {
     });
   };
 
+  StudentModel.generateStudentId = async function (batch, departmentCode) {
+    // Basic format: YearPrefix + DeptCode + 3-digit random/increment
+    // e.g. 21CSE001
+    const year = batch ? batch.split('-')[0].substring(2) : '21';
+    const dept = departmentCode ? departmentCode.substring(0, 3).toUpperCase() : 'GEN';
+    const random = Math.floor(Math.random() * 900) + 100; // 100-999
+    return `${year}${dept}${random}`;
+  };
+
   return StudentModel;
 };
 

@@ -158,18 +158,50 @@ export const getStudent = asyncHandler(async (req, res, next) => {
 // @route     POST /api/v1/students
 // @access    Private/Admin
 export const createStudent = asyncHandler(async (req, res, next) => {
+  // Handle name splitting
+  if (req.body.name && (!req.body.firstName || !req.body.lastName)) {
+    const parts = req.body.name.trim().split(' ');
+    req.body.firstName = parts[0];
+    req.body.lastName = parts.slice(1).join(' ') || '.';
+  }
+
+  // Set default role_id if missing (3 is student)
+  if (!req.body.role_id) {
+    req.body.role_id = 3;
+  }
+
+  // Set default semester if missing
+  if (!req.body.semester) {
+    req.body.semester = 1;
+  }
+
+  // Set default gender if missing
+  if (!req.body.gender) {
+    req.body.gender = 'other';
+  }
+
   // Generate student ID if not provided
   if (!req.body.studentId) {
-    const department = await Department.findByPk(req.body.department);
+    const department = await Department.findByPk(req.body.department || req.body.departmentId);
     const departmentCode = department ? department.short_name || department.full_name : 'GEN';
     req.body.studentId = await Student.generateStudentId(req.body.batch, departmentCode);
   }
 
-  // Create student profile
-  req.body.departmentId = req.body.department;
-  req.body.classId = req.body.class;
-  delete req.body.department;
-  delete req.body.class;
+  // Ensure rollNumber is set (often same as studentId in this system)
+  if (!req.body.rollNumber) {
+    req.body.rollNumber = req.body.studentId;
+  }
+
+  // Normalize department and class fields
+  if (req.body.department) {
+    req.body.departmentId = req.body.department;
+    delete req.body.department;
+  }
+  if (req.body.class) {
+    req.body.classId = req.body.class;
+    delete req.body.class;
+  }
+
   const student = await Student.create(req.body);
 
   res.status(201).json({
@@ -233,9 +265,9 @@ export const getStudentsByClass = asyncHandler(async (req, res, next) => {
       status: 'active'
     },
     attributes: { exclude: ['userId'] },
-    include: [{ 
-      model: Department, 
-      as: 'department', 
+    include: [{
+      model: Department,
+      as: 'department',
       attributes: ['short_name', 'full_name'],
       required: false  // Use LEFT JOIN
     }],
