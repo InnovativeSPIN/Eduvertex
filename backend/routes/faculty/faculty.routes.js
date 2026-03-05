@@ -11,7 +11,8 @@ import {
   updateFacultyStatus,
   uploadFaculty,
   getMyProfile,
-  updateFacultyProfile
+  updateFacultyProfile,
+  getMyTimetable
 } from '../../controllers/faculty/faculty.controller.js';
 import {
   getMyEducation,
@@ -55,6 +56,8 @@ router.use(protect);
 
 // Faculty and department-admins can access their own profile
 router.get('/me/profile', authorize('faculty', 'department-admin'), getMyProfile);
+// Faculty can get their timetable
+router.get('/my-timetable', authorize('faculty', 'department-admin'), getMyTimetable);
 // Faculty and department-admins can update their own profile
 router.put('/update-profile', authorize('faculty', 'department-admin'), updateFacultyProfile);
 // Route to download profile as DOCX (allow department-admin alongside faculty)
@@ -62,7 +65,7 @@ router.post('/download-profile', authorize('faculty', 'department-admin', 'super
 
 // Routes for admin
 router.route('/')
-  .get(authorize('superadmin', 'super-admin', 'executiveadmin', 'academicadmin', 'faculty'), getAllFaculty)
+  .get(authorize('superadmin', 'super-admin', 'executiveadmin', 'academicadmin', 'faculty', 'department-admin'), getAllFaculty)
   .post(authorize('superadmin', 'super-admin', 'executiveadmin', 'academicadmin'), createFaculty);
 
 router.route('/:id(\\d+)')
@@ -103,8 +106,6 @@ router.route('/experience/industry')
 router.route('/experience/industry/:id')
   .put(authorize('faculty', 'department-admin'), updateIndustryExperience)
   .delete(authorize('faculty', 'department-admin'), deleteIndustryExperience);
-
-// PhD records
 import {
   getMyPhd,
   addPhd,

@@ -11,13 +11,33 @@ const YearBreakTiming = (sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+    year_group: {
+      type: DataTypes.ENUM('year_1', 'year_2', 'year_3_4'),
+      allowNull: true,
+      comment: 'Year grouping: year_1, year_2, or year_3_4 (shared)',
+    },
     year: {
       type: DataTypes.ENUM('1st', '2nd', '3rd', '4th'),
-      allowNull: false,
+      allowNull: true,
+      comment: 'Backward compatibility - use year_group instead',
+    },
+    break_number: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: 'Break sequence number (1, 2, 3...)',
     },
     break_name: {
       type: DataTypes.STRING(100),
       allowNull: false, // e.g., "Morning Break", "Lunch Break"
+    },
+    break_type: {
+      type: DataTypes.ENUM('short', 'lunch'),
+      allowNull: true,
+    },
+    period_after: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: 'Which period this break follows',
     },
     start_time: {
       type: DataTypes.TIME,
@@ -34,8 +54,8 @@ const YearBreakTiming = (sequelize) => {
   }, {
     tableName: 'year_break_timings',
     timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
   });
 
   YearBreakTimingModel.associate = (models) => {

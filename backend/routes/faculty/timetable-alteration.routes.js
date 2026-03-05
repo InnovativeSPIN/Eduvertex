@@ -11,9 +11,9 @@ import {
 
 const router = express.Router();
 
-// All routes require authentication and faculty role
+// All routes require authentication and faculty/department-admin role
 router.use(protect);
-router.use(authorize('faculty'));
+router.use(authorize('faculty', 'department-admin'));
 
 // Timetable alteration routes (only for timetable incharge)
 router.use(checkTimetableIncharge);

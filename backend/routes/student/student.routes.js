@@ -11,7 +11,8 @@ import {
   promoteStudents,
   getMyProfile,
   updateMyProfile,
-  getStudentStats
+  getStudentStats,
+  getAcademicYears
 } from '../../controllers/student/student.controller.js';
 
 import { protect, authorize } from '../../middleware/auth.js';
@@ -25,6 +26,9 @@ router.use(protect);
 router.route('/me/profile')
   .get(authorize('student'), getMyProfile)
   .put(authorize('student'), updateMyProfile);
+
+// fetch academic years (batches) for dropdowns
+router.get('/academic-years', authorize('superadmin', 'super-admin', 'executiveadmin', 'academicadmin', 'department-admin', 'faculty'), getAcademicYears);
 
 // Stats route
 router.get('/stats', authorize('superadmin', 'super-admin', 'executiveadmin', 'academicadmin'), getStudentStats);

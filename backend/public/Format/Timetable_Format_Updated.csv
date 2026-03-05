@@ -1,0 +1,11 @@
+facultyId,facultyName,department,year,section,day,period,subject,subjectName,academicYear,roomNumber,labName,isLabSession,sessionType
+CS12,Dr. John Smith,CSE,3,A,Monday,1,CS301,Data Structures,2024-2028,201,,FALSE,Theory
+CS12,Dr. John Smith,CSE,3,A,Monday,2,CS301,Data Structures,2024-2028,201,,FALSE,Theory
+CS15,Prof. Sarah Jones,CSE,3,A,Monday,4,CS302L,DBMS Lab,2024-2028,CS-LAB-1,DBMS Lab,TRUE,Lab
+CS15,Prof. Sarah Jones,CSE,3,A,Monday,5,CS302L,DBMS Lab,2024-2028,CS-LAB-1,DBMS Lab,TRUE,Lab
+CS20,Dr. Michael Brown,CSE,3,A,Monday,6,CS303,Operating Systems,2024-2028,202,,FALSE,Theory
+CS12,Dr. John Smith,CSE,3,A,Tuesday,1,CS301,Data Structures,2024-2028,201,,FALSE,Theory
+CS18,Prof. Emily Davis,CSE,3,A,Tuesday,2,CS304,Computer Networks,2024-2028,203,,FALSE,Theory
+CS18,Prof. Emily Davis,CSE,3,A,Tuesday,4,CS305L,Networks Lab,2024-2028,CS-LAB-2,Networks Lab,TRUE,Lab
+CS18,Prof. Emily Davis,CSE,3,A,Tuesday,5,CS305L,Networks Lab,2024-2028,CS-LAB-2,Networks Lab,TRUE,Lab
+CS20,Dr. Michael Brown,CSE,3,A,Tuesday,6,CS303,Operating Systems,2024-2028,202,,FALSE,Theory

@@ -45,7 +45,12 @@ export const getAllFaculty = asyncHandler(async (req, res, next) => {
   const faculty = await Faculty.findAll({
     where,
     include: [
-      { model: Department, as: 'department', attributes: ['short_name', 'full_name'] }
+      { 
+        model: Department, 
+        as: 'department', 
+        attributes: ['short_name', 'full_name'],
+        required: false  // Use LEFT JOIN instead of INNER JOIN
+      }
     ],
     offset: startIndex,
     limit,
@@ -83,7 +88,12 @@ export const getAllFaculty = asyncHandler(async (req, res, next) => {
 export const getFaculty = asyncHandler(async (req, res, next) => {
   let faculty = await Faculty.findByPk(req.params.id, {
     include: [
-      { model: Department, as: 'department', attributes: ['short_name', 'full_name'] },
+      { 
+        model: Department, 
+        as: 'department', 
+        attributes: ['short_name', 'full_name'],
+        required: false  // Use LEFT JOIN
+      },
       { model: ClassModel, as: 'assignedClasses' }
     ]
   });
@@ -109,69 +119,141 @@ export const getFaculty = asyncHandler(async (req, res, next) => {
 // @route     POST /api/v1/faculty
 // @access    Private/Admin
 export const createFaculty = asyncHandler(async (req, res, next) => {
-  // Check if adding an HOD
-  if (req.body.designation === 'HOD') {
-    const existingHOD = await Faculty.findOne({
-      where: {
-        departmentId: req.body.department,
-        designation: 'HOD'
-      },
-      include: [{ model: User, as: 'user', attributes: ['name'] }]
-    });
+  console.log('[DEBUG] createFaculty - received body:', req.body);
+  
+  // Prepare fields for database
+  const facultyData = {
+    faculty_college_code: req.body.faculty_college_code || req.body.facultyCollegeCode,
+    Name: req.body.Name || req.body.name || req.body.firstName,
+    email: req.body.email,
+    password: req.body.password || 'default123',  // Default password
+    phone_number: req.body.phone_number || req.body.phoneNumber,
+    role_id: req.body.role_id || req.body.roleId || 5,  // Default to faculty role
+    department_id: req.body.department_id || req.body.departmentId || req.body.department,
+    designation: req.body.designation,
+    educational_qualification: req.body.educational_qualification || req.body.educationalQualification,
+    phd_status: req.body.phd_status || req.body.phdStatus || 'No',
+    gender: req.body.gender,
+    date_of_birth: req.body.date_of_birth || req.body.dateOfBirth,
+    date_of_joining: req.body.date_of_joining || req.body.dateOfJoining,
+    profile_image_url: req.body.profile_image_url || req.body.profileImageUrl,
+    status: req.body.status || 'active',
+    blood_group: req.body.blood_group || req.body.bloodGroup,
+    aadhar_number: req.body.aadhar_number || req.body.aadharNumber,
+    pan_number: req.body.pan_number || req.body.panNumber,
+    perm_address: req.body.perm_address || req.body.permAddress,
+    curr_address: req.body.curr_address || req.body.currAddress,
+    linkedin_url: req.body.linkedin_url || req.body.linkedinUrl,
+    is_timetable_incharge: req.body.is_timetable_incharge || req.body.isTimetableIncharge || false,
+    is_placement_coordinator: req.body.is_placement_coordinator || req.body.isPlacementCoordinator || false
+  };
 
-    if (existingHOD) {
-      return next(new ErrorResponse(`Department already has a Head of Department (${existingHOD.user ? existingHOD.user.name : 'Unknown'}) in faculty records`, 400));
+  // Remove null/undefined values
+  Object.keys(facultyData).forEach(key => {
+    if (facultyData[key] === null || facultyData[key] === undefined) {
+      delete facultyData[key];
     }
-  }
-
-  // Create faculty profile
-  req.body.departmentId = req.body.department;
-  delete req.body.department;
-  const faculty = await Faculty.create(req.body);
-
-  res.status(201).json({
-    success: true,
-    data: faculty
   });
+
+  console.log('[DEBUG] Creating faculty with data:', facultyData);
+
+  try {
+    const faculty = await Faculty.create(facultyData);
+    console.log('[DEBUG] Faculty created successfully:', faculty.faculty_college_code);
+
+    res.status(201).json({
+      success: true,
+      message: 'Faculty created successfully',
+      data: faculty
+    });
+  } catch (error) {
+    console.error('[ERROR] Faculty creation failed:', error.message);
+    console.error('[ERROR] Stack:', error.stack);
+    return next(new ErrorResponse(`Failed to create faculty: ${error.message}`, 400));
+  }
 });
 
 // @desc      Update faculty
 // @route     PUT /api/v1/faculty/:id
 // @access    Private/Admin
 export const updateFaculty = asyncHandler(async (req, res, next) => {
+  console.log('[DEBUG] updateFaculty - faculty ID:', req.params.id, 'body:', req.body);
+  
   let faculty = await Faculty.findByPk(req.params.id);
 
   if (!faculty) {
     return next(new ErrorResponse(`Faculty not found with id of ${req.params.id}`, 404));
   }
 
-  // Check if updating to an HOD
-  if (req.body.designation === 'HOD') {
-    const existingHOD = await Faculty.findOne({
-      where: {
-        departmentId: req.body.department || faculty.departmentId,
-        designation: 'HOD',
-        id: { [Op.ne]: req.params.id }
-      },
-      include: [{ model: User, as: 'user', attributes: ['name'] }]
+  // Prepare fields for update (only update provided fields)
+  const updateData = {};
+  const fieldMap = {
+    // Database field: request field options
+    'faculty_college_code': ['faculty_college_code', 'facultyCollegeCode'],
+    'Name': ['Name', 'name', 'firstName'],
+    'email': ['email'],
+    'password': ['password'],
+    'phone_number': ['phone_number', 'phoneNumber'],
+    'role_id': ['role_id', 'roleId'],
+    'department_id': ['department_id', 'departmentId', 'department'],
+    'designation': ['designation'],
+    'educational_qualification': ['educational_qualification', 'educationalQualification'],
+    'phd_status': ['phd_status', 'phdStatus'],
+    'gender': ['gender'],
+    'date_of_birth': ['date_of_birth', 'dateOfBirth'],
+    'date_of_joining': ['date_of_joining', 'dateOfJoining'],
+    'profile_image_url': ['profile_image_url', 'profileImageUrl'],
+    'status': ['status'],
+    'blood_group': ['blood_group', 'bloodGroup'],
+    'aadhar_number': ['aadhar_number', 'aadharNumber'],
+    'pan_number': ['pan_number', 'panNumber'],
+    'perm_address': ['perm_address', 'permAddress'],
+    'curr_address': ['curr_address', 'currAddress'],
+    'linkedin_url': ['linkedin_url', 'linkedinUrl'],
+    'is_timetable_incharge': ['is_timetable_incharge', 'isTimetableIncharge'],
+    'is_placement_coordinator': ['is_placement_coordinator', 'isPlacementCoordinator']
+  };
+
+  // Map request fields to database fields
+  Object.entries(fieldMap).forEach(([dbField, requestFields]) => {
+    for (let requestField of requestFields) {
+      if (req.body[requestField] !== undefined && req.body[requestField] !== null) {
+        updateData[dbField] = req.body[requestField];
+        break;  // Only use the first match
+      }
+    }
+  });
+
+  console.log('[DEBUG] Updating faculty with data:', updateData);
+
+  try {
+    // Update the faculty instance directly
+    await faculty.update(updateData);
+    
+    // Reload with department association
+    await faculty.reload({
+      include: [
+        { 
+          model: Department, 
+          as: 'department', 
+          attributes: ['short_name', 'full_name'],
+          required: false
+        }
+      ]
     });
 
-    if (existingHOD) {
-      return next(new ErrorResponse(`Department already has a Head of Department (${existingHOD.user ? existingHOD.user.name : 'Unknown'}) in faculty records`, 400));
-    }
-  }
+    console.log('[DEBUG] Faculty updated successfully:', faculty.faculty_college_code);
 
-  if (req.body.department) {
-    req.body.departmentId = req.body.department;
-    delete req.body.department;
+    res.status(200).json({
+      success: true,
+      message: 'Faculty updated successfully',
+      data: faculty
+    });
+  } catch (error) {
+    console.error('[ERROR] Faculty update failed:', error.message);
+    console.error('[ERROR] Stack:', error.stack);
+    return next(new ErrorResponse(`Failed to update faculty: ${error.message}`, 400));
   }
-  await Faculty.update(req.body, { where: { id: req.params.id } });
-  faculty = await Faculty.findByPk(req.params.id);
-
-  res.status(200).json({
-    success: true,
-    data: faculty
-  });
 });
 
 // @desc      Delete faculty
@@ -202,7 +284,12 @@ export const getFacultyByDepartment = asyncHandler(async (req, res, next) => {
       status: 'active'
     },
     include: [
-      { model: Department, as: 'department', attributes: ['short_name', 'full_name'] }
+      { 
+        model: Department, 
+        as: 'department', 
+        attributes: ['short_name', 'full_name'],
+        required: false  // Use LEFT JOIN
+      }
     ]
   });
 
@@ -480,7 +567,12 @@ export const updateFacultyProfile = asyncHandler(async (req, res, next) => {
 
     const updatedFaculty = await Faculty.findByPk(req.user.faculty_id, {
       include: [
-        { model: Department, as: 'department', attributes: ['short_name', 'full_name'] }
+        { 
+          model: Department, 
+          as: 'department', 
+          attributes: ['short_name', 'full_name'],
+          required: false  // Use LEFT JOIN
+        }
       ]
     });
 
@@ -491,5 +583,61 @@ export const updateFacultyProfile = asyncHandler(async (req, res, next) => {
   } catch (error) {
     console.error('[UPDATE PROFILE ERROR]', error);
     return next(new ErrorResponse('Failed to update profile', 500));
+  }
+});
+
+// @desc      Get faculty's timetable
+// @route     GET /api/v1/faculty/my-timetable
+// @access    Private (Faculty)
+export const getMyTimetable = asyncHandler(async (req, res, next) => {
+  try {
+    const { TimetableSimple } = models;
+    const facultyId = req.user.faculty_id;
+    
+    if (!facultyId) {
+      return next(new ErrorResponse('Faculty ID not found', 400));
+    }
+
+    // Get faculty college code to match timetable records
+    const faculty = await Faculty.findByPk(facultyId, {
+      attributes: ['faculty_college_code', 'Name']
+    });
+
+    if (!faculty) {
+      return next(new ErrorResponse('Faculty not found', 404));
+    }
+
+    // Fetch timetable records for this faculty
+    const timetableRecords = await TimetableSimple.findAll({
+      where: {
+        facultyId: faculty.faculty_college_code
+      },
+      attributes: ['day', 'hour', 'subject', 'section', 'academicYear', 'year', 'department'],
+      order: [['day', 'ASC'], ['hour', 'ASC']]
+    });
+
+    // Format response
+    const timetable = timetableRecords.map(record => ({
+      day_of_week: record.day,
+      period_number: record.hour,
+      subject: {
+        subject_name: record.subject
+      },
+      class: {
+        name: record.section || 'N/A'
+      },
+      room_number: 'TBD',
+      period_type: 'lecture',
+      academic_year: record.academicYear,
+      year: record.year
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: timetable
+    });
+  } catch (error) {
+    console.error('[GET TIMETABLE ERROR]', error);
+    return next(new ErrorResponse('Failed to fetch timetable', 500));
   }
 });

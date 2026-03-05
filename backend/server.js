@@ -34,8 +34,11 @@ import timetableManagementRoutes from './routes/department-admin/timetable-manag
 import breakTimingRoutes from './routes/department-admin/break-timing.routes.js';
 import facultyAllocationRoutes from './routes/department-admin/faculty-allocation.routes.js';
 import timetableNotificationRoutes from './routes/faculty/timetable-notification.routes.js';
+import timetableAlterationRoutes from './routes/faculty/timetable-alteration.routes.js';
 import coordinatorRoutes from './routes/department-admin/coordinator.routes.js';
 import subjectRoutes from './routes/department-admin/subject.routes.js';
+import roomRoutes from './routes/department-admin/room.routes.js';
+import labRoutes from './routes/department-admin/lab.routes.js';
 import generalSubjectRoutes from './routes/subject.routes.js';
 import classRoutes from './routes/class.routes.js';
 import studentMarksRoutes from './routes/student/studentMarks.routes.js';
@@ -43,6 +46,7 @@ import studentProjectRoutes from './routes/student/studentProject.routes.js';
 import studentCertificationRoutes from './routes/student/studentCertification.routes.js';
 import studentExtracurricularRoutes from './routes/student/studentExtracurricular.routes.js';
 import studentNotificationRoutes from './routes/student/studentNotification.routes.js';
+import studentDisciplinaryRoutes from './routes/student/disciplinary.routes.js';
 
 // Load env vars
 dotenv.config();
@@ -81,8 +85,9 @@ const startServer = () => {
 
   const app = express();
 
-  // Body parser
-  app.use(express.json());
+  // Body parser with increased limits for file uploads
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
   // Cookie parser
   app.use(cookieParser());
@@ -92,8 +97,14 @@ const startServer = () => {
     app.use(morgan('dev'));
   }
 
-  // File uploading
-  app.use(fileupload());
+  // File uploading - skip for bulk-upload route to avoid conflict with Multer
+  app.use((req, res, next) => {
+    // Skip express-fileupload for bulk-upload endpoint to prevent conflicts with Multer
+    if (req.path === '/api/v1/timetable/bulk-upload') {
+      return next();
+    }
+    fileupload()(req, res, next);
+  });
 
   // Sanitize data
   app.use(mongoSanitize());
@@ -158,12 +169,16 @@ const startServer = () => {
   app.use('/api/v1/department-admin/faculty-allocations', facultyAllocationRoutes);
   app.use('/api/v1/department-admin/coordinators', coordinatorRoutes);
   app.use('/api/v1/department-admin/subjects', subjectRoutes);
+  app.use('/api/v1/department-admin/rooms', roomRoutes);
+  app.use('/api/v1/department-admin/labs', labRoutes);
   app.use('/api/v1/faculty/notifications', timetableNotificationRoutes);
+  app.use('/api/v1/faculty/timetable/alterations', timetableAlterationRoutes);
   app.use('/api/v1/student/marks', studentMarksRoutes);
   app.use('/api/v1/student/projects', studentProjectRoutes);
   app.use('/api/v1/student/certifications', studentCertificationRoutes);
   app.use('/api/v1/student/extracurricular', studentExtracurricularRoutes);
   app.use('/api/v1/student/notifications', studentNotificationRoutes);
+  app.use('/api/v1/student/disciplinary', studentDisciplinaryRoutes);
 
   // Health check
   app.get('/api/v1/health', (req, res) => {

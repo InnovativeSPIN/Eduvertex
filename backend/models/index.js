@@ -42,6 +42,10 @@ import StudentSport from './StudentSport.model.js';
 import StudentEvent from './StudentEvent.model.js';
 import StudentNotification from './StudentNotification.model.js';
 import StudentBio from './StudentBio.model.js';
+import TimetableSimple from './TimetableSimple.model.js';
+import Room from './Room.model.js';
+import Lab from './Lab.model.js';
+import TimetablePeriod from './TimetablePeriod.model.js';
 
 // Initialize models
 const models = {
@@ -85,6 +89,10 @@ const models = {
   StudentEvent: StudentEvent(sequelize),
   StudentNotification: StudentNotification(sequelize),
   StudentBio: StudentBio(sequelize),
+  TimetableSimple: TimetableSimple(sequelize),
+  Room: Room(sequelize),
+  Lab: Lab(sequelize),
+  TimetablePeriod: TimetablePeriod(sequelize),
 };
 
 // Define associations

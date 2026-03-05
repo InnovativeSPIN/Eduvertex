@@ -41,8 +41,8 @@ const getSubjects = asyncHandler(async (req, res, next) => {
         attributes: ['id', 'short_name', 'full_name']
       }
     ],
-    attributes: ['id', 'name', 'code', 'semester', 'credits', 'type', 'is_elective'],
-    order: [['semester', 'ASC'], ['name', 'ASC']]
+    attributes: ['id', 'subject_name', 'subject_code', 'semester', 'credits', 'type', 'is_elective'],
+    order: [['semester', 'ASC'], ['subject_name', 'ASC']]
   });
 
   res.status(200).json({

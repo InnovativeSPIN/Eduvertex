@@ -245,7 +245,11 @@ export const getFacultyTimetable = asyncHandler(async (req, res, next) => {
             ...(academic_year && { academic_year }),
             ...(semester && { semester })
           },
-          include: [{ model: Department, as: 'department' }]
+          include: [{ 
+            model: Department, 
+            as: 'department',
+            required: false  // Use LEFT JOIN
+          }]
         },
         { model: Class, as: 'class' },
         { model: Subject, as: 'subject' }

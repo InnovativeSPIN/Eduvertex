@@ -15,21 +15,22 @@ import { protect } from '../../middleware/auth.js';
 
 const router = express.Router();
 
-// All routes require authentication and department admin role
+// All routes require authentication
 router.use(protect);
-router.use(checkTimetableIncharge);
 
-// Timetable CRUD routes
+// Timetable CRUD routes (viewing doesn't require timetable incharge)
 router.get('/department/:year', getTimetablesByDepartmentAndYear);
-router.post('/create', createTimetable);
-router.put('/:id', updateTimetable);
-router.post('/:timetable_id/publish', publishTimetable);
-
-// Slot assignment routes
 router.get('/:timetable_id/slots', getSlotAssignments);
-router.post('/slots/assign', assignFacultyToSlot);
-router.put('/slots/:assignment_id/reassign', changeFacultyAssignment);
-router.delete('/slots/:assignment_id', deleteSlotAssignment);
+
+// Protected routes require timetable incharge
+router.post('/create', checkTimetableIncharge, createTimetable);
+router.put('/:id', checkTimetableIncharge, updateTimetable);
+router.post('/:timetable_id/publish', checkTimetableIncharge, publishTimetable);
+
+// Slot assignment routes (require timetable incharge)
+router.post('/slots/assign', checkTimetableIncharge, assignFacultyToSlot);
+router.put('/slots/:assignment_id/reassign', checkTimetableIncharge, changeFacultyAssignment);
+router.delete('/slots/:assignment_id', checkTimetableIncharge, deleteSlotAssignment);
 
 // Faculty availability routes
 router.get('/slots/available-faculty', getAvailableFacultyForClass);

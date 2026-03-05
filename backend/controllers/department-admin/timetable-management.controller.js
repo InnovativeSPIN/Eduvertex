@@ -29,30 +29,63 @@ export const checkTimetableIncharge = asyncHandler(async (req, res, next) => {
  * Get all timetables for a department and year
  */
 export const getTimetablesByDepartmentAndYear = asyncHandler(async (req, res, next) => {
-  const { department_id } = req.user;
+  const departmentId = req.user.department_id || req.user.departmentId || req.user.department?.id;
   const { year } = req.params;
 
-  const timetables = await models.Timetable.findAll({
-    where: { department_id, year },
-    include: [
-      {
-        model: models.Department,
-        attributes: ['id', 'name']
-      },
-      {
-        model: models.TimetableSlot,
-        include: [
-          { model: models.Subject, attributes: ['id', 'name'] },
-          { model: models.Class, attributes: ['id', 'name'] }
-        ]
-      }
-    ]
-  });
+  if (!departmentId) {
+    return next(new ErrorResponse('Department ID not found in user data', 400));
+  }
 
-  res.status(200).json({
-    success: true,
-    data: timetables
-  });
+  try {
+    // First try to get from Timetable model (if created via API)
+    const timetables = await models.Timetable.findAll({
+      where: { department_id: departmentId },
+      include: [
+        {
+          model: models.Department,
+          as: 'department',
+          attributes: ['id', 'short_name', 'full_name']
+        },
+        {
+          model: models.TimetableSlot,
+          as: 'slots',
+          include: [
+            { model: models.Subject, as: 'subject', attributes: ['id', 'subject_name', 'subject_code'] },
+            { model: models.Class, as: 'class', attributes: ['id', 'name'] }
+          ]
+        }
+      ]
+    });
+
+    // Also fetch from TimetableSimple (bulk uploaded data)
+    const { TimetableSimple } = models;
+    let simpleTimetables = [];
+    
+    if (TimetableSimple) {
+      simpleTimetables = await TimetableSimple.findAll({
+        attributes: ['day', 'hour', 'subject', 'section', 'academicYear', 'year', 'department']
+      });
+    }
+
+    // Combine and return data
+    const allTimetables = [...timetables];
+    if (simpleTimetables.length > 0) {
+      allTimetables.push({
+        id: 0,
+        year: 'all',
+        department_id: departmentId,
+        TimetableSlots: simpleTimetables
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: allTimetables.length > 0 ? allTimetables : simpleTimetables
+    });
+  } catch (error) {
+    console.error('[TIMETABLE FETCH ERROR]', error.message);
+    return next(new ErrorResponse('Failed to fetch timetables: ' + error.message, 500));
+  }
 });
 
 /**

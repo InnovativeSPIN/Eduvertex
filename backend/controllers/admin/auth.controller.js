@@ -239,7 +239,12 @@ export const login = asyncHandler(async (req, res, next) => {
   user = await Faculty.findOne({
     where: facultyWhere,
     attributes: { include: ['password', 'role_id'] },
-    include: [{ model: models.Department, as: 'department', attributes: ['short_name', 'full_name'] }]
+    include: [{ 
+      model: models.Department, 
+      as: 'department', 
+      attributes: ['short_name', 'full_name'],
+      required: false  // Use LEFT JOIN
+    }]
   });
 
   if (user) {
@@ -261,7 +266,12 @@ export const login = asyncHandler(async (req, res, next) => {
       ]
     },
     attributes: { exclude: ['userId'] },
-    include: [{ model: models.Department, as: 'department', attributes: ['short_name', 'full_name'] }]
+    include: [{ 
+      model: models.Department, 
+      as: 'department', 
+      attributes: ['short_name', 'full_name'],
+      required: false  // Use LEFT JOIN
+    }]
   });
 
   if (user) {
@@ -291,7 +301,12 @@ export const login = asyncHandler(async (req, res, next) => {
       const deptAdminFaculty = await Faculty.findOne({
         where: { email },
         attributes: { include: ['password'] },
-        include: [{ model: models.Department, as: 'department', attributes: ['short_name', 'full_name'] }]
+        include: [{ 
+          model: models.Department, 
+          as: 'department', 
+          attributes: ['short_name', 'full_name'],
+          required: false  // Use LEFT JOIN
+        }]
       });
 
       if (!deptAdminFaculty) {

@@ -105,6 +105,21 @@ export const getAllStudents = asyncHandler(async (req, res, next) => {
   });
 });
 
+// @desc      Get list of academic years (distinct batches) from student profiles
+// @route     GET /api/v1/students/academic-years
+// @access    Private (department admin or higher)
+export const getAcademicYears = asyncHandler(async (req, res, next) => {
+  const records = await Student.findAll({
+    attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('batch')), 'batch']],
+    where: {
+      batch: { [Op.ne]: null }
+    },
+    order: [[Sequelize.col('batch'), 'DESC']]
+  });
+  const years = records.map(r => r.get('batch')).filter(y => y !== null);
+  res.status(200).json({ success: true, data: years });
+});
+
 // @desc      Get single student
 // @route     GET /api/v1/students/:id
 // @access    Private
@@ -218,7 +233,12 @@ export const getStudentsByClass = asyncHandler(async (req, res, next) => {
       status: 'active'
     },
     attributes: { exclude: ['userId'] },
-    include: [{ model: Department, as: 'department', attributes: ['short_name', 'full_name'] }],
+    include: [{ 
+      model: Department, 
+      as: 'department', 
+      attributes: ['short_name', 'full_name'],
+      required: false  // Use LEFT JOIN
+    }],
     order: [['rollNumber', 'ASC']]
   });
 

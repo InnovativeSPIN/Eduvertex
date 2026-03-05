@@ -1,0 +1,29 @@
+facultyId,facultyName,department,year,section,day,hour,subject,academicYear,roomNumber,labName,isLabSession,sessionType
+NS40T23,GOWTHAMI P,AI&DS,3,A,Monday,2,Embedded Systems and IoT,2025-2026,CR-15,,FALSE,theory
+NS80T01,NAGAJOTHI P,AI&DS,3,A,Monday,3,Digital Marketing,2025-2026,CR-15,,FALSE,theory
+NS60T15,MALLIKARJUN B,AI&DS,3,A,Monday,4,Graph Theory,2025-2026,CR-15,,FALSE,theory
+NS20T32,VINOTH KUMAR J J,AI&DS,3,A,Monday,5,App Development,2025-2026,CR-15,,FALSE,theory
+NS80T01,NAGAJOTHI P,AI&DS,3,A,Monday,6,Digital Marketing,2025-2026,CR-15,,FALSE,theory
+NS20T32,VINOTH KUMAR J J,AI&DS,3,A,Monday,7,App Development,2025-2026,CR-15,,FALSE,theory
+NS20T32,VINOTH KUMAR J J,AI&DS,3,A,Tuesday,1,App Development Laboratory,2025-2026,,LAB-L1,TRUE,lab
+NS20T32,VINOTH KUMAR J J,AI&DS,3,A,Tuesday,2,App Development Laboratory,2025-2026,,LAB-L1,TRUE,lab
+NS60T15,MALLIKARJUN B,AI&DS,3,A,Tuesday,3,Graph Theory,2025-2026,CR-15,,FALSE,theory
+NS40T23,GOWTHAMI P,AI&DS,3,A,Tuesday,4,Embedded Systems and IoT Laboratory,2025-2026,,LAB-MK,TRUE,lab
+NS40T23,GOWTHAMI P,AI&DS,3,A,Tuesday,5,Embedded Systems and IoT Laboratory,2025-2026,,LAB-MK,TRUE,lab
+CS10,VIGNESH.L.S,AI&DS,3,A,Tuesday,6,Principles of Programming Languages,2025-2026,CR-15,,FALSE,theory
+NS40T23,GOWTHAMI P,AI&DS,3,A,Wednesday,1,Embedded Systems and IoT,2025-2026,CR-15,,FALSE,theory
+NS20T32,VINOTH KUMAR J J,AI&DS,3,A,Wednesday,2,App Development,2025-2026,CR-15,,FALSE,theory
+NS60T15,MALLIKARJUN B,AI&DS,3,A,Wednesday,3,Graph Theory,2025-2026,CR-15,,FALSE,theory
+CS10,VIGNESH.L.S,AI&DS,3,A,Wednesday,4,Principles of Programming Languages,2025-2026,CR-15,,FALSE,theory
+NS80T01,NAGAJOTHI P,AI&DS,3,A,Thursday,1,Digital Marketing,2025-2026,CR-15,,FALSE,theory
+CS10,VIGNESH.L.S,AI&DS,3,A,Thursday,2,Principles of Programming Languages,2025-2026,CR-15,,FALSE,theory
+NS40T23,GOWTHAMI P,AI&DS,3,A,Thursday,3,Embedded Systems and IoT,2025-2026,CR-15,,FALSE,theory
+NS20T32,VINOTH KUMAR J J,AI&DS,3,A,Thursday,4,App Development,2025-2026,CR-15,,FALSE,theory
+NS60T15,MALLIKARJUN B,AI&DS,3,A,Thursday,5,Graph Theory,2025-2026,CR-15,,FALSE,theory
+NS80T01,NAGAJOTHI P,AI&DS,3,A,Thursday,6,Digital Marketing Laboratory,2025-2026,,LAB-LAN,TRUE,lab
+NS80T01,NAGAJOTHI P,AI&DS,3,A,Thursday,7,Digital Marketing Laboratory,2025-2026,,LAB-LAN,TRUE,lab
+NS60T15,MALLIKARJUN B,AI&DS,3,A,Saturday,1,Graph Theory,2025-2026,CR-15,,FALSE,theory
+CS10,VIGNESH.L.S,AI&DS,3,A,Saturday,2,Principles of Programming Languages,2025-2026,CR-15,,FALSE,theory
+NS40T23,GOWTHAMI P,AI&DS,3,A,Saturday,3,Embedded Systems and IoT,2025-2026,CR-15,,FALSE,theory
+NS20T32,VINOTH KUMAR J J,AI&DS,3,A,Saturday,4,App Development,2025-2026,CR-15,,FALSE,theory
+NS80T01,NAGAJOTHI P,AI&DS,3,A,Saturday,5,Digital Marketing,2025-2026,CR-15,,FALSE,theory

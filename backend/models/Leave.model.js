@@ -56,6 +56,45 @@ const Leave = (sequelize) => {
       allowNull: false,
       defaultValue: 'faculty',
     },
+    // Substitution workflow fields
+    affected_periods: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      comment: 'Array of timetable period IDs affected by this leave',
+    },
+    substitute_faculty_code: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      comment: 'Faculty college code of the substitute',
+    },
+    substitute_status: {
+      type: DataTypes.ENUM('pending', 'accepted', 'rejected'),
+      allowNull: true,
+    },
+    substitute_notified_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    substitute_response_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    substitute_remarks: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    admin_approval_status: {
+      type: DataTypes.ENUM('pending', 'approved', 'rejected'),
+      allowNull: true,
+    },
+    admin_approval_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    timetable_altered: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
   }, {
     tableName: 'leaves',
     timestamps: true,

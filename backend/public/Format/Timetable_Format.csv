@@ -1,0 +1,4 @@
+﻿facultyId,facultyName,department,year,section,day,hour,subject,academicYear
+FAC001,John Smith,CSE,1,A,Monday,1,Math,2025-2026
+FAC001,John Smith,CSE,1,A,Monday,2,Physics,2025-2026
+FAC002,Jane Doe,CSE,2,B,Tuesday,1,Chemistry,2025-2026
