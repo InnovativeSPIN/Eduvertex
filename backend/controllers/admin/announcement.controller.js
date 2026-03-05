@@ -9,116 +9,143 @@ import { Op, Sequelize } from 'sequelize';
 // @route     GET /api/v1/announcements
 // @access    Private
 export const getAnnouncements = asyncHandler(async (req, res, next) => {
-    const { role, departmentCode, departmentId } = req.user;
+    try {
+      const { role, departmentCode, departmentId } = req.user;
 
-    let where = { isActive: true };
+      let where = { isActive: true };
 
-    // If not superadmin, filter by role and department
-    const superRoles = ['superadmin', 'super-admin', 'executiveadmin', 'academicadmin'];
+      // If not superadmin, filter by role and department
+      const superRoles = ['superadmin', 'super-admin', 'executiveadmin', 'academicadmin'];
 
-    // Departments excluded from department-specific announcements (only see global)
-    const excludedDepartments = [8, 9, 11];
+      // Departments excluded from department-specific announcements (only see global)
+      const excludedDepartments = [8, 9, 11];
 
-    if (!superRoles.includes(role)) {
-        // Build role check: targetRole contains 'all' OR targetRole contains user's role
-        const roleConditions = [
-            Sequelize.where(
-                Sequelize.fn('JSON_CONTAINS', Sequelize.col('targetRole'), JSON.stringify('all')),
-                1
-            ),
-            Sequelize.where(
-                Sequelize.fn('JSON_CONTAINS', Sequelize.col('targetRole'), JSON.stringify(role)),
-                1
-            )
-        ];
+      if (!superRoles.includes(role)) {
+          // Build role check: targetRole contains 'all' OR targetRole contains user's role
+          const roleConditions = [
+              Sequelize.where(
+                  Sequelize.fn('JSON_CONTAINS', Sequelize.col('targetRole'), JSON.stringify('all')),
+                  1
+              ),
+              Sequelize.where(
+                  Sequelize.fn('JSON_CONTAINS', Sequelize.col('targetRole'), JSON.stringify(role)),
+                  1
+              )
+          ];
 
-        // Check if user is in an excluded department
-        const isExcludedDepartment = excludedDepartments.includes(Number(departmentId));
+          // Check if user is in an excluded department
+          const isExcludedDepartment = excludedDepartments.includes(Number(departmentId));
 
-        // Build department check
-        let departmentConditions;
-        if (isExcludedDepartment) {
-            // Excluded departments only see global announcements
-            departmentConditions = { department: null };
-        } else {
-            // Other departments see global + their own department announcements
-            departmentConditions = {
-                [Op.or]: [
-                    { department: null },
-                    { department: departmentCode }
-                ]
-            };
-        }
+          // Build department check
+          let departmentConditions;
+          if (isExcludedDepartment) {
+              // Excluded departments only see global announcements
+              departmentConditions = { department: null };
+          } else {
+              // Other departments see global + their own department announcements
+              departmentConditions = {
+                  [Op.or]: [
+                      { department: null },
+                      { department: departmentCode }
+                  ]
+              };
+          }
 
-        // Combine: (role condition) AND (department condition)
-        if (departmentCode) {
-            where[Op.and] = [
-                { [Op.or]: roleConditions },
-                departmentConditions
-            ];
-        } else {
-            // If no department code, just check role conditions
-            where[Op.or] = roleConditions;
-        }
+          // Combine: (role condition) AND (department condition)
+          if (departmentCode) {
+              where[Op.and] = [
+                  { [Op.or]: roleConditions },
+                  departmentConditions
+              ];
+          } else {
+              // If no department code, just check role conditions
+              where[Op.or] = roleConditions;
+          }
+      }
+
+      const announcements = await Announcement.findAll({
+          where,
+          include: [{
+              model: User,
+              as: 'createdBy',
+              attributes: ['name', 'avatar']
+          }],
+          order: [['createdAt', 'DESC']]
+      });
+
+      return res.status(200).json({
+          success: true,
+          count: announcements.length,
+          data: announcements
+      });
+    } catch (error) {
+      console.error('[GET ANNOUNCEMENTS] Error:', error);
+      return res.status(500).json({
+          success: false,
+          error: error.message || 'Failed to fetch announcements'
+      });
     }
-
-    const announcements = await Announcement.findAll({
-        where,
-        include: [{
-            model: User,
-            as: 'createdBy',
-            attributes: ['name', 'avatar']
-        }],
-        order: [['createdAt', 'DESC']]
-    });
-
-    res.status(200).json({
-        success: true,
-        count: announcements.length,
-        data: announcements
-    });
 });
 
 // @desc      Get all announcements (Admin view)
 // @route     GET /api/v1/announcements/admin
 // @access    Private/Admin
 export const getAdminAnnouncements = asyncHandler(async (req, res, next) => {
-    const announcements = await Announcement.findAll({
-        include: [{
-            model: User,
-            as: 'createdBy',
-            attributes: ['name', 'avatar']
-        }],
-        order: [['createdAt', 'DESC']]
-    });
+    try {
+      const announcements = await Announcement.findAll({
+          include: [{
+              model: User,
+              as: 'createdBy',
+              attributes: ['name', 'avatar']
+          }],
+          order: [['createdAt', 'DESC']]
+      });
 
-    res.status(200).json({
-        success: true,
-        count: announcements.length,
-        data: announcements
-    });
+      return res.status(200).json({
+          success: true,
+          count: announcements.length,
+          data: announcements
+      });
+    } catch (error) {
+      console.error('[GET ADMIN ANNOUNCEMENTS] Error:', error);
+      return res.status(500).json({
+          success: false,
+          error: error.message || 'Failed to fetch announcements'
+      });
+    }
 });
 
 // @desc      Get single announcement by ID
 // @route     GET /api/v1/announcements/:id
 // @access    Private
 export const getAnnouncement = asyncHandler(async (req, res, next) => {
-    const announcement = await Announcement.findByPk(req.params.id, {
-        include: [{
-            model: User,
-            as: 'createdBy',
-            attributes: ['name', 'avatar']
-        }]
-    });
+    try {
+      const announcement = await Announcement.findByPk(req.params.id, {
+          include: [{
+              model: User,
+              as: 'createdBy',
+              attributes: ['name', 'avatar']
+          }]
+      });
 
-    if (!announcement) {
-        return next(new ErrorResponse(`Announcement not found with id of ${req.params.id}`, 404));
+      if (!announcement) {
+          return res.status(404).json({
+              success: false,
+              error: `Announcement not found with id of ${req.params.id}`
+          });
+      }
+
+      return res.status(200).json({
+          success: true,
+          data: announcement
+      });
+    } catch (error) {
+      console.error('[GET ANNOUNCEMENT] Error:', error);
+      return res.status(500).json({
+          success: false,
+          error: error.message || 'Failed to fetch announcement'
+      });
     }
-
-    res.status(200).json({
-        success: true,
-        data: announcement
-    });
 });
 
 // @desc      Create announcement

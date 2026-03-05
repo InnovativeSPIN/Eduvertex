@@ -14,6 +14,7 @@ import {
 } from '../../controllers/admin/user.controller.js';
 
 import { protect, authorize } from '../../middleware/auth.js';
+import photoUpload from '../../middleware/photo-upload.js';
 
 const router = express.Router();
 
@@ -27,7 +28,7 @@ router.route('/roles').get(getRoles);
 router.route('/stats/dashboard').get(getDashboardStats);
 router.route('/role/:role').get(getUsersByRole);
 
-router.route('/:id/photo').put(uploadUserPhoto);
+router.route('/:id/photo').put(photoUpload.single('photo'), uploadUserPhoto);
 
 router.route('/')
   .get(getUsers)

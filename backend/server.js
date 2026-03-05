@@ -99,8 +99,10 @@ const startServer = () => {
 
   // File uploading - skip for bulk-upload route to avoid conflict with Multer
   app.use((req, res, next) => {
-    // Skip express-fileupload for bulk-upload endpoint to prevent conflicts with Multer
-    if (req.path === '/api/v1/timetable/bulk-upload') {
+    // Skip express-fileupload for endpoints using Multer
+    if (req.path === '/api/v1/timetable/bulk-upload' || 
+        req.path.includes('/photo') ||
+        req.path === '/api/v1/students/me/photo') {
       return next();
     }
     fileupload()(req, res, next);

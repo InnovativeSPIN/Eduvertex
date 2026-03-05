@@ -420,3 +420,29 @@ export const getStudentStats = asyncHandler(async (req, res, next) => {
     }
   });
 });
+
+// @desc      Upload student photo
+// @route     POST /api/v1/students/photo
+// @access    Private/Student
+export const uploadStudentPhoto = asyncHandler(async (req, res, next) => {
+  if (!req.file) {
+    return next(new ErrorResponse('No file uploaded', 400));
+  }
+
+  const student = await Student.findOne({ where: { id: req.user.id } });
+  if (!student) {
+    return next(new ErrorResponse('Student not found', 404));
+  }
+
+  const photoPath = req.file.path.replace(/\\/g, '/');
+  student.photo = photoPath;
+  await student.save();
+
+  res.status(200).json({
+    success: true,
+    message: 'Photo uploaded successfully',
+    data: {
+      photo: student.photo
+    }
+  });
+});

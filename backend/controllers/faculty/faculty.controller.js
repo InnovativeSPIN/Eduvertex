@@ -641,3 +641,73 @@ export const getMyTimetable = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse('Failed to fetch timetable', 500));
   }
 });
+// @desc      Upload faculty profile photo
+// @route     POST /api/v1/faculty/upload-photo
+// @access    Private/Faculty
+export const uploadProfilePhoto = asyncHandler(async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return next(new ErrorResponse('No file uploaded', 400));
+    }
+
+    if (!req.user || !req.user.faculty_id) {
+      return next(new ErrorResponse('Not authorized', 401));
+    }
+
+    const faculty = await Faculty.findByPk(req.user.faculty_id);
+    if (!faculty) {
+      return next(new ErrorResponse('Faculty not found', 404));
+    }
+
+    // Store relative path for easy access
+    const photoPath = `/uploads/${req.file.filename}`;
+    faculty.profile_image_url = photoPath;
+    await faculty.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Photo uploaded successfully',
+      data: {
+        photoUrl: photoPath,
+        filename: req.file.filename
+      }
+    });
+  } catch (error) {
+    console.error('[UPLOAD PHOTO] Error:', error);
+    // Clean up uploaded file on error
+    if (req.file && req.file.path) {
+      const fs = require('fs');
+      fs.unlink(req.file.path, (err) => {
+        if (err) console.error('Failed to delete file:', err);
+      });
+    }
+    return next(new ErrorResponse('Failed to upload photo', 500));
+  }
+});
+
+// @desc      Get faculty profile photo
+// @route     GET /api/v1/faculty/:id/photo
+// @access    Public
+export const getFacultyPhoto = asyncHandler(async (req, res, next) => {
+  try {
+    const faculty = await Faculty.findByPk(req.params.id, {
+      attributes: ['faculty_id', 'Name', 'profile_image_url']
+    });
+
+    if (!faculty || !faculty.profile_image_url) {
+      return next(new ErrorResponse('Photo not found', 404));
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        faculty_id: faculty.faculty_id,
+        name: faculty.Name,
+        photoUrl: faculty.profile_image_url
+      }
+    });
+  } catch (error) {
+    console.error('[GET PHOTO] Error:', error);
+    return next(new ErrorResponse('Failed to fetch photo', 500));
+  }
+});

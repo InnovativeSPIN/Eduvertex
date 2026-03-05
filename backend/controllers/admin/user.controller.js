@@ -17,47 +17,19 @@ export const uploadUserPhoto = asyncHandler(async (req, res, next) => {
     );
   }
 
-  if (!req.files) {
+  if (!req.file) {
     return next(new ErrorResponse('Please upload a file', 400));
   }
 
-  const file = req.files.file;
+  // Update user avatar
+  const photoPath = req.file.path.replace(/\\/g, '/');
+  await User.update({ avatar: photoPath }, { where: { id: req.params.id } });
 
-  // Make sure the image is a photo
-  if (!file.mimetype.startsWith('image')) {
-    return next(new ErrorResponse('Please upload an image file', 400));
-  }
-
-  // Check filesize
-  if (file.size > process.env.MAX_FILE_UPLOAD) {
-    return next(
-      new ErrorResponse(
-        `Please upload an image less than ${process.env.MAX_FILE_UPLOAD}`,
-        400
-      )
-    );
-  }
-
-  // Create custom filename
-  file.name = `photo_${user.id}${path.parse(file.name).ext}`;
-
-  try {
-    const uploadPath = path.resolve(process.env.FILE_UPLOAD_PATH, 'avatars', file.name);
-
-    await file.mv(uploadPath);
-
-    const photoUrl = `/uploads/avatars/${file.name}`;
-
-    await User.update({ avatar: photoUrl }, { where: { id: req.params.id } });
-
-    res.status(200).json({
-      success: true,
-      data: photoUrl
-    });
-  } catch (err) {
-    console.error('File Upload Error:', err);
-    return next(new ErrorResponse('Problem with file upload', 500));
-  }
+  res.status(200).json({
+    success: true,
+    message: 'Photo uploaded successfully',
+    data: photoPath
+  });
 });
 
 // helper to normalize role string to database name
