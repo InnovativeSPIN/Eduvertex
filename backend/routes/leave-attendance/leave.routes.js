@@ -10,7 +10,11 @@ import {
   getMyLeaves,
   getLeaveBalance,
   getPendingCount,
-  getPendingLeaves
+  getPendingLeaves,
+  getLeaveNotifications,
+  getLeaveNotificationCount,
+  markLeaveNotificationRead,
+  markAllLeaveNotificationsRead,
 } from '../../controllers/leave-attendance/leave.controller.js';
 
 import { protect, authorize } from '../../middleware/auth.js';
@@ -29,6 +33,12 @@ router.put('/:id/cancel', cancelLeave);
 // Admin routes
 router.get('/pending-count', authorize('superadmin', 'super-admin', 'executiveadmin', 'academicadmin', 'department-admin'), getPendingCount);
 
+// Leave notification routes
+router.get('/notifications/unread-count', getLeaveNotificationCount);
+router.put('/notifications/mark-all-read', markAllLeaveNotificationsRead);
+router.get('/notifications', getLeaveNotifications);
+router.put('/notifications/:id/read', markLeaveNotificationRead);
+
 // Main routes
 router.route('/')
   .get(getAllLeaves)
@@ -37,7 +47,7 @@ router.route('/')
 router.route('/:id')
   .get(getLeave)
   .put(updateLeave)
-  .delete(authorize('superadmin', 'super-admin', 'executiveadmin', 'academicadmin', 'department-admin'), deleteLeave);
+  .delete(deleteLeave);
 
 router.put('/:id/status', authorize('superadmin', 'super-admin', 'executiveadmin', 'academicadmin', 'department-admin'), updateLeaveStatus);
 

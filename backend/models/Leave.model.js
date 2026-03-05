@@ -95,6 +95,11 @@ const Leave = (sequelize) => {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    reassign_faculty_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: 'Faculty ID who will cover during this leave',
+    },
   }, {
     tableName: 'leaves',
     timestamps: true,

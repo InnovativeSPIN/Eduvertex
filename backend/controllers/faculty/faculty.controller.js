@@ -766,3 +766,30 @@ export const getMyClassIncharge = asyncHandler(async (req, res, next) => {
     }
   });
 });
+// @desc      Get faculty colleagues in same department (for leave reassign)
+// @route     GET /api/v1/faculty/me/department-colleagues
+// @access    Private/Faculty
+export const getDepartmentColleagues = asyncHandler(async (req, res, next) => {
+  const departmentId = req.user.departmentId || req.user.department_id;
+  if (!departmentId) {
+    return res.status(200).json({ success: true, data: [] });
+  }
+
+  try {
+    const colleagues = await Faculty.findAll({
+      where: {
+        department_id: departmentId,
+        status: 'active',
+        faculty_id: { [Op.ne]: req.user.id },
+      },
+      attributes: ['faculty_id', 'Name', 'designation', 'email', 'faculty_college_code'],
+      order: [['Name', 'ASC']],
+      raw: true,
+    });
+
+    res.status(200).json({ success: true, data: colleagues });
+  } catch (error) {
+    console.error('[GetColleagues] Error:', error.message);
+    return next(new ErrorResponse(`Error fetching colleagues: ${error.message}`, 500));
+  }
+});

@@ -47,6 +47,7 @@ import Room from './Room.model.js';
 import Lab from './Lab.model.js';
 import TimetablePeriod from './TimetablePeriod.model.js';
 import ClassIncharge from './ClassIncharge.model.js';
+import LeaveNotification from './LeaveNotification.model.js';
 
 // Initialize models
 const models = {
@@ -95,6 +96,7 @@ const models = {
   Lab: Lab(sequelize),
   TimetablePeriod: TimetablePeriod(sequelize),
   ClassIncharge: ClassIncharge(sequelize),
+  LeaveNotification: LeaveNotification(sequelize),
 };
 
 // Define associations
