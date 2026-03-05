@@ -174,8 +174,8 @@ export function FacultyFormModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.Name || !formData.faculty_college_code || !formData.email) {
-      toast.error('Please fill in required fields: Name, College Code, and Email');
+    if (!formData.Name || !formData.faculty_college_code || !formData.email || !formData.department_id || !formData.designation) {
+      toast.error('Please fill in required fields: Name, College Code, email, Department, and Designation');
       return;
     }
 
@@ -183,17 +183,18 @@ export function FacultyFormModal({
     try {
       // Prepare submit data (all fields as JSON)
       const submitData: any = {};
-      
+
       Object.entries(formData).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
+        // Only skip empty strings for optional fields
+        if (value !== undefined && value !== null && (value !== '' || key === 'department_id' || key === 'designation')) {
           submitData[key] = value;
         }
       });
 
-      const url = mode === 'edit' 
+      const url = mode === 'edit'
         ? `/api/v1/faculty/${formData.faculty_id}`
         : '/api/v1/faculty';
-      
+
       const method = mode === 'edit' ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -329,11 +330,14 @@ export function FacultyFormModal({
             {/* Department and Designation */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Department</Label>
+                <Label>
+                  Department <span className="text-red-500">*</span>
+                </Label>
                 <Select
                   value={formData.department_id}
                   onValueChange={(value) => handleInputChange('department_id', value)}
                   disabled={loading}
+                  required
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select department" />
