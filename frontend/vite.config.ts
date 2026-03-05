@@ -24,7 +24,11 @@ export default defineConfig({
         target: 'http://localhost:3005',
         changeOrigin: true,
         secure: false,
-      },
-    },
+      },      // route format files from backend so downloads work in dev
+      '/Format': {
+        target: 'http://localhost:3005',
+        changeOrigin: true,
+        secure: false,
+      },    },
   },
 })

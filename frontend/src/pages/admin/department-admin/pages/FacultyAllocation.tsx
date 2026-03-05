@@ -16,6 +16,7 @@ import {
 import { Plus, Trash2, Edit2, BookOpen, Users, LayoutGrid } from 'lucide-react';
 import { MainLayout } from '../components/layout/MainLayout';
 import { generateAcademicYears, getCurrentAcademicYear } from '@/utils/academicYear';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface FacultyAllocation {
   id: number;
@@ -61,6 +62,7 @@ interface Class {
 }
 
 export default function FacultyAllocationPage() {
+  const { authToken } = useAuth();
   const [allocations, setAllocations] = useState<FacultyAllocation[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [faculty, setFaculty] = useState<Faculty[]>([]);
@@ -219,9 +221,13 @@ export default function FacultyAllocationPage() {
         ? '/api/v1/department-admin/faculty-allocations'
         : `/api/v1/department-admin/faculty-allocations/${formModal.data?.id}`;
 
+      const token = authToken || localStorage.getItem('authToken');
       const response = await fetch(url, {
         method: formModal.mode === 'add' ? 'POST' : 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
         body: JSON.stringify(payload),
       });
 
@@ -242,8 +248,13 @@ export default function FacultyAllocationPage() {
     if (!deleteDialog.data) return;
 
     try {
+      const token = authToken || localStorage.getItem('authToken');
       const response = await fetch(`/api/v1/department-admin/faculty-allocations/${deleteDialog.data.id}`, {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        }
       });
 
       const result = await response.json();

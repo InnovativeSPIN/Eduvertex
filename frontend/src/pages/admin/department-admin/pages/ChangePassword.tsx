@@ -5,11 +5,10 @@ import { Input } from '@/pages/admin/department-admin/components/ui/input';
 import { Label } from '@/pages/admin/department-admin/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/pages/admin/department-admin/components/ui/card';
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
-import { useToast } from '@/pages/admin/department-admin/hooks/use-toast';
+import { toast } from '@/pages/admin/department-admin/components/ui/sonner';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function ChangePassword() {
-  const { toast } = useToast();
   const { logout } = useAuth();
   const [formData, setFormData] = useState({
     currentPassword: '',
@@ -71,10 +70,7 @@ export default function ChangePassword() {
       const result = await response.json();
 
       if (result.success) {
-        toast({
-          title: 'Password Updated',
-          description: 'Your password has been changed successfully. You will be logged out for security.',
-        });
+        toast.success('Password has been changed successfully. You will be logged out for security.');
 
         // Clear form
         setFormData({
@@ -88,19 +84,11 @@ export default function ChangePassword() {
           logout();
         }, 2000);
       } else {
-        toast({
-          title: 'Update Failed',
-          description: result.message || 'Failed to update password',
-          variant: 'destructive',
-        });
+        toast.error(result.message || 'Failed to update password');
       }
     } catch (error) {
       console.error('Password update error:', error);
-      toast({
-        title: 'Update Failed',
-        description: 'There was an error updating your password.',
-        variant: 'destructive',
-      });
+      toast.error('There was an error updating your password.');
     } finally {
       setIsLoading(false);
     }

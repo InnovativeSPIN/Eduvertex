@@ -21,8 +21,10 @@ import Marks from './pages/academics/Marks';
 import Timetable from './pages/academics/Timetable';
 import Leave from './pages/academics/Leave';
 
+// Records
 // Portfolio (combines Records and Extra-curricular)
 import StudentPortfolio from './pages/portfolio/StudentPortfolio';
+import Disciplinary from './pages/records/Disciplinary';
 
 
 // Notifications
@@ -75,6 +77,7 @@ const StudentRoutes = () => {
           <Route path="portfolio/events" element={<StudentPortfolio />} />
           <Route path="portfolio/certifications" element={<StudentPortfolio />} />
           <Route path="portfolio/projects" element={<StudentPortfolio />} />
+          <Route path="portfolio/disciplinary" element={<Disciplinary />} />
 
 
           {/* Notifications */}

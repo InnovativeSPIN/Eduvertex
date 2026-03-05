@@ -22,8 +22,10 @@ import { MentorDashboard } from "./pages/MentorDashboard";
 import { MenteesList } from "./pages/MenteesList";
 import { StudentProfileView } from "./pages/StudentProfileView";
 import AnnouncementDetail from "./pages/AnnouncementDetail";
-import Announcements from "./pages/Announcements";
-
+import Announcements from "./pages/Announcements";import NotificationCenter from './pages/NotificationCenter';
+import { InternalMarksEntry } from './pages/InternalMarksEntry';
+import CreateTimetable from './pages/CreateTimetable';
+import { Substitutions } from './pages/Substitutions';
 import './faculty.css';
 
 const queryClient = new QueryClient();
@@ -53,6 +55,10 @@ const FacultyRoutes = () => (
               <Route path="reports" element={<Reports />} />
               <Route path="announcements" element={<Announcements />} />
               <Route path="announcements/:id" element={<AnnouncementDetail />} />
+              <Route path="notifications" element={<NotificationCenter />} />
+              <Route path="internal-marks" element={<InternalMarksEntry />} />
+              <Route path="create-timetable" element={<CreateTimetable />} />
+              <Route path="substitutions" element={<Substitutions />} />
               <Route path="mentor" element={<MentorDashboard />} />
               <Route path="mentor/:year" element={<MenteesList />} />
               <Route path="mentor/student/:studentId" element={<StudentProfileView />} />

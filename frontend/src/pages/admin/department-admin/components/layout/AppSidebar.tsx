@@ -19,6 +19,8 @@ import {
   GraduationCap,
   Book,
   Lock,
+  Plus,
+  Shuffle,
 } from "lucide-react";
 import { cn } from "@/pages/admin/department-admin/lib/utils";
 
@@ -27,7 +29,9 @@ const menuItems = [
   { title: "Profile", url: "/admin/department-admin/profile", icon: User },
   { title: "Coordinators", url: "/admin/department-admin/coordinators", icon: Users },
   { title: "Subject Allocations", url: "/admin/department-admin/faculty-allocations", icon: BookOpen },
-  { title: "Timetable", url: "/admin/department-admin/timetable", icon: Calendar },
+  { title: "Create Timetable", url: "/admin/department-admin/create-timetable", icon: Plus },
+  { title: "Timetable Editor", url: "/admin/department-admin/timetable", icon: Calendar },
+  { title: "Substitutions", url: "/admin/department-admin/substitutions", icon: Shuffle },
   { title: "Attendance", url: "/admin/department-admin/attendance", icon: ClipboardCheck },
   { title: "Academics", url: "/admin/department-admin/academics", icon: BookOpen },
   { title: "Leave Management", url: "/admin/department-admin/leave", icon: CalendarDays },
