@@ -771,23 +771,28 @@ export const getMyClassIncharge = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/faculty/me/department-colleagues
 // @access    Private/Faculty
 export const getDepartmentColleagues = asyncHandler(async (req, res, next) => {
-  const departmentId = req.user.departmentId || req.user.department_id;
-  if (!departmentId) {
+  const departmentId = parseInt(req.user.departmentId || req.user.department_id, 10);
+  const currentFacultyId = parseInt(req.user.faculty_id || req.user.id, 10);
+
+  if (!departmentId || isNaN(departmentId)) {
     return res.status(200).json({ success: true, data: [] });
   }
 
   try {
+    console.log('[GetColleagues] departmentId:', departmentId, 'currentFacultyId:', currentFacultyId);
+
     const colleagues = await Faculty.findAll({
       where: {
         department_id: departmentId,
         status: 'active',
-        faculty_id: { [Op.ne]: req.user.id },
+        faculty_id: { [Op.ne]: currentFacultyId },
       },
       attributes: ['faculty_id', 'Name', 'designation', 'email', 'faculty_college_code'],
       order: [['Name', 'ASC']],
       raw: true,
     });
 
+    console.log('[GetColleagues] Found', colleagues.length, 'colleagues for dept', departmentId);
     res.status(200).json({ success: true, data: colleagues });
   } catch (error) {
     console.error('[GetColleagues] Error:', error.message);

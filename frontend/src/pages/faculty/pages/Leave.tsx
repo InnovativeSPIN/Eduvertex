@@ -25,6 +25,7 @@ interface LeaveRequest {
     approvalDate?: string;
     approvalRemarks?: string;
     reassign_faculty_id?: number;
+    reassignFacultyName?: string;
 }
 
 interface Colleague {
@@ -514,6 +515,12 @@ export default function Leave() {
                                                         <CalendarDays className="w-3 h-3" />
                                                         {formatApiDate(request.startDate)} → {formatApiDate(request.endDate)} ({Math.ceil(request.totalDays)} days)
                                                     </span>
+                                                    {request.reassignFacultyName && (
+                                                        <span className="flex items-center gap-1 text-primary font-medium">
+                                                            <User className="w-3 h-3" />
+                                                            Reassigned to: {request.reassignFacultyName}
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 {request.approvalRemarks && (
                                                     <p className="text-xs text-muted-foreground mt-2 p-2 bg-muted/40 rounded border border-border">

@@ -35,6 +35,7 @@ interface Leave {
   };
   applicantType: string;
   createdAt: string;
+  reassignFacultyName?: string;
 }
 
 export function LeaveApprovals() {
@@ -212,6 +213,12 @@ export function LeaveApprovals() {
                     <p className="text-xs text-muted-foreground uppercase font-medium mb-1">Days</p>
                     <p className="text-sm font-medium">{leave.totalDays}</p>
                   </div>
+                  {leave.reassignFacultyName && (
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase font-medium mb-1">Covered By</p>
+                      <p className="text-sm font-medium text-primary">{leave.reassignFacultyName}</p>
+                    </div>
+                  )}
                 </div>
 
                 {leave.reason && (

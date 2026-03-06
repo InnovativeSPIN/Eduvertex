@@ -115,9 +115,13 @@ export const createLeave = asyncHandler(async (req, res, next) => {
     req.body.departmentId = req.user.departmentId;
   }
 
-  // Store reassign faculty
+  // Store reassign faculty (parse as int since FormData sends strings)
   if (req.body.reassignFacultyId) {
-    req.body.reassign_faculty_id = req.body.reassignFacultyId;
+    const parsedId = parseInt(req.body.reassignFacultyId, 10);
+    if (!isNaN(parsedId)) {
+      req.body.reassign_faculty_id = parsedId;
+      console.log('[Leave] Reassign faculty ID set to:', parsedId);
+    }
   }
 
   // Handle file upload
@@ -433,10 +437,29 @@ export const getMyLeaves = asyncHandler(async (req, res, next) => {
 
     console.log('[Leave] Found', leaves.length, 'leaves');
 
+    // Enrich with reassigned faculty name
+    const reassignIds = [...new Set(leaves.map(l => l.reassign_faculty_id).filter(Boolean))];
+    let reassignFacultyMap = {};
+    if (reassignIds.length > 0) {
+      const reassignFaculty = await Faculty.findAll({
+        where: { faculty_id: reassignIds },
+        attributes: ['faculty_id', 'Name', 'designation'],
+        raw: true,
+      });
+      reassignFacultyMap = Object.fromEntries(reassignFaculty.map(f => [f.faculty_id, f]));
+    }
+
+    const enrichedLeaves = leaves.map(l => ({
+      ...l,
+      reassignFacultyName: l.reassign_faculty_id && reassignFacultyMap[l.reassign_faculty_id]
+        ? reassignFacultyMap[l.reassign_faculty_id].Name
+        : null,
+    }));
+
     res.status(200).json({
       success: true,
-      count: leaves.length,
-      data: leaves
+      count: enrichedLeaves.length,
+      data: enrichedLeaves
     });
   } catch (error) {
     console.error('[Leave] Query Error:', error.message, error.stack);
@@ -538,9 +561,12 @@ export const getPendingLeaves = asyncHandler(async (req, res, next) => {
 
     // Enrich with applicant name from faculty table
     const applicantIds = [...new Set(rawLeaves.map(l => l.applicantId))];
-    const facultyList = applicantIds.length
+    const reassignFacultyIds = [...new Set(rawLeaves.map(l => l.reassign_faculty_id).filter(Boolean))];
+    const allFacultyIds = [...new Set([...applicantIds, ...reassignFacultyIds])];
+
+    const facultyList = allFacultyIds.length
       ? await Faculty.findAll({
-        where: { faculty_id: applicantIds },
+        where: { faculty_id: allFacultyIds },
         attributes: ['faculty_id', 'Name', 'email', 'designation'],
         raw: true,
       })
@@ -556,6 +582,9 @@ export const getPendingLeaves = asyncHandler(async (req, res, next) => {
           role: facultyMap[l.applicantId].designation || 'Faculty',
         }
         : { name: 'Unknown', email: '', role: 'Faculty' },
+      reassignFacultyName: l.reassign_faculty_id && facultyMap[l.reassign_faculty_id]
+        ? facultyMap[l.reassign_faculty_id].Name
+        : null,
     }));
 
     console.log('[PendingLeaves] Found', leaves.length, 'leaves');
