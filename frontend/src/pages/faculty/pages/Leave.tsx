@@ -71,6 +71,9 @@ export default function Leave() {
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [activeTab, setActiveTab] = useState("apply");
+    const [reassignmentRequests, setReassignmentRequests] = useState<any[]>([]);
+    const [fetchingReassignments, setFetchingReassignments] = useState(false);
+
 
     const [form, setForm] = useState({
         leaveType: "",
@@ -80,6 +83,8 @@ export default function Leave() {
         loadAssign: "",
         reassignFacultyId: "",
     });
+    const [file, setFile] = useState<File | null>(null);
+
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -89,7 +94,48 @@ export default function Leave() {
     useEffect(() => {
         fetchMyLeaves();
         fetchColleagues();
+        fetchReassignmentRequests();
     }, []);
+
+    const fetchReassignmentRequests = async () => {
+        try {
+            setFetchingReassignments(true);
+            const token = localStorage.getItem("authToken");
+            const response = await fetch("/api/v1/leave/reassignment-requests", {
+                headers: token ? { Authorization: `Bearer ${token}` } : {},
+            });
+            const result = await response.json();
+            if (result.success) setReassignmentRequests(result.data || []);
+        } catch (error) {
+            console.error("Error fetching reassignment requests:", error);
+        } finally {
+            setFetchingReassignments(false);
+        }
+    };
+
+    const handleReassignmentResponse = async (id: number, status: "accepted" | "rejected") => {
+        try {
+            const token = localStorage.getItem("authToken");
+            const response = await fetch(`/api/v1/leave/${id}/reassignment-response`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: JSON.stringify({ status }),
+            });
+            const result = await response.json();
+            if (result.success) {
+                toast.success(`Request ${status} successfully`);
+                fetchReassignmentRequests();
+            } else {
+                toast.error(result.error || `Failed to ${status} request`);
+            }
+        } catch {
+            toast.error(`Failed to ${status} request`);
+        }
+    };
+
 
     const fetchMyLeaves = async () => {
         try {
@@ -115,7 +161,7 @@ export default function Leave() {
             });
             const result = await res.json();
             if (result.success) setColleagues(result.data || []);
-        } catch {}
+        } catch { }
     };
 
     const handleDelete = async (id: number) => {
@@ -151,28 +197,37 @@ export default function Leave() {
         try {
             setSubmitting(true);
             const token = localStorage.getItem("authToken");
+
+            const formData = new FormData();
+            formData.append("leaveType", form.leaveType);
+            formData.append("startDate", form.startDate);
+            formData.append("endDate", form.endDate);
+            formData.append("reason", form.reason);
+            formData.append("loadAssign", form.loadAssign);
+            if (form.reassignFacultyId) {
+                formData.append("reassignFacultyId", form.reassignFacultyId);
+            }
+            if (file) {
+                formData.append("document", file);
+            }
+
             const response = await fetch("/api/v1/leave", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
                     ...(token ? { Authorization: `Bearer ${token}` } : {}),
                 },
-                body: JSON.stringify({
-                    leaveType: form.leaveType,
-                    startDate: form.startDate,
-                    endDate: form.endDate,
-                    reason: form.reason,
-                    loadAssign: form.loadAssign,
-                    reassignFacultyId: form.reassignFacultyId || null,
-                }),
+                body: formData,
             });
+
             const result = await response.json();
             if (result.success) {
                 toast.success("Leave application submitted! Your HOD has been notified.");
                 setForm({ leaveType: "", startDate: "", endDate: "", reason: "", loadAssign: "", reassignFacultyId: "" });
+                setFile(null);
                 setActiveTab("status");
                 fetchMyLeaves();
             } else {
+
                 toast.error(result.error || "Failed to submit leave application");
             }
         } catch {
@@ -228,7 +283,17 @@ export default function Leave() {
                         <FileText className="w-4 h-4" />
                         My Requests
                     </TabsTrigger>
+                    <TabsTrigger value="reassignments" className="flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        Reassignment Requests
+                        {reassignmentRequests.length > 0 && (
+                            <span className="ml-1 px-1.5 py-0.5 bg-primary text-white text-[10px] rounded-full">
+                                {reassignmentRequests.length}
+                            </span>
+                        )}
+                    </TabsTrigger>
                 </TabsList>
+
 
                 <TabsContent value="apply">
                     <motion.div
@@ -339,13 +404,46 @@ export default function Leave() {
                             {(form.leaveType === "Medical" || form.leaveType === "On-Duty") && (
                                 <div className="space-y-2">
                                     <Label>Supporting Documents (Optional)</Label>
-                                    <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors cursor-pointer">
-                                        <p className="text-sm text-muted-foreground">
-                                            Drag and drop files or click to upload
-                                        </p>
+                                    <div
+                                        className={cn(
+                                            "border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors cursor-pointer",
+                                            file && "border-primary bg-primary/5"
+                                        )}
+                                        onClick={() => document.getElementById('leave-doc')?.click()}
+                                    >
+                                        <input
+                                            id="leave-doc"
+                                            type="file"
+                                            className="hidden"
+                                            onChange={(e) => setFile(e.target.files?.[0] || null)}
+                                            accept=".pdf,.doc,.docx,image/*"
+                                        />
+                                        {file ? (
+                                            <div className="flex items-center justify-center gap-2 text-primary font-medium">
+                                                <FileText className="w-5 h-5" />
+                                                {file.name}
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-6 w-6 ml-2"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setFile(null);
+                                                    }}
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                        ) : (
+                                            <p className="text-sm text-muted-foreground flex flex-col items-center gap-2">
+                                                <PlusCircle className="w-6 h-6" />
+                                                Drag and drop files or click to upload
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             )}
+
 
                             <div className="flex gap-3 pt-4">
                                 <Button type="submit" className="flex-1" disabled={submitting}>
@@ -454,8 +552,8 @@ export default function Leave() {
                                                         request.status === "approved"
                                                             ? "bg-success/20 text-success"
                                                             : request.status === "rejected"
-                                                            ? "bg-destructive/20 text-destructive"
-                                                            : "bg-muted text-muted-foreground"
+                                                                ? "bg-destructive/20 text-destructive"
+                                                                : "bg-muted text-muted-foreground"
                                                     )}
                                                 >
                                                     2
@@ -467,8 +565,8 @@ export default function Leave() {
                                                         request.status === "approved"
                                                             ? "bg-success/20 text-success"
                                                             : request.status === "rejected"
-                                                            ? "bg-destructive/20 text-destructive"
-                                                            : "bg-muted text-muted-foreground"
+                                                                ? "bg-destructive/20 text-destructive"
+                                                                : "bg-muted text-muted-foreground"
                                                     )}
                                                 >
                                                     3
@@ -481,7 +579,107 @@ export default function Leave() {
                         )}
                     </motion.div>
                 </TabsContent>
+
+                <TabsContent value="reassignments">
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="space-y-4"
+                    >
+                        {fetchingReassignments ? (
+                            <div className="flex flex-col items-center justify-center py-12">
+                                <Clock className="w-8 h-8 text-muted-foreground animate-spin mb-4" />
+                                <p className="text-muted-foreground">Fetching reassignment requests...</p>
+                            </div>
+                        ) : reassignmentRequests.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-12 border border-dashed rounded-lg bg-muted/10">
+                                <User className="w-8 h-8 text-muted-foreground mb-4" />
+                                <p className="text-muted-foreground">No pending reassignment requests</p>
+                                <p className="text-sm text-muted-foreground mt-1">Requests from colleagues will appear here</p>
+                            </div>
+                        ) : (
+                            reassignmentRequests.map((request, index) => (
+                                <motion.div
+                                    key={request.id}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: index * 0.1 }}
+                                    className="widget-card border-l-4 border-primary"
+                                >
+                                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                                    <User className="w-4 h-4 text-primary" />
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-foreground leading-none">
+                                                        {request.applicant?.Name}
+                                                        <span className="text-xs font-normal text-muted-foreground ml-2">
+                                                            ({request.applicant?.department?.short_name})
+                                                        </span>
+                                                    </h4>
+                                                    <p className="text-[10px] text-muted-foreground mt-1">Requested to cover classes</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4 mt-4 text-xs">
+                                                <div className="p-2 bg-muted/30 rounded border border-border/50">
+                                                    <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Leave Duration</p>
+                                                    <p className="font-medium">
+                                                        {formatApiDate(request.startDate)} — {formatApiDate(request.endDate)}
+                                                    </p>
+                                                    <p className="text-primary mt-0.5">{Math.ceil(request.totalDays)} Day(s)</p>
+                                                </div>
+                                                <div className="p-2 bg-muted/30 rounded border border-border/50">
+                                                    <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Leave Type</p>
+                                                    <p className="font-medium">{request.leaveType} Leave</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-4 space-y-2">
+                                                <div>
+                                                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Reason</p>
+                                                    <p className="text-sm text-foreground">{request.reason}</p>
+                                                </div>
+                                                {request.loadAssign && (
+                                                    <div className="p-3 bg-primary/5 rounded border border-primary/20">
+                                                        <p className="text-[10px] uppercase font-bold text-primary mb-1">Load Details</p>
+                                                        <p className="text-xs text-foreground italic leading-relaxed">"{request.loadAssign}"</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-row md:flex-col gap-2 shrink-0 self-center md:self-start">
+                                            <Button
+                                                className="bg-success hover:bg-success/90 text-white min-w-[100px]"
+                                                onClick={() => handleReassignmentResponse(request.id, "accepted")}
+                                            >
+                                                <CheckCircle2 className="w-4 h-4 mr-2" />
+                                                Accept
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                className="text-destructive hover:bg-destructive/10 border-destructive/20 min-w-[100px]"
+                                                onClick={() => handleReassignmentResponse(request.id, "rejected")}
+                                            >
+                                                <XCircle className="w-4 h-4 mr-2" />
+                                                Reject
+                                            </Button>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 pt-3 border-t border-border/50 flex justify-between items-center bg-muted/10 -mx-6 -mb-6 px-6 py-2 rounded-b-xl">
+                                        <p className="text-[10px] text-muted-foreground italic">Applied on {formatApiDate(request.createdAt)}</p>
+                                        <Button variant="ghost" size="sm" className="text-[10px] h-6">View Full Details</Button>
+                                    </div>
+                                </motion.div>
+                            ))
+                        )}
+                    </motion.div>
+                </TabsContent>
             </Tabs>
+
         </MainLayout>
     );
 }

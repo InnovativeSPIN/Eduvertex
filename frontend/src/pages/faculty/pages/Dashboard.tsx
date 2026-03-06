@@ -1,9 +1,11 @@
-﻿import { MainLayout } from "@/pages/faculty/components/layout/MainLayout";
+import { MainLayout } from "@/pages/faculty/components/layout/MainLayout";
 import { StatCard } from "@/pages/faculty/components/dashboard/StatCard";
 import { NextClassCard } from "@/pages/faculty/components/dashboard/NextClassCard";
 import { PendingTasksList } from "@/pages/faculty/components/dashboard/PendingTasksList";
 import { LeaveSnapshot } from "@/pages/faculty/components/dashboard/LeaveSnapshot";
 import { IntegratedNotificationBell } from "@/components/common/IntegratedNotificationBell";
+import { LeaveNotificationBell } from "@/components/common/LeaveNotificationBell";
+
 import { useAnnouncementNotification } from "@/hooks/useAnnouncementNotification";
 import { AnnouncementNotificationModal } from "@/components/common/AnnouncementNotificationModal";
 import { motion } from "framer-motion";
@@ -109,7 +111,11 @@ export default function Dashboard() {
               {formatTime(currentTime)}
             </p>
           </div>
-          <IntegratedNotificationBell />
+          <div className="flex items-center gap-2">
+            <LeaveNotificationBell />
+            <IntegratedNotificationBell />
+          </div>
+
         </div>
       </motion.div>
 

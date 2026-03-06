@@ -5,7 +5,8 @@ import { cn } from "@/lib/utils";
 
 interface LeaveNotif {
     id: number;
-    type: "leave_submitted" | "leave_approved" | "leave_rejected";
+    leaveId: number;
+    type: "leave_submitted" | "leave_approved" | "leave_rejected" | "reassignment_requested" | "load_accepted" | "load_rejected";
     title: string;
     message: string;
     facultyName: string;
@@ -16,12 +17,15 @@ interface LeaveNotif {
     createdAt: string;
 }
 
+
 export function LeaveNotificationBell() {
     const [isOpen, setIsOpen] = useState(false);
     const [notifications, setNotifications] = useState<LeaveNotif[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [actionLoading, setActionLoading] = useState<number | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
+
     const buttonRef = useRef<HTMLButtonElement>(null);
 
     const fetchCount = async () => {
@@ -32,7 +36,7 @@ export function LeaveNotificationBell() {
             });
             const data = await res.json();
             if (data.success) setUnreadCount(data.data.count);
-        } catch {}
+        } catch { }
     };
 
     const fetchNotifications = async () => {
@@ -61,7 +65,7 @@ export function LeaveNotificationBell() {
                 prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
             );
             setUnreadCount((c) => Math.max(0, c - 1));
-        } catch {}
+        } catch { }
     };
 
     const markAllRead = async () => {
@@ -73,8 +77,37 @@ export function LeaveNotificationBell() {
             });
             setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
             setUnreadCount(0);
-        } catch {}
+        } catch { }
     };
+
+    const handleReassignmentResponse = async (notifId: number, leaveId: number, status: "accepted" | "rejected") => {
+        try {
+            setActionLoading(notifId);
+            const token = localStorage.getItem("authToken");
+            const res = await fetch(`/api/v1/leave/${leaveId}/reassignment-response`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: JSON.stringify({ status }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                // Mark current notification as read
+                await markAsRead(notifId);
+                // Refresh notifications
+                fetchNotifications();
+            } else {
+                alert(data.error || "Failed to process request");
+            }
+        } catch (error) {
+            console.error("Error processing reassignment:", error);
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
 
     useEffect(() => {
         fetchCount();
@@ -106,15 +139,19 @@ export function LeaveNotificationBell() {
 
     const getTypeIcon = (type: LeaveNotif["type"]) => {
         if (type === "leave_submitted") return <Clock className="w-5 h-5 text-warning" />;
-        if (type === "leave_approved") return <CheckCircle2 className="w-5 h-5 text-success" />;
+        if (type === "leave_approved" || type === "load_accepted") return <CheckCircle2 className="w-5 h-5 text-success" />;
+        if (type === "reassignment_requested") return <CalendarDays className="w-5 h-5 text-primary" />;
         return <XCircle className="w-5 h-5 text-destructive" />;
     };
 
+
     const getTypeBg = (type: LeaveNotif["type"]) => {
         if (type === "leave_submitted") return "bg-warning/10";
-        if (type === "leave_approved") return "bg-success/10";
+        if (type === "leave_approved" || type === "load_accepted") return "bg-success/10";
+        if (type === "reassignment_requested") return "bg-primary/10";
         return "bg-destructive/10";
     };
+
 
     return (
         <div className="relative">
@@ -223,16 +260,37 @@ export function LeaveNotificationBell() {
                                                     <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-1">
                                                         {notif.message}
                                                     </p>
-                                                    <p className="text-[10px] text-muted-foreground">
+                                                    <p className="text-[10px] text-muted-foreground mt-1">
                                                         {new Date(notif.createdAt).toLocaleDateString("en-IN", {
                                                             day: "2-digit",
                                                             month: "short",
                                                             year: "numeric",
+                                                            hour: "2-digit",
+                                                            minute: "2-digit"
                                                         })}
                                                     </p>
+                                                    {notif.type === "reassignment_requested" && !notif.isRead && (
+                                                        <div className="flex gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
+                                                            <button
+                                                                onClick={() => handleReassignmentResponse(notif.id, notif.leaveId, "accepted")}
+                                                                disabled={actionLoading === notif.id}
+                                                                className="px-3 py-1 bg-success text-white text-[10px] font-bold rounded-lg hover:bg-success/90 transition-colors"
+                                                            >
+                                                                {actionLoading === notif.id ? "..." : "Accept"}
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleReassignmentResponse(notif.id, notif.leaveId, "rejected")}
+                                                                disabled={actionLoading === notif.id}
+                                                                className="px-3 py-1 bg-destructive text-white text-[10px] font-bold rounded-lg hover:bg-destructive/90 transition-colors"
+                                                            >
+                                                                {actionLoading === notif.id ? "..." : "Reject"}
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
+
                                     ))}
                                 </div>
                             )}

@@ -108,8 +108,10 @@ const startServer = () => {
       '/api/v1/student/certifications',
       '/api/v1/student/projects',
       '/api/v1/student/extracurricular',
-      '/api/v1/student/sports'
+      '/api/v1/student/sports',
+      '/api/v1/leave'
     ];
+
 
     if (multerPaths.some(p => req.path.includes(p)) || req.path.includes('/photo')) {
       return next();

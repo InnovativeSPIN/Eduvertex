@@ -100,6 +100,17 @@ const Leave = (sequelize) => {
       allowNull: true,
       comment: 'Faculty ID who will cover during this leave',
     },
+    documentUrl: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      comment: 'URL of the uploaded supporting document',
+    },
+    loadAssign: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: 'Workload distribution details',
+    },
+
   }, {
     tableName: 'leaves',
     timestamps: true,
@@ -112,6 +123,15 @@ const Leave = (sequelize) => {
       foreignKey: 'departmentId',
       as: 'department',
     });
+    LeaveModel.belongsTo(models.Faculty, {
+      foreignKey: 'applicantId',
+      as: 'applicant',
+    });
+    LeaveModel.belongsTo(models.Faculty, {
+      foreignKey: 'reassign_faculty_id',
+      as: 'reassignFaculty',
+    });
+
   };
 
   return LeaveModel;

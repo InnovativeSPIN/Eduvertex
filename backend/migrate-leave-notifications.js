@@ -20,7 +20,8 @@ const migrate = async () => {
         leaveType VARCHAR(50) NULL,
         startDate DATE NULL,
         endDate DATE NULL,
-        type ENUM('leave_submitted','leave_approved','leave_rejected') NOT NULL,
+        type ENUM('leave_submitted','leave_approved','leave_rejected', 'reassignment_requested', 'load_accepted', 'load_rejected') NOT NULL,
+
         title VARCHAR(200) NOT NULL,
         message TEXT NULL,
         isRead TINYINT(1) NOT NULL DEFAULT 0,

@@ -22,9 +22,10 @@ const LeaveNotification = (sequelize) => {
     endDate: { type: DataTypes.DATEONLY, allowNull: true },
     // Notification content
     type: {
-      type: DataTypes.ENUM('leave_submitted', 'leave_approved', 'leave_rejected'),
+      type: DataTypes.ENUM('leave_submitted', 'leave_approved', 'leave_rejected', 'reassignment_requested', 'load_accepted', 'load_rejected'),
       allowNull: false,
     },
+
     title: { type: DataTypes.STRING(200), allowNull: false },
     message: { type: DataTypes.TEXT, allowNull: true },
     isRead: { type: DataTypes.BOOLEAN, defaultValue: false },

@@ -120,6 +120,12 @@ export const createLeave = asyncHandler(async (req, res, next) => {
     req.body.reassign_faculty_id = req.body.reassignFacultyId;
   }
 
+  // Handle file upload
+  if (req.file) {
+    req.body.documentUrl = `/uploads/leaves/${req.file.filename}`;
+  }
+
+
   // Calculate total days
   const start = new Date(req.body.startDate);
   const end = new Date(req.body.endDate);
@@ -128,17 +134,40 @@ export const createLeave = asyncHandler(async (req, res, next) => {
 
   const leave = await Leave.create(req.body);
 
-  // Notify department admin
+  // Notify department admin OR reassign faculty
   try {
-    if (leave.departmentId) {
+    const senderName = req.user.Name || req.user.name || 'Faculty';
+    const startStr = new Date(req.body.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const endStr = new Date(req.body.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    if (leave.reassign_faculty_id) {
+      // Step 1: Notify Reassign Faculty
+      await LeaveNotification.create({
+        recipientId: leave.reassign_faculty_id,
+        recipientType: 'faculty',
+        departmentId: leave.departmentId,
+        senderId: req.user.id,
+        senderName,
+        leaveId: leave.id,
+        facultyName: senderName,
+        leaveType: req.body.leaveType,
+        startDate: req.body.startDate,
+        endDate: req.body.endDate,
+        type: 'reassignment_requested',
+        title: `Load Reassignment Request`,
+        message: `${senderName} has requested you to cover their classes from ${startStr} to ${endStr} due to ${req.body.leaveType} leave.`,
+        isRead: false,
+      });
+
+      // Update leave to indicate waiting for substitute
+      leave.substitute_status = 'pending';
+      await leave.save();
+    } else if (leave.departmentId) {
+      // Step 1 (Direct): Notify HOD if no reassign faculty
       const deptAdmin = await Faculty.findOne({
         where: { department_id: leave.departmentId, role_id: 7, status: 'active' },
         attributes: ['faculty_id'],
       });
-
-      const senderName = req.user.Name || req.user.name || 'Faculty';
-      const startStr = new Date(req.body.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-      const endStr = new Date(req.body.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 
       await LeaveNotification.create({
         recipientId: deptAdmin?.faculty_id || null,
@@ -158,6 +187,7 @@ export const createLeave = asyncHandler(async (req, res, next) => {
       });
     }
   } catch (notifErr) {
+
     console.error('[Leave] Notification error (non-fatal):', notifErr.message);
   }
 
@@ -222,26 +252,28 @@ export const updateLeaveStatus = asyncHandler(async (req, res, next) => {
 
   await leave.save();
 
-  // Update leave balance if approved
-  if (req.body.status === 'approved') {
-    const currentYear = new Date().getFullYear().toString();
-    const leaveBalance = await LeaveBalance.findOne({
-      where: {
-        userId: leave.applicantId,
-        academicYear: currentYear
-      }
-    });
+  // Update leave balance if approved (only for faculty which is the main record type for this table)
+  if (req.body.status === 'approved' && leave.applicantType === 'faculty') {
+    try {
+      const leaveBalance = await LeaveBalance.findOne({
+        where: {
+          staff_id: leave.applicantId,
+          leave_type: leave.leaveType
+        }
+      });
 
-    if (leaveBalance && leaveBalance[leave.leaveType]) {
-      const updatedBalance = {
-        ...leaveBalance[leave.leaveType],
-        used: leaveBalance[leave.leaveType].used + leave.totalDays,
-        balance: leaveBalance[leave.leaveType].balance - leave.totalDays
-      };
-      leaveBalance.set(leave.leaveType, updatedBalance);
-      await leaveBalance.save();
+      if (leaveBalance) {
+        // Increment used_leaves
+        const currentUsed = parseFloat(leaveBalance.used_leaves) || 0;
+        const leaveDays = parseFloat(leave.totalDays) || 0;
+        leaveBalance.used_leaves = currentUsed + leaveDays;
+        await leaveBalance.save();
+      }
+    } catch (balErr) {
+      console.error('[LeaveStatus] Balance update error (non-fatal):', balErr.message);
     }
   }
+
 
   // Create notifications (non-fatal)
   try {
@@ -385,7 +417,7 @@ export const getMyLeaves = asyncHandler(async (req, res, next) => {
 
   try {
     console.log('[Leave] Fetching leaves for user:', req.user.id, 'Role:', req.user.role);
-    
+
     // First, just count the records to verify the query works
     const count = await Leave.count({
       where: { applicantId: req.user.id }
@@ -470,10 +502,23 @@ export const getPendingLeaves = asyncHandler(async (req, res, next) => {
 
     let where = { status: 'pending' };
 
+    // HOD should only see leaves that have either:
+    // 1. No reassignment faculty
+    // 2. Reassignment faculty has already accepted
+    where[Op.and] = [
+      {
+        [Op.or]: [
+          { reassign_faculty_id: null },
+          { substitute_status: 'accepted' }
+        ]
+      }
+    ];
+
     // Department admin sees only their department's pending leaves
     if (req.user.role === 'department-admin' && req.user.departmentId) {
       where.departmentId = req.user.departmentId;
     }
+
 
     console.log('[PendingLeaves] Fetching with where:', where, 'User role:', req.user.role);
 
@@ -495,10 +540,10 @@ export const getPendingLeaves = asyncHandler(async (req, res, next) => {
     const applicantIds = [...new Set(rawLeaves.map(l => l.applicantId))];
     const facultyList = applicantIds.length
       ? await Faculty.findAll({
-          where: { faculty_id: applicantIds },
-          attributes: ['faculty_id', 'Name', 'email', 'designation'],
-          raw: true,
-        })
+        where: { faculty_id: applicantIds },
+        attributes: ['faculty_id', 'Name', 'email', 'designation'],
+        raw: true,
+      })
       : [];
     const facultyMap = Object.fromEntries(facultyList.map(f => [f.faculty_id, f]));
 
@@ -506,10 +551,10 @@ export const getPendingLeaves = asyncHandler(async (req, res, next) => {
       ...l,
       applicant: facultyMap[l.applicantId]
         ? {
-            name: facultyMap[l.applicantId].Name,
-            email: facultyMap[l.applicantId].email,
-            role: facultyMap[l.applicantId].designation || 'Faculty',
-          }
+          name: facultyMap[l.applicantId].Name,
+          email: facultyMap[l.applicantId].email,
+          role: facultyMap[l.applicantId].designation || 'Faculty',
+        }
         : { name: 'Unknown', email: '', role: 'Faculty' },
     }));
 
@@ -630,3 +675,158 @@ export const markAllLeaveNotificationsRead = asyncHandler(async (req, res, next)
     return next(new ErrorResponse(`Error marking notifications as read: ${error.message}`, 500));
   }
 });
+
+// @desc      Get load reassignment requests for current faculty
+// @route     GET /api/v1/leave/reassignment-requests
+// @access    Private (Faculty)
+export const getReassignmentRequests = asyncHandler(async (req, res, next) => {
+  try {
+    const leaves = await Leave.findAll({
+      where: {
+        reassign_faculty_id: req.user.id,
+        substitute_status: 'pending'
+      },
+      include: [
+        {
+          model: Faculty,
+          as: 'applicant',
+          attributes: ['faculty_id', 'Name', 'department_id'],
+          include: [{
+            model: Department,
+            as: 'department',
+            attributes: ['id', 'full_name', 'short_name']
+          }]
+        }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.status(200).json({
+      success: true,
+      data: leaves
+    });
+  } catch (error) {
+    console.error('[GetReassignmentRequests] Error:', error.message);
+    return next(new ErrorResponse(`Error fetching reassignment requests: ${error.message}`, 500));
+  }
+});
+
+// @desc      Process load reassignment request
+// @route     PUT /api/v1/leave/:id/reassignment-response
+// @access    Private (Faculty)
+export const processReassignmentResponse = asyncHandler(async (req, res, next) => {
+  const { status, remarks } = req.body;
+
+  if (!['accepted', 'rejected'].includes(status)) {
+    return next(new ErrorResponse('Status must be accepted or rejected', 400));
+  }
+
+  const leave = await Leave.findByPk(req.params.id);
+  if (!leave) {
+    return next(new ErrorResponse('Leave application not found', 404));
+  }
+
+  // Ensure current user is the reassign faculty
+  if (leave.reassign_faculty_id !== req.user.id) {
+    return next(new ErrorResponse('Not authorized to respond to this request', 403));
+  }
+
+  if (leave.substitute_status !== 'pending') {
+    return next(new ErrorResponse('Request has already been processed', 400));
+  }
+
+  leave.substitute_status = status;
+  leave.substitute_remarks = remarks || null;
+  leave.substitute_response_at = new Date();
+
+  // If rejected, the whole leave is automatically rejected
+  if (status === 'rejected') {
+    leave.status = 'rejected';
+    leave.approvalRemarks = `Load Reassignment rejected by ${req.user.Name || req.user.name}.`;
+  }
+
+  await leave.save();
+
+  // Create notifications
+  try {
+    const respondentName = req.user.Name || req.user.name || 'Faculty';
+
+    // Find applicant
+    const applicantFaculty = await Faculty.findByPk(leave.applicantId, { attributes: ['faculty_id', 'Name', 'department_id'] });
+    const applicantName = applicantFaculty?.Name || 'Faculty';
+
+    if (status === 'accepted') {
+      // 1. Notify HOD that leave is ready for approval
+      const deptAdmin = await Faculty.findOne({
+        where: { department_id: leave.departmentId, role_id: 7, status: 'active' },
+        attributes: ['faculty_id'],
+      });
+
+      const startStr = new Date(leave.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+      const endStr = new Date(leave.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+      await LeaveNotification.create({
+        recipientId: deptAdmin?.faculty_id || null,
+        recipientType: 'department-admin',
+        departmentId: leave.departmentId,
+        senderId: req.user.id,
+        senderName: respondentName,
+        leaveId: leave.id,
+        facultyName: applicantName,
+        leaveType: leave.leaveType,
+        startDate: leave.startDate,
+        endDate: leave.endDate,
+        type: 'leave_submitted', // Standard type so HOD sees it as a new request
+        title: `Leave Request: ${applicantName} (Load Accepted)`,
+        message: `${respondentName} has accepted to cover ${applicantName}'s classes. Leave request from ${startStr} to ${endStr} is now pending your approval.`,
+        isRead: false,
+      });
+
+      // 2. Notify Applicant that their load was accepted
+      await LeaveNotification.create({
+        recipientId: leave.applicantId,
+        recipientType: 'faculty',
+        departmentId: leave.departmentId,
+        senderId: req.user.id,
+        senderName: respondentName,
+        leaveId: leave.id,
+        facultyName: applicantName,
+        leaveType: leave.leaveType,
+        startDate: leave.startDate,
+        endDate: leave.endDate,
+        type: 'load_accepted',
+        title: `Load Accepted by ${respondentName}`,
+        message: `${respondentName} has accepted your load reassignment request. Your leave is now pending HOD approval.`,
+        isRead: false,
+      });
+
+    } else {
+      // status === 'rejected'
+      // Notify Applicant that their load was rejected (and thus leave is rejected)
+      await LeaveNotification.create({
+        recipientId: leave.applicantId,
+        recipientType: 'faculty',
+        departmentId: leave.departmentId,
+        senderId: req.user.id,
+        senderName: respondentName,
+        leaveId: leave.id,
+        facultyName: applicantName,
+        leaveType: leave.leaveType,
+        startDate: leave.startDate,
+        endDate: leave.endDate,
+        type: 'load_rejected',
+        title: `Load Rejected by ${respondentName}`,
+        message: `${respondentName} has rejected your load reassignment request. Your leave application has been automatically rejected.`,
+        isRead: false,
+      });
+    }
+  } catch (notifErr) {
+    console.error('[ReassignmentResponse] Notification error:', notifErr.message);
+  }
+
+  res.status(200).json({
+    success: true,
+    data: leave
+  });
+});
+

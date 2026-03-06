@@ -2,7 +2,7 @@ import { DataTypes } from 'sequelize';
 
 const LeaveBalance = (sequelize) => {
   const LeaveBalanceModel = sequelize.define('LeaveBalance', {
-    leave_balance_id: {
+    balance_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
@@ -15,34 +15,31 @@ const LeaveBalance = (sequelize) => {
       type: DataTypes.ENUM('Medical', 'Casual', 'Earned', 'On-Duty', 'Personal', 'Maternity', 'Comp-Off'),
       allowNull: false,
     },
-    total_leaves: {
-      type: DataTypes.DECIMAL(4, 1),
-      allowNull: false,
-    },
-    leaves_taken: {
-      type: DataTypes.DECIMAL(4, 1),
+    total_allowed: {
+      type: DataTypes.DECIMAL(5, 1),
       defaultValue: 0.0,
     },
-    leaves_remaining: {
-      type: DataTypes.DECIMAL(4, 1),
-      allowNull: false,
+    used_leaves: {
+      type: DataTypes.DECIMAL(5, 1),
+      defaultValue: 0.0,
     },
-    academic_year: {
-      type: DataTypes.STRING(9), // Format: YYYY-YYYY
-      allowNull: false,
+    remaining_leaves: {
+      type: DataTypes.DECIMAL(5, 1),
+      allowNull: true,
     },
   }, {
     tableName: 'staff_leave_balance',
     timestamps: false,
   });
 
+
   LeaveBalanceModel.associate = (models) => {
-    // Define associations here if needed
-    LeaveBalanceModel.belongsTo(models.User, {
+    LeaveBalanceModel.belongsTo(models.Faculty, {
       foreignKey: 'staff_id',
       as: 'staff',
     });
   };
+
 
   return LeaveBalanceModel;
 };
