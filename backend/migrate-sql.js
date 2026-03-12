@@ -13,6 +13,28 @@ const createTablesSQL = async () => {
       database: process.env.DB_NAME || 'eduvertex'
     });
 
+    // run any raw migration SQL files present in migrations folder
+    const path = await import('path');
+    const fs = await import('fs');
+    const { fileURLToPath } = await import('url');
+    // derive directory of this script via import.meta.url in a cross-platform way
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const migrationsDir = path.join(__dirname, 'migrations');
+    const files = fs.readdirSync(migrationsDir).filter(f => f.endsWith('.sql'));
+    for (const file of files) {
+      const fullPath = path.join(migrationsDir, file);
+      const sql = fs.readFileSync(fullPath, 'utf8');
+      if (!sql.trim()) continue;
+      console.log(`\n--- executing migration file: ${file}`);
+      try {
+        await connection.query(sql);
+        console.log(`✅ ${file} applied`);
+      } catch (err) {
+        console.warn(`⚠️ error applying ${file}:`, err.message);
+      }
+    }
+
+
     console.log('Creating/updating timetable management tables...\n');
 
     // Create rooms table (already created, skip if exists)

@@ -1,4 +1,20 @@
 // Get token from model, create cookie and send response
+
+// helper to normalize an avatar/url string much like frontend version
+const normalizeUrl = (url) => {
+  if (!url) return null;
+  // if contains /uploads/, drop everything before it
+  const idx = url.indexOf('/uploads/');
+  if (idx !== -1) return url.slice(idx);
+  // if backslash style
+  const normalized = url.replace(/\\/g, '/');
+  const idx2 = normalized.indexOf('/uploads/');
+  if (idx2 !== -1) return normalized.slice(idx2);
+  // bare filename
+  if (/^[^\/]+\.[^\/]+$/.test(url)) return `/uploads/${url}`;
+  return url;
+};
+
 const sendTokenResponse = (user, statusCode, res) => {
   // Create token
   const token = user.getSignedJwtToken();
@@ -26,7 +42,7 @@ const sendTokenResponse = (user, statusCode, res) => {
       year: user.year,
       semester: user.semester,
       rollNo: user.studentId,
-      avatar: user.photo || null
+      avatar: normalizeUrl(user.photo) || null
     };
   } else if (user.role === 'faculty' || user.role?.role_name === 'faculty' || user.Name) {
     const isDeptAdmin = user.role_id === 7 || (user.role && user.role.role_id === 7);
@@ -37,7 +53,7 @@ const sendTokenResponse = (user, statusCode, res) => {
       role: isDeptAdmin ? 'department-admin' : 'faculty',
       designation: user.designation || null,
       department: user.department,
-      avatar: user.profile_image_url || null,
+      avatar: normalizeUrl(user.profile_image_url) || null,
       is_timetable_incharge: user.is_timetable_incharge || false,
       is_placement_coordinator: user.is_placement_coordinator || false
     };
@@ -51,7 +67,7 @@ const sendTokenResponse = (user, statusCode, res) => {
       year: user.year,
       semester: user.semester,
       rollNo: user.rollNo,
-      avatar: user.avatar || null
+      avatar: normalizeUrl(user.avatar) || null
     };
   }
 

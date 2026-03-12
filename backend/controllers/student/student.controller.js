@@ -490,7 +490,7 @@ export const uploadStudentPhoto = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse('Student not found', 404));
   }
 
-  const photoPath = req.file.path.replace(/\\/g, '/');
+  const photoPath = `/uploads/photos/${req.file.filename}`;
   student.photo = photoPath;
   await student.save();
 

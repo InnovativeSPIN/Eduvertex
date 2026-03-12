@@ -13,7 +13,7 @@ export const uploadUserPhoto = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse('Please upload a file', 400));
   }
 
-  const photoPath = req.file.path.replace(/\\/g, '/');
+  const photoPath = `/uploads/photos/${req.file.filename}`;
 
   // check users table
   let user = await User.findByPk(req.params.id);
