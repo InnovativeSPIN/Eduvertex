@@ -145,8 +145,23 @@ export default function Login() {
       <div className="hidden lg:flex lg:w-1/2 gradient-primary items-center justify-center p-12">
         <div className="max-w-md text-center">
           <div className="mb-8 flex justify-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10 backdrop-blur">
-              <img src="./dist/assets/campusnexus.png" alt="" />
+            <div
+              className="rounded-full p-[3px] border border-white/30"
+              style={{
+                background: 'rgba(255,255,255,0.10)',
+                backdropFilter: 'blur(12px)',
+                boxShadow:
+                  '0 0 16px 4px rgba(255,255,255,0.20), 0 0 32px 8px rgba(99,179,237,0.14), inset 0 1px 0 rgba(255,255,255,0.30)',
+              }}
+            >
+              <img
+                src="./dist/assets/campusnexus.png"
+                alt="Campus Nexus"
+                className="h-36 w-36 rounded-full object-cover"
+                style={{
+                  filter: 'drop-shadow(0 0 5px rgba(255,255,255,0.45))',
+                }}
+              />
             </div>
           </div>
           <h1 className="text-4xl font-bold text-primary-foreground mb-4">
@@ -162,8 +177,21 @@ export default function Login() {
       <div className="flex w-full lg:w-1/2 items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center lg:hidden mb-8">
-            <div className="inline-flex h-16 w-16 items-center justify-center rounded-xl bg-primary">
-              <GraduationCap className="h-8 w-8 text-primary-foreground" />
+            <div
+              className="inline-block rounded-full p-[3px] border border-white/30"
+              style={{
+                background: 'rgba(255,255,255,0.10)',
+                backdropFilter: 'blur(12px)',
+                boxShadow:
+                  '0 0 14px 3px rgba(99,179,237,0.22), 0 0 28px 6px rgba(147,51,234,0.14), inset 0 1px 0 rgba(255,255,255,0.28)',
+              }}
+            >
+              <img
+                src="./dist/assets/campusnexus.png"
+                alt="Campus Nexus"
+                className="h-24 w-24 rounded-full object-cover"
+                style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.40))' }}
+              />
             </div>
             <div>
               <h1 className="font-bold text-white text-sm leading-tight uppercase tracking-tight">Campus Nexus</h1>
