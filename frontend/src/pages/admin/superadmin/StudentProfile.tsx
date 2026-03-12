@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { normalizeImageUrl } from '@/utils/imageUrl';
 import { AdminLayout } from '@/pages/admin/superadmin/components/layout/AdminLayout';
 import { Button } from '@/pages/admin/superadmin/components/ui/button';
 import { ChevronLeft, Mail, Phone, Building2, Calendar, User, MapPin, GraduationCap, Clock } from 'lucide-react';
@@ -31,7 +32,7 @@ export default function SuperAdminStudentProfile() {
                     // compute enrollmentYear from batch if available
                     s.enrollmentYear = s.batch ? parseInt(s.batch.split('-')[0], 10) : undefined;
                     // unify photo/avatar
-                    s.avatar = s.photo || s.avatar;
+                    s.avatar = normalizeImageUrl(s.photo || s.avatar) || undefined;
                     // make department always a string for UI convenience
                     if (s.department && typeof s.department === 'object') {
                         s.departmentName = s.department.name || s.department.short_name || s.department.full_name || '';

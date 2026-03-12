@@ -1,5 +1,6 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { normalizeImageUrl } from '@/utils/imageUrl';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
@@ -64,7 +65,7 @@ export default function Sidebar({ isCollapsed: collapsed, onToggle: setCollapsed
           <div className="flex-shrink-0">
             {user?.avatar ? (
               <img
-                src={user.avatar}
+                src={normalizeImageUrl(user.avatar) || ''}
                 alt={user.name}
                 className="w-10 h-10 rounded-full object-cover border-2 border-white/20"
               />

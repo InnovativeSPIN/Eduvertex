@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { normalizeImageUrl } from '@/utils/imageUrl';
 import { AdminLayout } from '@/pages/admin/superadmin/components/layout/AdminLayout';
 import { DataTable } from '@/pages/admin/superadmin/components/dashboard/DataTable';
 import { AdminFormModal } from '@/pages/admin/superadmin/components/modals/AdminFormModal';
@@ -47,7 +48,7 @@ export default function SuperAdminAdmins() {
                         department: (user.department && typeof user.department === 'object')
                             ? (user.department.short_name || user.department.full_name || user.department.name)
                             : (user.department || null),
-                        avatar: user.avatar,
+                        avatar: normalizeImageUrl(user.avatar) || undefined,
                         status: user.isActive ? 'active' : 'inactive',
                     }));
                 // Also fetch faculty list and include department-admins (role_id === 7)
@@ -66,7 +67,7 @@ export default function SuperAdminAdmins() {
                                 department: (f.department && typeof f.department === 'object')
                                     ? (f.department.short_name || f.department.full_name || f.department.name)
                                     : (f.department || null),
-                                avatar: f.profile_image_url || f.avatar,
+                                avatar: normalizeImageUrl(f.profile_image_url || f.avatar) || undefined,
                                 status: f.status === 'inactive' ? 'inactive' : 'active',
                             }));
 

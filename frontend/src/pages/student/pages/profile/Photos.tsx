@@ -4,15 +4,16 @@ import SectionCard from '@/pages/student/components/common/SectionCard';
 import ProfileNavBar from '@/pages/student/components/layout/ProfileNavBar';
 import { Camera, Users, Check, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { normalizeImageUrl } from '@/utils/imageUrl';
 
 export default function Photos() {
   const { user } = useAuth();
-  const [studentPhoto, setStudentPhoto] = useState<string | null>(user?.avatar || null);
+  const [studentPhoto, setStudentPhoto] = useState<string | null>(normalizeImageUrl(user?.avatar) || null);
   const [familyPhoto, setFamilyPhoto] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.avatar) {
-      setStudentPhoto(user.avatar);
+      setStudentPhoto(normalizeImageUrl(user.avatar));
     }
   }, [user?.avatar]);
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { normalizeImageUrl } from '@/utils/imageUrl';
 import { AdminLayout } from '@/pages/admin/superadmin/components/layout/AdminLayout';
 import { Button } from '@/pages/admin/superadmin/components/ui/button';
 import { ChevronLeft, Mail, Phone, Building2, Calendar, Award, User, MapPin, Briefcase, Edit2, Trash2, Globe } from 'lucide-react';
@@ -41,7 +42,7 @@ export default function SuperAdminFacultyProfile() {
             const f = json.data;
             // derive a name field to mirror student profile logic
             f.name = f.Name || '';
-            f.avatar = f.profile_image_url || f.avatar;
+            f.avatar = normalizeImageUrl(f.profile_image_url || f.avatar) || undefined;
             setFaculty(f);
           } else {
             toast.error(json.message || 'Faculty not found');

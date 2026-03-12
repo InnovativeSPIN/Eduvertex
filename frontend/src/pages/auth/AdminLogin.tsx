@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import campusNexusLogo from '@/assets/campusnexus.png';
 import { UserRole } from '@/types/auth';
 import { Button } from '@/pages/admin/superadmin/components/ui/button';
 import { Input } from '@/pages/admin/superadmin/components/ui/input';
@@ -136,7 +137,7 @@ export default function AdminLogin() {
                             }}
                         >
                             <img
-                                src="./dist/assets/campusnexus.png"
+                                src={campusNexusLogo}
                                 alt="Campus Nexus"
                                 className="h-36 w-36 rounded-full object-cover"
                                 style={{ filter: 'drop-shadow(0 0 5px rgba(255,255,255,0.45))' }}
@@ -169,7 +170,7 @@ export default function AdminLogin() {
                             }}
                         >
                             <img
-                                src="./dist/assets/campusnexus.png"
+                                src={campusNexusLogo}
                                 alt="Campus Nexus"
                                 className="h-24 w-24 rounded-full object-cover"
                                 style={{ filter: 'drop-shadow(0 0 4px rgba(99,102,241,0.45))' }}

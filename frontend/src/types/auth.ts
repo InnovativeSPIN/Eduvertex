@@ -60,6 +60,9 @@ export interface Student {
 	enrollmentYear?: number;
 	// derived client-side: 1–4 representing academic year
 	studyYear?: number;
+	// additional computed props used by UI
+	departmentName?: string;
+	academicYear?: string;
 	// UI helpers
 	name?: string;
 	avatar?: string;

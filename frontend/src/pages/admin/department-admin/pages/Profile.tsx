@@ -1,5 +1,6 @@
 ﻿import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { normalizeImageUrl } from '@/utils/imageUrl';
 import { toast } from "@/pages/faculty/hooks/use-toast";
 import { MainLayout } from "@/pages/admin/department-admin/components/layout/MainLayout";
 import { motion } from "framer-motion";
@@ -170,7 +171,7 @@ export default function Profile() {
     ...initialFacultyData,
     name: user?.name || initialFacultyData.name,
     email: user?.email || initialFacultyData.email,
-    profilePhoto: user?.avatar || initialFacultyData.profilePhoto
+    profilePhoto: normalizeImageUrl(user?.avatar) || initialFacultyData.profilePhoto
   });
 
   useEffect(() => {
@@ -183,7 +184,7 @@ export default function Profile() {
         ...prev,
         name: user.name || prev.name,
         email: user.email || prev.email,
-        profilePhoto: user.avatar || prev.profilePhoto,
+        profilePhoto: normalizeImageUrl(user.avatar) || prev.profilePhoto,
         designation: user.designation || prev.designation,
         department: departmentFullName || prev.department,
         linkedinUrl: (user as any)?.linkedin_url || prev.linkedinUrl

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import { User, UserRole } from '@/types/auth';
+import { normalizeImageUrl } from '@/utils/imageUrl';
 
 interface AuthContextType {
   user: User | null;
@@ -20,7 +21,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthContextType['user']>(() => {
     try {
       const savedUser = localStorage.getItem('campus_nexus_user');
-      return savedUser ? JSON.parse(savedUser) : null;
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        if (parsed && parsed.avatar) {
+          parsed.avatar = normalizeImageUrl(parsed.avatar) || parsed.avatar;
+        }
+        return parsed;
+      }
+      return null;
     } catch (error) {
       console.error('Error parsing user from localStorage:', error);
       return null;
@@ -60,7 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           email: result.user.email,
           name: result.user.name,
           role: result.user.role as UserRole,
-          avatar: result.user.avatar || '',
+          avatar: normalizeImageUrl(result.user.avatar) || '',
           department: departmentObj || null,
           designation: result.user.designation || '',
           year: result.user.year,
@@ -96,7 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               if (prof) {
                 userObj.name = prof.Name || prof.name || userObj.name;
                 userObj.email = prof.email || userObj.email;
-                userObj.avatar = prof.avatar || prof.profile_image_url || userObj.avatar;
+                userObj.avatar = normalizeImageUrl(prof.avatar || prof.profile_image_url || userObj.avatar) || '';
                 userObj.designation = prof.designation || userObj.designation;
                 // Normalize department to a short string to avoid rendering objects
                 if (prof.department) {
@@ -200,7 +208,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               name: freshData.name || freshData.Name || prev.name,
               email: freshData.email || prev.email,
               designation: freshData.designation || prev.designation,
-              avatar: freshData.avatar || freshData.profile_image_url || prev.avatar,
+              avatar: normalizeImageUrl(freshData.avatar || freshData.profile_image_url || prev.avatar) || prev.avatar,
               department: freshDept || prev.department,
               is_timetable_incharge: freshData.is_timetable_incharge || false,
               is_placement_coordinator: freshData.is_placement_coordinator || false,
@@ -223,7 +231,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const normDept = (newData as any).department && typeof (newData as any).department === 'object'
         ? ((newData as any).department.short_name || (newData as any).department.full_name)
         : (newData as any).department;
-      const merged = { ...prev, ...newData, ...(normDept ? { department: normDept } : {}) };
+      const normAvatar = newData.avatar ? normalizeImageUrl(newData.avatar) : undefined;
+      const merged = { ...prev, ...newData, ...(normDept ? { department: normDept } : {}), ...(normAvatar ? { avatar: normAvatar } : {}) };
       const updated = merged;
       localStorage.setItem('campus_nexus_user', JSON.stringify(updated));
       return updated;
