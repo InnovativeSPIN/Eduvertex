@@ -63,7 +63,7 @@ export const assignClassIncharge = asyncHandler(async (req, res, next) => {
 
     const updatedIncharge = await ClassIncharge.findByPk(existingIncharge.id, {
       include: [
-        { model: ClassModel, as: 'class', attributes: ['id', 'name', 'section', 'semester', 'batch'] },
+        { model: ClassModel, as: 'class', attributes: ['id', 'name', 'capacity'] },
         { model: Faculty, as: 'faculty', attributes: ['faculty_id', 'Name', 'email', 'designation'] }
       ]
     });
@@ -93,7 +93,7 @@ export const assignClassIncharge = asyncHandler(async (req, res, next) => {
   // Reload with associations
   const createdIncharge = await ClassIncharge.findByPk(incharge.id, {
     include: [
-      { model: ClassModel, as: 'class', attributes: ['id', 'name', 'section', 'semester', 'batch', 'capacity'] },
+      { model: ClassModel, as: 'class', attributes: ['id', 'name', 'capacity'] },
       { model: Faculty, as: 'faculty', attributes: ['faculty_id', 'Name', 'email', 'designation'] }
     ]
   });
@@ -109,7 +109,7 @@ export const assignClassIncharge = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/department-admin/class-incharges
 // @access    Private/DepartmentAdmin
 export const getClassIncharges = asyncHandler(async (req, res, next) => {
-  const { academic_year, semester, status } = req.query;
+  const { academic_year, status } = req.query;
   const departmentId = req.user.department_id;
 
   const where = { status: 'active' };
@@ -140,14 +140,12 @@ export const getClassIncharges = asyncHandler(async (req, res, next) => {
       { 
         model: ClassModel, 
         as: 'class', 
-        attributes: ['id', 'name', 'section', 'semester', 'batch', 'capacity'],
-        where: semester ? { semester: parseInt(semester) } : {}
+        attributes: ['id', 'name', 'capacity'],
       },
       { model: Faculty, as: 'faculty', attributes: ['faculty_id', 'Name', 'email', 'designation'] }
     ],
     order: [
-      ['academic_year', 'DESC'],
-      [{ model: ClassModel, as: 'class' }, 'semester', 'ASC']
+      ['academic_year', 'DESC']
     ]
   });
 
@@ -167,7 +165,7 @@ export const getClassInchargeById = asyncHandler(async (req, res, next) => {
 
   const incharge = await ClassIncharge.findByPk(id, {
     include: [
-      { model: ClassModel, as: 'class', attributes: ['id', 'name', 'section', 'semester', 'batch', 'capacity', 'department_id'] },
+      { model: ClassModel, as: 'class', attributes: ['id', 'name', 'capacity', 'department_id'] },
       { model: Faculty, as: 'faculty', attributes: ['faculty_id', 'Name', 'email', 'designation', 'department_id'] }
     ]
   });
@@ -310,7 +308,7 @@ export const updateClassIncharge = asyncHandler(async (req, res, next) => {
   // Reload with associations
   const updatedIncharge = await ClassIncharge.findByPk(id, {
     include: [
-      { model: ClassModel, as: 'class', attributes: ['id', 'name', 'section', 'semester', 'batch'] },
+      { model: ClassModel, as: 'class', attributes: ['id', 'name', 'capacity'] },
       { model: Faculty, as: 'faculty', attributes: ['faculty_id', 'Name', 'email', 'designation'] }
     ]
   });

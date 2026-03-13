@@ -39,7 +39,7 @@ export const getAllTimetables = asyncHandler(async (req, res, next) => {
   const timetables = await Timetable.findAll({
     where,
     include: [
-      { model: ClassModel, as: 'class', attributes: ['name', 'section'] },
+      { model: ClassModel, as: 'class', attributes: ['name'] },
       { model: Department, as: 'department', attributes: ['name', 'code'] },
       { model: User, as: 'createdBy', attributes: ['name'] },
       {
@@ -75,7 +75,7 @@ export const getAllTimetables = asyncHandler(async (req, res, next) => {
 export const getTimetable = asyncHandler(async (req, res, next) => {
   const timetable = await Timetable.findByPk(req.params.id, {
     include: [
-      { model: ClassModel, as: 'class', attributes: ['name', 'section', 'room'] },
+      { model: ClassModel, as: 'class', attributes: ['name', 'room'] },
       { model: Department, as: 'department', attributes: ['name', 'code'] },
       { model: User, as: 'createdBy', attributes: ['name'] },
       {
@@ -109,7 +109,7 @@ export const getTimetableByClass = asyncHandler(async (req, res, next) => {
       isActive: true
     },
     include: [
-      { model: ClassModel, as: 'class', attributes: ['name', 'section', 'room'] },
+      { model: ClassModel, as: 'class', attributes: ['name', 'room'] },
       { model: Department, as: 'department', attributes: ['name', 'code'] },
       {
         model: TimetableSlot,
@@ -143,7 +143,7 @@ export const getTimetableByFaculty = asyncHandler(async (req, res, next) => {
         model: Timetable,
         where: { isActive: true },
         include: [
-          { model: ClassModel, as: 'class', attributes: ['name', 'section'] },
+          { model: ClassModel, as: 'class', attributes: ['name'] },
           { model: Department, as: 'department', attributes: ['name', 'code'] }
         ]
       },
@@ -422,7 +422,7 @@ export const getTodaySchedule = asyncHandler(async (req, res, next) => {
           {
             model: Timetable,
             where: { isActive: true },
-            include: [{ model: ClassModel, as: 'class', attributes: ['name', 'section'] }]
+            include: [{ model: ClassModel, as: 'class', attributes: ['name'] }]
           },
           { model: Subject, as: 'subject', attributes: ['name', 'code'] }
         ]

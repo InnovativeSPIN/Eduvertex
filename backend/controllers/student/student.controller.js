@@ -72,7 +72,7 @@ export const getAllStudents = asyncHandler(async (req, res, next) => {
     include: [
       // department model stores short_name/full_name instead of name/code
       { model: Department, as: 'department', attributes: ['short_name', 'full_name'] },
-      { model: ClassModel, as: 'class', attributes: ['name', 'section'] }
+      { model: ClassModel, as: 'class', attributes: ['name'] }
     ],
     order: [['createdAt', 'DESC']]
   };
@@ -133,7 +133,7 @@ export const getStudent = asyncHandler(async (req, res, next) => {
     attributes: { exclude: ['userId'] },
     include: [
       { model: Department, as: 'department', attributes: ['short_name', 'full_name'] },
-      { model: ClassModel, as: 'class', attributes: ['name', 'section', 'room'] }
+      { model: ClassModel, as: 'class', attributes: ['name', 'room'] }
     ]
   });
 
@@ -296,7 +296,7 @@ export const getStudentsByDepartment = asyncHandler(async (req, res, next) => {
       status: 'active'
     },
     attributes: { exclude: ['userId'] },
-    include: [{ model: ClassModel, as: 'class', attributes: ['name', 'section'] }],
+    include: [{ model: ClassModel, as: 'class', attributes: ['name'] }],
     order: [['semester', 'ASC'], ['rollNumber', 'ASC']]
   });
 

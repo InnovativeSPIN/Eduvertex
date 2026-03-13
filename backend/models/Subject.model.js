@@ -36,6 +36,11 @@ const Subject = (sequelize) => {
       defaultValue: 'odd',
       comment: 'Odd or Even semester type',
     },
+    batch: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      comment: 'Batch year e.g. 2025, 2026',
+    },
     academic_year: {
       type: DataTypes.STRING(9),
       allowNull: true,
@@ -73,16 +78,6 @@ const Subject = (sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: true,
       comment: 'Specific class if subject is class-specific, NULL for department-wide',
-    },
-    min_hours_per_week: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      defaultValue: 3,
-    },
-    max_students: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      comment: 'Maximum students allowed, NULL for no limit',
     },
     created_by: {
       type: DataTypes.INTEGER,

@@ -1,8 +1,9 @@
 import ErrorResponse from '../../utils/errorResponse.js';
 import asyncHandler from '../../middleware/async.js';
-import { models } from '../../models/index.js';
+import { models, sequelize } from '../../models/index.js';
+import { Op } from 'sequelize';
 
-const { Subject, Department, Class } = models;
+const { Subject, Department, Class, Student } = models;
 
 // @desc      Get all subjects with filters
 // @route     GET /api/v1/admin/subjects
@@ -40,6 +41,7 @@ export const getSubjects = asyncHandler(async (req, res, next) => {
         sem_type: subject.sem_type,
         academic_year: subject.academic_year,
         year: subject.year,
+        batch: subject.batch,
         lab_name: subject.lab_name,
         credits: subject.credits,
         type: subject.type,
@@ -70,7 +72,7 @@ export const getSubject = asyncHandler(async (req, res, next) => {
     const subject = await Subject.findByPk(req.params.id, {
       include: [
         { model: Department, as: 'department', attributes: ['id', 'short_name', 'full_name'] },
-        { model: Class, as: 'class', attributes: ['id', 'name', 'section'] }
+        { model: Class, as: 'class', attributes: ['id', 'name'] }
       ]
     });
 
@@ -93,6 +95,7 @@ export const getSubject = asyncHandler(async (req, res, next) => {
       type: subjectData.type,
       is_elective: subjectData.is_elective,
       is_laboratory: subjectData.is_laboratory,
+      batch: subjectData.batch,
       status: subjectData.status,
       created_at: subjectData.created_at,
       updated_at: subjectData.updated_at,
@@ -122,13 +125,13 @@ export const createSubject = asyncHandler(async (req, res, next) => {
     sem_type,
     academic_year,
     year,
+    batch,
     lab_name,
     credits,
     type,
     is_elective,
     is_laboratory,
     class_id,
-    min_hours_per_week,
     max_students,
     status
   } = req.body;
@@ -163,13 +166,13 @@ export const createSubject = asyncHandler(async (req, res, next) => {
     sem_type: sem_type || (parseInt(semester) % 2 === 1 ? 'odd' : 'even'),
     academic_year: academic_year || null,
     year: year ? parseInt(year) : Math.ceil(parseInt(semester) / 2),
+    batch: batch || null,
     lab_name: is_laboratory ? (lab_name || null) : null,
     credits: credits ? parseFloat(credits) : 4.0,
     type: type || 'Theory',
     is_elective: is_elective || false,
     is_laboratory: is_laboratory || false,
     class_id: class_id || null,
-    min_hours_per_week: min_hours_per_week || 3,
     max_students: max_students || null,
     status: status || 'active',
     created_by: req.user?.id || 1
@@ -197,6 +200,7 @@ export const createSubject = asyncHandler(async (req, res, next) => {
       sem_type: formatted.sem_type,
       academic_year: formatted.academic_year,
       year: formatted.year,
+      batch: formatted.batch,
       lab_name: formatted.lab_name,
       credits: formatted.credits,
       type: formatted.type,
@@ -227,6 +231,7 @@ export const updateSubject = asyncHandler(async (req, res, next) => {
     sem_type,
     academic_year,
     year,
+    batch,
     lab_name,
     credits,
     type,
@@ -265,6 +270,7 @@ export const updateSubject = asyncHandler(async (req, res, next) => {
     sem_type: sem_type || subject.sem_type,
     academic_year: academic_year !== undefined ? academic_year : subject.academic_year,
     year: year !== undefined ? parseInt(year) : subject.year,
+    batch: batch !== undefined ? batch : subject.batch,
     lab_name: is_laboratory !== undefined
       ? (is_laboratory ? (lab_name || subject.lab_name) : null)
       : (subject.is_laboratory ? (lab_name !== undefined ? lab_name : subject.lab_name) : null),
@@ -298,6 +304,7 @@ export const updateSubject = asyncHandler(async (req, res, next) => {
     sem_type: subjectData.sem_type,
     academic_year: subjectData.academic_year,
     year: subjectData.year,
+    batch: subjectData.batch,
     lab_name: subjectData.lab_name,
     credits: subjectData.credits,
     type: subjectData.type,
@@ -367,6 +374,16 @@ export const getDepartmentsSemesters = asyncHandler(async (req, res, next) => {
       order: [['short_name', 'ASC']]
     });
 
+    const batches = await Student.findAll({
+      attributes: [[sequelize.fn('DISTINCT', sequelize.col('batch')), 'batch']],
+      where: {
+        batch: { [Op.ne]: null }
+      },
+      order: [[sequelize.col('batch'), 'ASC']]
+    });
+
+    const batchList = batches.map(b => b.get('batch')).filter(Boolean);
+
     res.status(200).json({
       success: true,
       data: departments.map(d => ({
@@ -376,7 +393,8 @@ export const getDepartmentsSemesters = asyncHandler(async (req, res, next) => {
       })),
       semesters: Array.from({ length: 8 }, (_, i) => i + 1),
       semTypes: ['odd', 'even'],
-      subjectTypes: ['Theory', 'Practical', 'Theory+Practical', 'Project', 'Seminar', 'Internship']
+      subjectTypes: ['Theory', 'Practical', 'Theory+Practical', 'Project', 'Seminar', 'Internship'],
+      batches: batchList
     });
   } catch (error) {
     console.error('Error in getDepartmentsSemesters:', error);

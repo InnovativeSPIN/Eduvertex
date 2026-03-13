@@ -729,7 +729,7 @@ export const getMyClassIncharge = asyncHandler(async (req, res, next) => {
       {
         model: ClassModel,
         as: 'class',
-        attributes: ['id', 'name', 'section', 'semester', 'batch', 'capacity', 'department_id'],
+        attributes: ['id', 'name', 'capacity', 'department_id'],
         include: [
           { model: Department, as: 'department', attributes: ['short_name', 'full_name'] }
         ]
@@ -745,31 +745,22 @@ export const getMyClassIncharge = asyncHandler(async (req, res, next) => {
     });
   }
 
-  // Fetch students using the class record's semester + department_id.
-  // Logic:
-  //   class_incharges.class_id  →  classes(semester, department_id)
-  //   → student_profile WHERE departmentId = classes.department_id
-  //                       AND semester     = classes.semester
+  // Fetch students by class association
   const assignedClass = incharge.class;
 
   if (!assignedClass) {
     return next(new ErrorResponse('Assigned class not found', 404));
   }
 
-  const { semester: classSemester, department_id: classDeptId } = assignedClass;
-
-  console.log(`[ClassIncharge] class_id=${incharge.class_id} → semester=${classSemester}, department_id=${classDeptId}`);
-
   const students = await Student.findAll({
     where: {
-      departmentId: classDeptId,
-      semester: classSemester
+      classId: incharge.class_id
     },
-    attributes: ['id', 'studentId', 'firstName', 'lastName', 'email', 'phone', 'status', 'semester'],
+    attributes: ['id', 'studentId', 'firstName', 'lastName', 'email', 'phone', 'status'],
     order: [['studentId', 'ASC']]
   });
 
-  console.log(`[ClassIncharge] Found ${students.length} students for dept=${classDeptId}, semester=${classSemester}`);
+  console.log(`[ClassIncharge] Found ${students.length} students for class_id=${incharge.class_id}`);
 
   res.status(200).json({
     success: true,

@@ -27,8 +27,12 @@ export const getDepartmentSubjects = asyncHandler(async (req, res, next) => {
       as: 'assignedFaculty',
       attributes: ['faculty_id', 'Name', 'email', 'designation'],
       through: { 
-        attributes: ['academic_year', 'status', 'assigned_at', 'semester'],
-        where: academic_year ? { academic_year } : {}
+        // Include the assignment ID so the frontend can use it for reassign/unassign actions
+        attributes: ['id', 'academic_year', 'status', 'assigned_at', 'semester', 'total_hours', 'no_of_periods'],
+        where: {
+          status: 'active',
+          ...(academic_year ? { academic_year } : {})
+        }
       }
     }
   ];

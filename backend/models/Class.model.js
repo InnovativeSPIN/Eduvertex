@@ -1,7 +1,7 @@
 import { DataTypes } from 'sequelize';
 
 const ClassModel = (sequelize) => {
-  const Class = sequelize.define('Class', {
+  const Class = sequelize.define('Classes', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -11,24 +11,12 @@ const ClassModel = (sequelize) => {
       type: DataTypes.STRING(100),
       allowNull: false,
     },
-    section: {
-      type: DataTypes.STRING(10),
-      allowNull: true,
-    },
     room: {
       type: DataTypes.STRING(50),
       allowNull: true,
     },
     department_id: {
       type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-    semester: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-    batch: {
-      type: DataTypes.STRING(20),
       allowNull: true,
     },
     capacity: {
@@ -41,9 +29,7 @@ const ClassModel = (sequelize) => {
     },
   }, {
     tableName: 'classes',
-    timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
+    timestamps: false,
   });
 
   Class.associate = (models) => {

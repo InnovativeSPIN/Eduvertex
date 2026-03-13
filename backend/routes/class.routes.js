@@ -15,7 +15,7 @@ router.use(protect);
 // @desc    Get all classes (for general use in forms/dropdowns) 
 // @access  Private
 const getClasses = asyncHandler(async (req, res, next) => {
-  const { department_id, batch, semester } = req.query;
+  const { department_id } = req.query;
 
   let where = {};
   
@@ -25,9 +25,6 @@ const getClasses = asyncHandler(async (req, res, next) => {
   } else if (department_id) {
     where.department_id = department_id;
   }
-  
-  if (batch) where.batch = batch;
-  if (semester) where.semester = semester;
 
   const classes = await ClassModel.findAll({
     where,
@@ -38,8 +35,8 @@ const getClasses = asyncHandler(async (req, res, next) => {
         attributes: ['id', 'short_name', 'full_name']
       }
     ],
-    attributes: ['id', 'name', 'section', 'room', 'semester', 'batch', 'capacity'],
-    order: [['semester', 'ASC'], ['section', 'ASC']]
+    attributes: ['id', 'name', 'room', 'capacity'],
+    order: [['name', 'ASC']]
   });
 
   res.status(200).json({

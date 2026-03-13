@@ -48,8 +48,8 @@ router.route('/:id')
   .put(authorize('superadmin', 'super-admin', 'executiveadmin', 'academicadmin'), updateStudent)
   .delete(authorize('superadmin', 'super-admin'), deleteStudent);
 
-router.get('/class/:classId', authorize('superadmin', 'super-admin', 'executiveadmin', 'academicadmin', 'faculty'), getStudentsByClass);
-router.get('/department/:departmentId', authorize('superadmin', 'super-admin', 'executiveadmin', 'academicadmin', 'faculty'), getStudentsByDepartment);
+router.get('/class/:classId', authorize('superadmin', 'super-admin', 'executiveadmin', 'academicadmin', 'department-admin', 'faculty'), getStudentsByClass);
+router.get('/department/:departmentId', authorize('superadmin', 'super-admin', 'executiveadmin', 'academicadmin', 'department-admin', 'faculty'), getStudentsByDepartment);
 router.put('/:id/status', authorize('superadmin', 'super-admin', 'executiveadmin', 'academicadmin'), updateStudentStatus);
 router.put('/promote', authorize('superadmin', 'super-admin', 'executiveadmin', 'academicadmin'), promoteStudents);
 

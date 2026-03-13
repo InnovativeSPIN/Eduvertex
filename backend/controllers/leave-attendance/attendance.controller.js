@@ -44,7 +44,7 @@ export const getAllAttendance = asyncHandler(async (req, res, next) => {
   const attendance = await Attendance.findAll({
     where,
     include: [
-      { model: ClassModel, as: 'class', attributes: ['name', 'section'] },
+      { model: ClassModel, as: 'class', attributes: ['name'] },
       { model: Subject, as: 'subject', attributes: ['name', 'code'] },
       { model: Faculty, as: 'faculty', attributes: ['firstName', 'lastName'] },
       {
@@ -77,7 +77,7 @@ export const getAllAttendance = asyncHandler(async (req, res, next) => {
 export const getAttendance = asyncHandler(async (req, res, next) => {
   const attendance = await Attendance.findByPk(req.params.id, {
     include: [
-      { model: ClassModel, as: 'class', attributes: ['name', 'section'] },
+      { model: ClassModel, as: 'class', attributes: ['name'] },
       { model: Subject, as: 'subject', attributes: ['name', 'code'] },
       { model: Faculty, as: 'faculty', attributes: ['firstName', 'lastName'] },
       {

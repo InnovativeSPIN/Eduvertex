@@ -3,7 +3,7 @@ import ErrorResponse from '../../utils/errorResponse.js';
 import { models, sequelize } from '../../models/index.js';
 import { Op } from 'sequelize';
 
-const { FacultySubjectAssignment, Subject, Faculty, Class, Department } = models;
+const { FacultySubjectAssignment, Subject, Faculty, Class: ClassModel, Department, SubjectClassMapping } = models;
 
 // @desc      Allocate subject to faculty with class
 // @route     POST /api/v1/department-admin/faculty-allocations
@@ -16,12 +16,19 @@ export const allocateSubjectToFaculty = asyncHandler(async (req, res, next) => {
     academic_year,
     semester,
     total_hours,
-    no_of_periods
+    no_of_periods,
+    year, // optionally submitted from frontend
+    batch
   } = req.body;
 
-  // Validate required fields
-  if (!faculty_id || !subject_id || !academic_year || !semester) {
-    return next(new ErrorResponse('Please provide faculty_id, subject_id, academic_year, and semester', 400));
+  // Validate required fields (class now mandatory)
+  if (!faculty_id || !subject_id || !class_id || !academic_year || !semester) {
+    return next(new ErrorResponse('Please provide faculty_id, subject_id, class_id, academic_year, and semester', 400));
+  }
+
+  // Ensure year is within expected range (1-4)
+  if (year && (parseInt(year) < 1 || parseInt(year) > 4)) {
+    return next(new ErrorResponse('Year must be between 1 and 4', 400));
   }
 
   const departmentId = req.user.department_id;
@@ -44,7 +51,7 @@ export const allocateSubjectToFaculty = asyncHandler(async (req, res, next) => {
 
   // If class_id provided, verify it belongs to department
   if (class_id) {
-    const classExists = await Class.findOne({
+    const classExists = await ClassModel.findOne({
       where: { id: class_id, department_id: departmentId }
     });
 
@@ -53,61 +60,154 @@ export const allocateSubjectToFaculty = asyncHandler(async (req, res, next) => {
     }
   }
 
-  // Check if allocation already exists
-  const existingAllocation = await FacultySubjectAssignment.findOne({
+  // Ensure only one active allocation exists per subject for a given academic year + semester
+  // Also keep DB-unique constraint (faculty_id + subject_id + class_id + academic_year) satisfied.
+
+  // If there is already an allocation with the exact same key, update it.
+  const existingExact = await FacultySubjectAssignment.findOne({
     where: {
       faculty_id,
       subject_id,
-      academic_year,
-      semester
+      class_id: class_id || null,
+      academic_year
     }
   });
 
-  if (existingAllocation) {
-    return next(new ErrorResponse('This allocation already exists', 400));
+  // Find the active assignment for this subject/year/semester (business rule)
+  const existingSubjectYearSem = await FacultySubjectAssignment.findOne({
+    where: {
+      subject_id,
+      academic_year,
+      semester,
+      status: 'active'
+    }
+  });
+
+  // Use transaction to ensure both allocation and mapping are created/updated
+  const transaction = await sequelize.transaction();
+
+  try {
+    // Update subject with batch if provided
+    if (batch) {
+      await Subject.update(
+        { batch },
+        { where: { id: subject_id }, transaction }
+      );
+    }
+
+    let allocation;
+
+    if (existingExact) {
+      // If it matches the exact unique key, just update values
+      allocation = await existingExact.update({
+        total_hours: total_hours ? parseInt(total_hours) : existingExact.total_hours,
+        no_of_periods: no_of_periods ? parseInt(no_of_periods) : existingExact.no_of_periods,
+        assigned_by: req.user.id,
+        assigned_at: new Date(),
+        status: 'active'
+      }, { transaction });
+    } else if (existingSubjectYearSem) {
+      // We have an active assignment for this subject/year/semester.
+      // We'll reassign that row to the new faculty/class, but must ensure we don't violate the unique constraint.
+      const conflict = await FacultySubjectAssignment.findOne({
+        where: {
+          faculty_id,
+          subject_id,
+          class_id: class_id || null,
+          academic_year
+        }
+      });
+
+      if (conflict) {
+        await transaction.rollback();
+        return next(new ErrorResponse('A matching assignment already exists for this faculty/class/year', 400));
+      }
+
+      allocation = await existingSubjectYearSem.update({
+        faculty_id,
+        class_id: class_id || null,
+        total_hours: total_hours ? parseInt(total_hours) : existingSubjectYearSem.total_hours,
+        no_of_periods: no_of_periods ? parseInt(no_of_periods) : existingSubjectYearSem.no_of_periods,
+        assigned_by: req.user.id,
+        assigned_at: new Date()
+      }, { transaction });
+    } else {
+      // Create allocation
+      allocation = await FacultySubjectAssignment.create({
+        faculty_id,
+        subject_id,
+        class_id: class_id || null,
+        academic_year,
+        semester,
+        total_hours: total_hours ? parseInt(total_hours) : 0,
+        no_of_periods: no_of_periods ? parseInt(no_of_periods) : 0,
+        assigned_by: req.user.id,
+        assigned_at: new Date(),
+        status: 'active'
+      }, { transaction });
+    }
+
+    // Check if mapping already exists for this subject-class-semester-year
+    const existingMapping = await SubjectClassMapping.findOne({
+      where: {
+        subject_id,
+        class_id,
+        semester,
+        academic_year,
+        department_id: departmentId
+      },
+      transaction
+    });
+
+    if (!existingMapping) {
+      // Create subject-class mapping automatically
+      await SubjectClassMapping.create({
+        subject_id,
+        class_id,
+        semester,
+        academic_year,
+        department_id: departmentId,
+        is_core: true, // Defaulting to core as typical for mandatory class assignments
+        status: 'active'
+      }, { transaction });
+    }
+
+    await transaction.commit();
+
+    // Reload with associations
+    const createdAllocation = await FacultySubjectAssignment.findByPk(allocation.id, {
+      include: [
+        { model: Faculty, as: 'faculty', attributes: ['faculty_id', 'Name', 'email', 'designation'] },
+        { model: Subject, as: 'subject', attributes: ['id', 'subject_code', 'subject_name', 'semester', 'sem_type', 'type', 'credits', 'year', 'batch'] },
+        { model: ClassModel, as: 'class', attributes: ['id', 'name'] }
+      ]
+    });
+
+    // Map subject fields to match frontend expectations
+    const responseData = createdAllocation.toJSON();
+    if (responseData.subject) {
+      responseData.subject = {
+        id: responseData.subject.id,
+        code: responseData.subject.subject_code,
+        name: responseData.subject.subject_name,
+        semester: responseData.subject.semester,
+        sem_type: responseData.subject.sem_type,
+        type: responseData.subject.type,
+        credits: responseData.subject.credits,
+        year: responseData.subject.year,
+        batch: responseData.subject.batch
+      };
+    }
+
+    res.status(201).json({
+      success: true,
+      data: responseData
+    });
+  } catch (error) {
+    await transaction.rollback();
+    console.error('[Allocate Subject Error]', error);
+    return next(new ErrorResponse(error.message || 'Error creating allocation and mapping', 500));
   }
-
-  // Create allocation
-  const allocation = await FacultySubjectAssignment.create({
-    faculty_id,
-    subject_id,
-    class_id: class_id || null,
-    academic_year,
-    semester,
-    total_hours: total_hours ? parseInt(total_hours) : 0,
-    no_of_periods: no_of_periods ? parseInt(no_of_periods) : 0,
-    assigned_by: req.user.id,
-    assigned_at: new Date(),
-    status: 'active'
-  });
-
-  // Reload with associations
-  const createdAllocation = await FacultySubjectAssignment.findByPk(allocation.id, {
-    include: [
-      { model: Faculty, as: 'faculty', attributes: ['faculty_id', 'Name', 'email', 'designation'] },
-      { model: Subject, as: 'subject', attributes: ['id', 'subject_code', 'subject_name', 'semester', 'sem_type', 'type', 'credits'] },
-      { model: Class, as: 'class', attributes: ['id', 'name', 'section'] }
-    ]
-  });
-
-  // Map subject fields to match frontend expectations
-  const responseData = createdAllocation.toJSON();
-  if (responseData.subject) {
-    responseData.subject = {
-      id: responseData.subject.id,
-      code: responseData.subject.subject_code,
-      name: responseData.subject.subject_name,
-      semester: responseData.subject.semester,
-      sem_type: responseData.subject.sem_type,
-      type: responseData.subject.type,
-      credits: responseData.subject.credits
-    };
-  }
-
-  res.status(201).json({
-    success: true,
-    data: responseData
-  });
 });
 
 // @desc      Get faculty allocations for department
@@ -124,7 +224,7 @@ export const getFacultyAllocations = asyncHandler(async (req, res, next) => {
       return next(new ErrorResponse('Department ID not found in user', 400));
     }
 
-    const where = {};
+    const where = { status: 'active' };
     if (academic_year) where.academic_year = academic_year;
     if (semester) where.semester = parseInt(semester);
     if (status) where.status = status;
@@ -147,9 +247,16 @@ export const getFacultyAllocations = asyncHandler(async (req, res, next) => {
     const allocations = await FacultySubjectAssignment.findAll({
       where,
       include: [
-        { model: Faculty, as: 'faculty', attributes: ['faculty_id', 'Name', 'email', 'designation'] },
-        { model: Subject, as: 'subject', attributes: ['id', 'subject_code', 'subject_name', 'semester', 'sem_type', 'type', 'credits'] },
-        { model: Class, as: 'class', attributes: ['id', 'name', 'section', 'semester', 'batch'] }
+        {
+          model: Faculty,
+          as: 'faculty',
+          attributes: ['faculty_id', 'Name', 'email', 'designation'],
+          include: [
+            { model: Department, as: 'department', attributes: ['id', 'short_name', 'full_name'] }
+          ]
+        },
+        { model: Subject, as: 'subject', attributes: ['id', 'subject_code', 'subject_name', 'semester', 'sem_type', 'type', 'credits', 'year', 'batch'] },
+        { model: ClassModel, as: 'class', attributes: ['id', 'name'] }
       ],
       order: [['academic_year', 'DESC'], ['semester', 'ASC'], ['faculty_id', 'ASC']]
     });
@@ -165,7 +272,9 @@ export const getFacultyAllocations = asyncHandler(async (req, res, next) => {
           semester: allocationData.subject.semester,
           sem_type: allocationData.subject.sem_type,
           type: allocationData.subject.type,
-          credits: allocationData.subject.credits
+          credits: allocationData.subject.credits,
+          year: allocationData.subject.year,
+          batch: allocationData.subject.batch
         };
       }
       return allocationData;
@@ -192,7 +301,7 @@ export const getAllocationDetails = asyncHandler(async (req, res, next) => {
     include: [
       { model: Faculty, as: 'faculty', attributes: ['faculty_id', 'Name', 'email', 'designation', 'department_id'] },
       { model: Subject, as: 'subject', attributes: ['id', 'subject_code', 'subject_name', 'semester', 'sem_type', 'type', 'credits'] },
-      { model: Class, as: 'class', attributes: ['id', 'name', 'section', 'semester', 'batch', 'capacity'] }
+      { model: ClassModel, as: 'class', attributes: ['id', 'name', 'capacity'] }
     ]
   });
 
@@ -246,7 +355,7 @@ export const updateAllocation = asyncHandler(async (req, res, next) => {
 
   // If class_id is being updated, verify it exists
   if (class_id) {
-    const classExists = await Class.findOne({
+    const classExists = await ClassModel.findOne({
       where: { id: class_id, department_id: req.user.department_id }
     });
 
@@ -266,8 +375,8 @@ export const updateAllocation = asyncHandler(async (req, res, next) => {
   const updatedAllocation = await FacultySubjectAssignment.findByPk(allocation.id, {
     include: [
       { model: Faculty, as: 'faculty', attributes: ['faculty_id', 'Name', 'email', 'designation'] },
-      { model: Subject, as: 'subject', attributes: ['id', 'subject_code', 'subject_name', 'semester', 'sem_type', 'type', 'credits'] },
-      { model: Class, as: 'class', attributes: ['id', 'name', 'section'] }
+      { model: Subject, as: 'subject', attributes: ['id', 'subject_code', 'subject_name', 'semester', 'sem_type', 'type', 'credits', 'year', 'batch'] },
+      { model: ClassModel, as: 'class', attributes: ['id', 'name'] }
     ]
   });
 
@@ -281,7 +390,9 @@ export const updateAllocation = asyncHandler(async (req, res, next) => {
       semester: responseData.subject.semester,
       sem_type: responseData.subject.sem_type,
       type: responseData.subject.type,
-      credits: responseData.subject.credits
+      credits: responseData.subject.credits,
+      year: responseData.subject.year,
+      batch: responseData.subject.batch
     };
   }
 
@@ -335,7 +446,7 @@ export const getAllocationSubjects = asyncHandler(async (req, res, next) => {
 
     const subjects = await Subject.findAll({
       where,
-      attributes: ['id', 'subject_code', 'subject_name', 'semester', 'sem_type', 'type', 'credits'],
+      attributes: ['id', 'subject_code', 'subject_name', 'semester', 'sem_type', 'type', 'credits', 'batch'],
       order: [['semester', 'ASC'], ['subject_code', 'ASC']]
     });
 
@@ -347,7 +458,8 @@ export const getAllocationSubjects = asyncHandler(async (req, res, next) => {
       semester: subject.semester,
       sem_type: subject.sem_type,
       type: subject.type,
-      credits: subject.credits
+      credits: subject.credits,
+      batch: subject.batch
     }));
 
     console.log('[GET SUBJECTS] Found subjects:', mappedSubjects.length);
@@ -432,22 +544,20 @@ export const getAllocationFaculty = asyncHandler(async (req, res, next) => {
 // @access    Private/DepartmentAdmin
 export const getAllocationClasses = asyncHandler(async (req, res, next) => {
   try {
-    const { semester } = req.query;
     const departmentId = req.user?.department_id;
 
-    console.log('[GET CLASSES] departmentId:', departmentId, 'filters:', { semester });
+    console.log('[GET CLASSES] departmentId:', departmentId);
 
     if (!departmentId) {
       return next(new ErrorResponse('Department ID not found in user', 400));
     }
 
     const where = { department_id: departmentId, status: 'active' };
-    if (semester) where.semester = parseInt(semester);
 
-    const classes = await Class.findAll({
+    const classes = await ClassModel.findAll({
       where,
-      attributes: ['id', 'name', 'section', 'semester', 'batch', 'capacity', 'room'],
-      order: [['semester', 'ASC'], ['name', 'ASC']]
+      attributes: ['id', 'name', 'capacity', 'room'],
+      order: [['name', 'ASC']],
     });
 
     console.log('[GET CLASSES] Found classes:', classes.length);
@@ -487,7 +597,7 @@ export const getFacultyAllocationsBySemester = asyncHandler(async (req, res, nex
     include: [
       { model: Faculty, as: 'faculty', attributes: ['faculty_id', 'Name', 'email', 'designation'] },
       { model: Subject, as: 'subject', attributes: ['id', 'subject_code', 'subject_name', 'type', 'sem_type'] },
-      { model: Class, as: 'class', attributes: ['id', 'name', 'section', 'batch'] }
+      { model: ClassModel, as: 'class', attributes: ['id', 'name'] }
     ],
     order: [['faculty_id', 'ASC']]
   });
